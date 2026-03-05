@@ -1,0 +1,28 @@
+<ng-container *ngIf="(authService.authReady$ | async); else loading">
+  <!-- Logged-in layout -->
+  <div class="layout" *ngIf="authService.isLoggedIn(); else loggedOut">
+    <div class="navbar">
+      <app-navbar></app-navbar>
+    </div>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Logged-out layout -->
+  <ng-template #loggedOut>
+    <div class="layout-N">
+      <main class="content-N">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </ng-template>
+</ng-container>
+<ng-template #loading>
+  <div class="layout-N">
+    <main class="content">
+      Loading...
+    </main>
+  </div>
+</ng-template>

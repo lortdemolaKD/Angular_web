@@ -1,0 +1,169 @@
+<div class="navbar-root" (mouseenter)="onNavbarMouseEnter()" (mouseleave)="onNavbarMouseLeave()">
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/" class="brand nav-link">
+      <mat-icon class="nav-link__icon">dashboard</mat-icon>
+      <span class="brand-title">Sentinel Insights</span>
+    </a>
+    <button type="button" class="mobile-menu-btn" (click)="toggleMobileMenu()" [attr.aria-expanded]="mobileMenuOpen" aria-label="Menu">
+      <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+    </button>
+
+    <!-- Company dropdown (only for OrgAdmin/SystemAdmin; location-scoped users have one company) -->
+    <div class="company-picker desktop-only" *ngIf="companies?.length && isOrgAdmin">
+      <button type="button" class="company-button" (click)="toggleDropdown()" [attr.aria-expanded]="dropdownOpen" aria-haspopup="listbox">
+        <mat-icon class="company-button__icon">business</mat-icon>
+        <span class="company-button__label">{{ currentCompany?.name || 'Select company' }}</span>
+        <mat-icon class="company-button__chevron">expand_more</mat-icon>
+      </button>
+
+      <div class="company-dropdown" *ngIf="dropdownOpen" role="listbox">
+        <button
+          type="button"
+          class="company-item"
+          *ngFor="let c of companies"
+          (click)="selectCompany(c.id)"
+          role="option"
+        >
+          <mat-icon class="company-item__icon">business</mat-icon>
+          <span>{{ c.name }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar-center desktop-nav-center">
+    <!-- Basic links (adjust to your routes) -->
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+      <mat-icon class="nav-link__icon">home</mat-icon>
+      <span>Home</span>
+    </a>
+    <a routerLink="/organization" routerLinkActive="active" *ngIf="isOrgAdmin" class="nav-link">
+      <mat-icon class="nav-link__icon">business</mat-icon>
+      <span>Organization</span>
+    </a>
+    <a routerLink="/companies" routerLinkActive="active" class="nav-link">
+      <mat-icon class="nav-link__icon">location_on</mat-icon>
+      <span>Companies</span>
+    </a>
+    <a routerLink="/Bonus" routerLinkActive="active" class="nav-link">
+      <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
+      <span>Bonus</span>
+    </a>
+    <a routerLink="/chart-test" routerLinkActive="active" class="nav-link">
+      <mat-icon class="nav-link__icon">bar_chart</mat-icon>
+      <span>Chart Test</span>
+    </a>
+    <a routerLink="/table-test" routerLinkActive="active" class="nav-link">
+      <mat-icon class="nav-link__icon">table_chart</mat-icon>
+      <span>Table Test</span>
+    </a>
+    <a routerLink="/gantt-test" routerLinkActive="active" class="nav-link">
+      <mat-icon class="nav-link__icon">timeline</mat-icon>
+      <span>Gantt Test</span>
+    </a>
+    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin" class="nav-link">
+      <mat-icon class="nav-link__icon">assignment</mat-icon>
+      <span>Audits</span>
+    </a>
+    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin" class="nav-link">
+      <mat-icon class="nav-link__icon">menu_book</mat-icon>
+      <span>Audit Library</span>
+    </a>
+  </div>
+
+  <div class="navbar-right">
+    <button type="button" class="invite-btn" *ngIf="canInvite" (click)="openInviteModal()">
+      <mat-icon class="invite-btn__icon">person_add</mat-icon>
+      <span>Invite</span>
+    </button>
+
+    <div class="navbar-right-bottom">
+      <div class="user-pill-wrap" *ngIf="user">
+        <button type="button" class="user-pill" [class.user-pill--open]="accountPanelOpen" (click)="toggleAccountPanel()" [attr.aria-expanded]="accountPanelOpen" aria-label="Account">
+          <span class="user-pill__avatar" *ngIf="userAvatarUrl" [style.backgroundImage]="'url(' + userAvatarUrl + ')'"></span>
+          <span class="user-pill__avatar user-pill__avatar--initials" *ngIf="!userAvatarUrl">{{ userInitials }}</span>
+          <span class="user-pill__text">
+            <span class="user-name">{{ user.name }}</span>
+            <span class="user-role">{{ user.role }}</span>
+          </span>
+          <mat-icon class="user-pill__chevron">expand_more</mat-icon>
+        </button>
+        <div class="user-account-dropdown" *ngIf="accountPanelOpen">
+          <div class="user-account-dropdown__backdrop" (click)="closeAccountPanel()"></div>
+          <div class="user-account-dropdown__panel">
+            <app-user-account-panel
+              [user]="user"
+              [companyName]="currentCompany?.name ?? null"
+              [locationName]="currentLocation?.name ?? null"
+              (close)="closeAccountPanel()">
+            </app-user-account-panel>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-actions-row">
+        <app-theme-switcher></app-theme-switcher>
+        <button type="button" class="logout-btn" (click)="logout()" aria-label="Log out">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+</div>
+
+<!-- Mobile: overlay and dropdown outside nav so they aren't clipped and show above content -->
+<div class="mobile-nav-overlay" *ngIf="mobileMenuOpen" (click)="closeMobileMenu()" role="presentation"></div>
+<div class="mobile-nav-dropdown" *ngIf="mobileMenuOpen" role="dialog" aria-label="Navigation menu">
+  <div class="mobile-nav-dropdown__inner">
+    <div class="company-picker mobile-only" *ngIf="companies?.length && isOrgAdmin">
+      <button type="button" class="company-button mobile-nav-link" (click)="toggleDropdown()" [attr.aria-expanded]="dropdownOpen">
+        <mat-icon class="nav-link__icon">business</mat-icon>
+        <span>{{ currentCompany?.name || 'Select organization' }}</span>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+      <div class="company-dropdown" *ngIf="dropdownOpen">
+        <button type="button" class="company-item" *ngFor="let c of companies" (click)="selectCompany(c.id)">
+          <mat-icon class="company-item__icon">business</mat-icon>
+          <span>{{ c.name }}</span>
+        </button>
+      </div>
+    </div>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">home</mat-icon>
+      <span>Home</span>
+    </a>
+    <a routerLink="/organization" routerLinkActive="active" *ngIf="isOrgAdmin" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">business</mat-icon>
+      <span>Organization</span>
+    </a>
+    <a routerLink="/companies" routerLinkActive="active" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">location_on</mat-icon>
+      <span>Companies</span>
+    </a>
+    <a routerLink="/Bonus" routerLinkActive="active" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
+      <span>Bonus</span>
+    </a>
+    <a routerLink="/chart-test" routerLinkActive="active" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">bar_chart</mat-icon>
+      <span>Chart Test</span>
+    </a>
+    <a routerLink="/table-test" routerLinkActive="active" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">table_chart</mat-icon>
+      <span>Table Test</span>
+    </a>
+    <a routerLink="/gantt-test" routerLinkActive="active" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">timeline</mat-icon>
+      <span>Gantt Test</span>
+    </a>
+    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">assignment</mat-icon>
+      <span>Audits</span>
+    </a>
+    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin" class="mobile-nav-link nav-link">
+      <mat-icon class="nav-link__icon">menu_book</mat-icon>
+      <span>Audit Library</span>
+    </a>
+  </div>
+</div>

@@ -1,0 +1,100 @@
+<div class="dlg">
+<h2 class="dlg-title">{{ data.title || 'Manage evidence' }}</h2>
+
+
+
+<div class="dlg-body">
+  <div class="section">
+    <div class="section-title">Evidence summary</div>
+    <textarea
+      rows="3"
+      class="full-textarea"
+      [(ngModel)]="evidenceSummaryText"
+      placeholder="Short narrative summary of evidence..."
+    ></textarea>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Evidence items ({{ evidence.length }})</div>
+
+    <div class="items" *ngIf="evidence.length > 0; else empty">
+      <div class="item" *ngFor="let ev of evidence">
+        <div class="item-main">
+          <div class="pill">{{ ev.type }}</div>
+          <div class="item-text">
+            <div class="desc">{{ ev.description || '(no description)' }}</div>
+            <div class="muted" *ngIf="ev.type === 'text'">{{ ev.content }}</div>
+            <div class="muted" *ngIf="ev.type === 'file'">{{ ev.fileUrl }}</div>
+            <div class="muted" *ngIf="ev.type === 'audit'">{{ ev.fileUrl }}</div>
+          </div>
+        </div>
+
+        <button class="mini-btn" (click)="removeItem(ev.id)">Remove</button>
+      </div>
+
+      <div class="row-actions">
+        <button class="mini-btn" (click)="clearAll()">Clear all</button>
+      </div>
+    </div>
+
+    <ng-template #empty>
+      <div class="muted">No evidence items yet.</div>
+    </ng-template>
+  </div>
+
+  <div class="section add">
+    <div class="section-title">Add new item</div>
+
+    <div class="add-grid">
+      <label class="field">
+        <span class="field__label">Type</span>
+        <select [(ngModel)]="newType">
+          <option value="text">Text</option>
+          <option value="file">File</option>
+          <option value="audit">Audit</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span class="field__label">Description</span>
+        <input type="text" [(ngModel)]="newDescription" placeholder="e.g. Care plan reviewed" />
+      </label>
+
+      <label class="field" *ngIf="newType === 'text'">
+        <span class="field__label">Text content</span>
+        <input type="text" [(ngModel)]="newTextContent" placeholder="Notes..." />
+      </label>
+
+      <label class="field" *ngIf="newType === 'file'">
+        <span class="field__label">File name (stub)</span>
+        <input type="file" [(ngModel)]="newFileName" placeholder="e.g. consent-form.pdf" />
+      </label>
+      <label class="field" *ngIf="newType === 'audit'">
+        <span class="field__label">Select Audit</span>
+
+        <select [ngModel]="selectedAudit()?.id"
+                (ngModelChange)="onAuditIdSelected($event)">
+          <option [ngValue]="null">-- Select --</option>
+
+          <option *ngFor="let audit of audits()" [ngValue]="audit.id">
+            {{ audit.id }}
+          </option>
+        </select>
+      </label>
+
+      <div class="add-actions">
+        <button class="mini-btn primary" (click)="addItem()">Add</button>
+      </div>
+    </div>
+
+    <div class="muted hint">
+      Note: file upload can be wired later; this dialog currently stores the file name in <code>fileUrl</code>.
+    </div>
+  </div>
+</div>
+
+<div class="dlg-actions">
+  <button class="mini-btn" (click)="cancel()">Cancel</button>
+  <button class="mini-btn primary" (click)="save()">Save</button>
+</div>
+</div>

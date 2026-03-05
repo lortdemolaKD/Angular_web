@@ -1,0 +1,96 @@
+.dlg-title{
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dlg-body{
+  display: grid;
+
+  gap: 14px;
+}
+.dlg{
+
+  padding: 20px;
+
+}
+.section{
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+}
+
+.section-title{
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.full-textarea{
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.items{
+  display: grid;
+  gap: 10px;
+}
+
+.item{
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fafafa;
+}
+
+.item-main{
+  display: flex;
+  gap: 10px;
+}
+
+.pill{
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(0,0,0,0.08);
+  align-self: flex-start;
+}
+
+.item-text .desc{
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.muted{
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.add-grid{
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.add-actions{
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dlg-actions{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.hint{
+  margin-top: 8px;
+}

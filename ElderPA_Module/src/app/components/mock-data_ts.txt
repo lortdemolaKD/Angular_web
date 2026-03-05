@@ -1,0 +1,2343 @@
+import {
+  AuditEvidence,
+  AuditInstance,
+  AuditTemplate,
+  RegulationRef,
+  PerformanceSet,
+  LocationType,
+  CompanyType, UserType, Room, RoomGroup, FeeRule, ClientGroup
+} from './Types';
+
+// mock-regulation-library.ts
+import {
+  RegulationLibrary,
+  RegulationItem,
+  RegulationClause,
+  ServiceType,
+} from './Types';
+
+export const MOCK_REGULATIONS: RegulationLibrary = {
+  id: 'CQC-FS',
+  title: 'Fundamental Standards (Mock)',
+  source: {
+    publisher: 'CQC',
+    hubUrl:
+      'https://www.cqc.org.uk/guidance-regulation/providers/regulations-service-providers-and-managers',
+    versionDate: '2025-12-30',
+  },
+  items: [
+    {
+      id: 'FS-REG-4',
+      code: '4',
+      title: 'Requirements where the service provider is an individual or partnership',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Providers who are individuals/partnerships must be fit and meet character, health, information and competence requirements.',
+      subsections: [
+        { id: 'FS-REG-4-1', label: '4(1)', text: 'Applies where a service provider is an individual or a partnership.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        { id: 'FS-REG-4-2', label: '4(2)', text: 'Do not carry on a regulated activity unless the provider is fit to do so.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        {
+          id: 'FS-REG-4-3',
+          label: '4(3)',
+          text: 'Fitness requirements differ for individuals vs partnerships (including links to 4(4), 4(5), 4(6)).',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            {
+              id: 'FS-REG-4-3-a',
+              label: '4(3)(a)',
+              text: 'Individual provider: must meet 4(4) and 4(5).',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+              children: [
+                { id: 'FS-REG-4-3-a-i', label: '4(3)(a)(i)', text: 'Meets 4(4).', appliesTo: 'Both', defaultIncluded: false },
+                { id: 'FS-REG-4-3-a-ii', label: '4(3)(a)(ii)', text: 'Meets 4(5).', appliesTo: 'Both', defaultIncluded: false }
+              ]
+            },
+            {
+              id: 'FS-REG-4-3-b',
+              label: '4(3)(b)',
+              text: 'Partnership: each partner meets 4(4) and the partnership meets 4(6).',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+              children: [
+                { id: 'FS-REG-4-3-b-i', label: '4(3)(b)(i)', text: 'Each partner meets 4(4).', appliesTo: 'Both', defaultIncluded: false },
+                { id: 'FS-REG-4-3-b-ii', label: '4(3)(b)(ii)', text: 'Partnership meets 4(6).', appliesTo: 'Both', defaultIncluded: false }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'FS-REG-4-4',
+          label: '4(4)',
+          text: 'Character, health capability (with reasonable adjustments), and Schedule 3 information requirements.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-4-4-a', label: '4(4)(a)', text: 'Good character.', appliesTo: 'Both', defaultIncluded: false },
+            {
+              id: 'FS-REG-4-4-b',
+              label: '4(4)(b)',
+              text: 'Able by reason of health (after reasonable adjustments) to perform intrinsic tasks.',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+              children: [
+                { id: 'FS-REG-4-4-b-i', label: '4(4)(b)(i)', text: 'Intrinsic tasks for an individual provider.', appliesTo: 'Both', defaultIncluded: false },
+                { id: 'FS-REG-4-4-b-ii', label: '4(4)(b)(ii)', text: 'Intrinsic tasks for a partner’s role in a partnership.', appliesTo: 'Both', defaultIncluded: false }
+              ]
+            },
+            { id: 'FS-REG-4-4-c', label: '4(4)(c)', text: 'Schedule 3 information must be available to supply to CQC.', appliesTo: 'Both', defaultIncluded: true }
+          ]
+        },
+        { id: 'FS-REG-4-5', label: '4(5)', text: 'Individual provider has the necessary qualifications, skills and experience.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        { id: 'FS-REG-4-6', label: '4(6)', text: 'Partnership has necessary qualifications/skills/experience via the partners combined.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' }
+      ]
+    },
+    {
+      id: 'FS-REG-5',
+      code: '5',
+      title: 'Fit and proper persons: directors',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Health service bodies must ensure directors meet fit and proper person requirements.',
+      subsections: [
+        { id: 'FS-REG-5-1', label: '5(1)', text: 'Applies where a service provider is a health service body.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        {
+          id: 'FS-REG-5-2',
+          label: '5(2)',
+          text: 'Do not appoint/retain a director (or equivalent) unless they meet the requirements in 5(3).',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-5-2-a', label: '5(2)(a)', text: 'Director appointment requirement.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-2-b', label: '5(2)(b)', text: 'Equivalent/similar director functions requirement.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        },
+        {
+          id: 'FS-REG-5-3',
+          label: '5(3)',
+          text: 'Fit and proper criteria: character, competence, health capability, misconduct/mismanagement, and Schedule 4 unfitness grounds.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-5-3-a', label: '5(3)(a)', text: 'Good character.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-3-b', label: '5(3)(b)', text: 'Qualifications/competence/skills/experience for the role.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-3-c', label: '5(3)(c)', text: 'Health capability (with reasonable adjustments).', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-3-d', label: '5(3)(d)', text: 'No serious misconduct or mismanagement history.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-3-e', label: '5(3)(e)', text: 'No unfitness grounds apply (Schedule 4 Part 1).', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        },
+        { id: 'FS-REG-5-4', label: '5(4)', text: 'Character assessment must include matters listed in Schedule 4 Part 2.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        {
+          id: 'FS-REG-5-5',
+          label: '5(5)',
+          text: 'Information that must be available for each director/equivalent role-holder (Schedule 3 plus other required information).',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-5-5-a', label: '5(5)(a)', text: 'Schedule 3 information.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-5-b', label: '5(5)(b)', text: 'Other enactment-required information.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        },
+        {
+          id: 'FS-REG-5-6',
+          label: '5(6)',
+          text: 'If a director no longer meets requirements, take proportionate action and notify regulator if applicable.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-5-6-a', label: '5(6)(a)', text: 'Take action to ensure the office is held by a fit person.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-5-6-b', label: '5(6)(b)', text: 'Inform the relevant professional regulator where applicable.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'FS-REG-6',
+      code: '6',
+      title: 'Requirement where the service provider is a body other than a partnership',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Bodies (not partnerships) must nominate an individual and ensure they are fit for the role.',
+      subsections: [
+        { id: 'FS-REG-6-1', label: '6(1)', text: 'Applies where the service provider is a body other than a partnership.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        {
+          id: 'FS-REG-6-2',
+          label: '6(2)',
+          text: 'Notify CQC of the nominated individual (name, address, position) who supervises management of the regulated activity.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-6-2-a', label: '6(2)(a)', text: 'Employed as director/manager/secretary of the body.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-6-2-b', label: '6(2)(b)', text: 'Responsible for supervising management of the activity.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        },
+        {
+          id: 'FS-REG-6-3',
+          label: '6(3)',
+          text: 'Take reasonable steps to ensure the nominated individual is fit (character, competence, health, Schedule 3 info).',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-6-3-a', label: '6(3)(a)', text: 'Good character.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-6-3-b', label: '6(3)(b)', text: 'Qualifications/skills/experience to supervise properly.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-6-3-c', label: '6(3)(c)', text: 'Health capability (with reasonable adjustments).', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-6-3-d', label: '6(3)(d)', text: 'Schedule 3 information is available.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        }
+      ]
+    },
+    {
+      id: 'FS-REG-7',
+      code: '7',
+      title: 'Requirements relating to registered managers',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Registered managers must be fit and meet character, competence, health and information requirements.',
+      subsections: [
+        { id: 'FS-REG-7-1', label: '7(1)', text: 'A person must not manage as a registered manager unless fit to do so.', appliesTo: 'Both', defaultIncluded: true, domain: 'WellLed' },
+        {
+          id: 'FS-REG-7-2',
+          label: '7(2)',
+          text: 'Registered manager fitness: character, qualifications/skills/experience, health capability, Schedule 3 info.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+          domain: 'WellLed',
+          children: [
+            { id: 'FS-REG-7-2-a', label: '7(2)(a)', text: 'Good character.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-7-2-b', label: '7(2)(b)', text: 'Qualifications/skills/experience to manage.', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-7-2-c', label: '7(2)(c)', text: 'Health capability (with reasonable adjustments).', appliesTo: 'Both', defaultIncluded: false },
+            { id: 'FS-REG-7-2-d', label: '7(2)(d)', text: 'Schedule 3 information available to CQC.', appliesTo: 'Both', defaultIncluded: false }
+          ]
+        }
+      ]
+    }
+
+    ,{
+      id: 'FS-REG-8',
+      code: '8',
+      title: 'General',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'General duty to comply with regulations 9–19.',
+      subsections: [
+        {
+          id: 'FS-REG-8-1',
+          label: '8(1)',
+          text: 'Comply with regulations 9 to 19 when carrying on a regulated activity.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+        },
+        {
+          id: 'FS-REG-8-2',
+          label: '8(2)',
+          text: 'This does not require duplicate action where another registered person has already done what is required.',
+          appliesTo: 'Both',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-9',
+      code: '9',
+      title: 'Person-centred care',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Care must be appropriate, meet needs, reflect preferences.',
+      subsections: [
+        {
+          id: 'FS-REG-9-1',
+          label: '9(1)',
+          text: 'Care and treatment must be appropriate, meet needs, and reflect preferences.',
+          appliesTo: 'Both',
+          domain: 'Caring',
+          defaultIncluded: true,
+          children: [
+            {
+              id: 'FS-REG-9-1-a',
+              label: '9(1)(a)',
+              text: 'Care and treatment must be appropriate.',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+            },
+            {
+              id: 'FS-REG-9-1-b',
+              label: '9(1)(b)',
+              text: 'Care and treatment must meet needs.',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+            },
+            {
+              id: 'FS-REG-9-1-c',
+              label: '9(1)(c)',
+              text: 'Care and treatment must reflect preferences.',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-10',
+      code: '10',
+      title: 'Dignity and respect',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'People must be treated with dignity and respect.',
+      subsections: [
+        {
+          id: 'FS-REG-10-1',
+          label: '10(1)',
+          text: 'Service users must be treated with dignity and respect.',
+          appliesTo: 'Both',
+          domain: 'Caring',
+          defaultIncluded: true,
+        },
+        {
+          id: 'FS-REG-10-2-a',
+          label: '10(2)(a)',
+          text: 'Ensure the privacy of the service user.',
+          appliesTo: 'Both',
+          domain: 'Caring',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-11',
+      code: '11',
+      title: 'Need for consent',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Care must only be provided with consent (with lawful exceptions).',
+      subsections: [
+        {
+          id: 'FS-REG-11-1',
+          label: '11(1)',
+          text: 'Care and treatment must only be provided with the consent of the relevant person.',
+          appliesTo: 'Both',
+          domain: 'Safe',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-12',
+      code: '12',
+      title: 'Safe care and treatment',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Care and treatment must be provided in a safe way.',
+      subsections: [
+        {
+          id: 'FS-REG-12-1',
+          label: '12(1)',
+          text: 'Care and treatment must be provided in a safe way for service users.',
+          appliesTo: 'Both',
+          domain: 'Safe',
+          defaultIncluded: true,
+        },
+        {
+          id: 'FS-REG-12-2',
+          label: '12(2)',
+          text: 'Risk management, safe premises/equipment, medicines safety, and infection prevention and control.',
+          appliesTo: 'Both',
+          domain: 'Safe',
+          defaultIncluded: true,
+          children: [
+            {
+              id: 'FS-REG-12-2-a',
+              label: '12(2)(a)',
+              text: 'Assess risks to health and safety.',
+              appliesTo: 'Both',
+              defaultIncluded: false,
+            },
+            {
+              id: 'FS-REG-12-2-g',
+              label: '12(2)(g)',
+              text: 'Ensure proper and safe management of medicines.',
+              appliesTo: 'Both',
+              defaultIncluded: true,
+              tags: ['medicines'],
+            },
+            {
+              id: 'FS-REG-12-2-h',
+              label: '12(2)(h)',
+              text: 'Prevent, detect and control the spread of infections (including health care associated infections).',
+              appliesTo: 'Both',
+              defaultIncluded: true,
+              tags: ['IPC'],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-13',
+      code: '13',
+      title: 'Safeguarding service users from abuse and improper treatment',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'People must be protected from abuse and improper treatment.',
+      subsections: [
+        {
+          id: 'FS-REG-13-1',
+          label: '13(1)',
+          text: 'Service users must be protected from abuse and improper treatment.',
+          appliesTo: 'Both',
+          domain: 'Safe',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-14',
+      code: '14',
+      title: 'Meeting nutritional and hydration needs',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'People must receive adequate nutrition and hydration.',
+      subsections: [
+        {
+          id: 'FS-REG-14-1',
+          label: '14(1)',
+          text: 'The nutritional and hydration needs of service users must be met.',
+          appliesTo: 'Both',
+          domain: 'Caring',
+          defaultIncluded: true,
+          tags: ['nutrition', 'hydration'],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-15',
+      code: '15',
+      title: 'Premises and equipment',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Premises and equipment must be clean, suitable, and maintained.',
+      subsections: [
+        {
+          id: 'FS-REG-15-1',
+          label: '15(1)',
+          text: 'Premises and equipment must be clean, secure, suitable, properly used and maintained.',
+          appliesTo: 'Both',
+          domain: 'Safe',
+          defaultIncluded: true,
+          tags: ['environment', 'equipment'],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-16',
+      code: '16',
+      title: 'Receiving and acting on complaints',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Complaints must be handled effectively and acted upon.',
+      subsections: [
+        {
+          id: 'FS-REG-16-1',
+          label: '16(1)',
+          text: 'Investigate complaints and take necessary and proportionate action.',
+          appliesTo: 'Both',
+          domain: 'Responsive',
+          defaultIncluded: true,
+          tags: ['complaints'],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-17',
+      code: '17',
+      title: 'Good governance',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Governance systems must assure quality, safety, and compliance.',
+      subsections: [
+        {
+          id: 'FS-REG-17-1',
+          label: '17(1)',
+          text: 'Systems or processes must be established and operated effectively to ensure compliance.',
+          appliesTo: 'Both',
+          domain: 'WellLed',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-18',
+      code: '18',
+      title: 'Staffing',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Sufficient numbers of suitably qualified staff must be deployed.',
+      subsections: [
+        {
+          id: 'FS-REG-18-1',
+          label: '18(1)',
+          text: 'Sufficient numbers of suitably qualified, competent, skilled and experienced persons must be deployed.',
+          appliesTo: 'Both',
+          domain: 'WellLed',
+          defaultIncluded: true,
+          tags: ['staffing'],
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-19',
+      code: '19',
+      title: 'Fit and proper persons employed',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'People employed must be fit, competent, and appropriate.',
+      subsections: [
+        {
+          id: 'FS-REG-19-1',
+          label: '19(1)',
+          text: 'Persons employed must be of good character, competent, and able (health) to perform intrinsic tasks.',
+          appliesTo: 'Both',
+          domain: 'WellLed',
+          defaultIncluded: true,
+        },
+      ],
+    },
+
+    {
+      id: 'FS-REG-20',
+      code: '20',
+      title: 'Duty of candour',
+      type: 'Regulation',
+      appliesTo: 'Both',
+      description: 'Be open and transparent when things go wrong.',
+      subsections: [
+        {
+          id: 'FS-REG-20-1',
+          label: '20(1)',
+          text: 'Act in an open and transparent way with relevant persons in relation to care and treatment.',
+          appliesTo: 'Both',
+          domain: 'WellLed',
+          defaultIncluded: true,
+          tags: ['candour'],
+        },
+      ],
+    },
+  ],
+};
+
+export const CUSTOM_LIBRARY: RegulationLibrary = {
+  id: 'CUSTOM',
+  title: 'Custom Audits (User-Editable)',
+  source: {
+    publisher: 'User Defined',
+    hubUrl: '/admin/custom-audits-editor',
+    versionDate: new Date().toISOString().split('T')[0],
+  },
+  items: [],  // Starts empty; populated via API
+};
+
+
+const regRef = (id: string): RegulationRef => {
+  const item = MOCK_REGULATIONS.items.find(r => r.id === id);
+  if (!item) throw new Error(`Missing regulation item: ${id}`);
+
+  return {
+    id: item.id,
+    title: `Regulation ${item.code} - ${item.title}`,
+    description: item.description ?? '',
+  };
+};
+
+// mock-templates.ts
+
+
+
+export const MOCK_TEMPLATES: AuditTemplate[] = [
+  {
+    id: 'template-001',
+    name: 'Hospital Baseline Audit',
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-001',
+        title: 'Safety and Effectiveness',
+        description: 'Checks on safe and effective patient care.',
+        questions: [
+          {
+            id: 'q-001',
+            text: 'Are medicines stored safely?',
+            domain: 'Safe',
+            regulations: [regRef('FS-REG-12')],
+            requiresEvidence: true,
+            weight: 5,
+          },
+          {
+            id: 'q-002',
+            text: 'Are care plans documented and effective?',
+            domain: 'Effective',
+            regulations: [regRef('FS-REG-9')],
+            requiresEvidence: false,
+            weight: 4,
+          },
+        ],
+      },
+      {
+        id: 'section-002',
+        title: 'Patient Experience',
+        description: 'Checks on caring and responsive practices.',
+        questions: [
+          {
+            id: 'q-003',
+            text: 'Are patients treated with dignity and respect?',
+            domain: 'Caring',
+            regulations: [regRef('FS-REG-10')],
+            requiresEvidence: false,
+            weight: 3,
+          },
+          {
+            id: 'q-004',
+            text: 'Are patient complaints addressed promptly?',
+            domain: 'Responsive',
+            regulations: [regRef('FS-REG-16')],
+            requiresEvidence: false,
+            weight: 4,
+          },
+        ],
+      },
+      {
+        id: 'section-003',
+        title: 'Leadership',
+        description: 'Checks on governance and well-led practices.',
+        questions: [
+          {
+            id: 'q-005',
+            text: 'Is leadership clear and accountable?',
+            domain: 'WellLed',
+            regulations: [regRef('FS-REG-17')],
+            requiresEvidence: true,
+            weight: 5,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'template-002',
+    name: 'Surgical Unit Audit',
+    version: '1.0',
+    createdAt: '2025-02-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-004',
+        title: 'Sterilization and Hygiene',
+        description: 'Checks on surgical hygiene, sterilization procedures, and infection control.',
+        questions: [
+          {
+            id: 'q-006',
+            text: 'Are surgical instruments properly sterilized?',
+            domain: 'Safe',
+            regulations: [regRef('FS-REG-12')],
+            requiresEvidence: true,
+            weight: 5,
+          },
+          {
+            id: 'q-007',
+            text: 'Are surgical areas cleaned between operations?',
+            domain: 'Safe',
+            regulations: [regRef('FS-REG-15')],
+            requiresEvidence: true,
+            weight: 4,
+          },
+        ],
+      },
+      {
+        id: 'section-005',
+        title: 'Staff Competency',
+        description: 'Checks that staff are properly trained and certified.',
+        questions: [
+          {
+            id: 'q-008',
+            text: 'Do staff maintain current surgical certifications?',
+            domain: 'WellLed',
+            regulations: [regRef('FS-REG-18')],
+            requiresEvidence: true,
+            weight: 5,
+          },
+          {
+            id: 'q-009',
+            text: 'Are surgical team briefings conducted regularly?',
+            domain: 'Effective',
+            regulations: [regRef('FS-REG-13')],
+            requiresEvidence: false,
+            weight: 3,
+          },
+        ],
+      },
+    ],
+  },
+];
+
+
+
+export const MOCK_EVIDENCE: AuditEvidence[] = [
+  {
+    id: 'ev-001',
+    type: 'file',
+    description: 'Temperature log of medicine fridge',
+    fileUrl: '/assets/evidence/fridge-log.pdf',
+    uploadedBy: 'auditor.john',
+    uploadedAt: '2025-03-01T10:30:00Z',
+  },
+  {
+    id: 'ev-002',
+    type: 'text',
+    description: 'Photographic record of patient notes',
+    content: 'Patient notes are complete and updated.',
+    uploadedBy: 'auditor.mary',
+    uploadedAt: '2025-03-02T11:15:00Z',
+  },
+  {
+    id: 'ev-003',
+    type: 'file',
+    description: 'Staff training certificates',
+    fileUrl: '/assets/evidence/training-certificates.pdf',
+    uploadedBy: 'auditor.john',
+    uploadedAt: '2025-03-03T09:45:00Z',
+  },
+  {
+    id: 'ev-004',
+    type: 'file',
+    description: 'Surgical instrument sterilization log',
+    fileUrl: '/assets/evidence/sterilization-log.pdf',
+    uploadedBy: 'auditor.susan',
+    uploadedAt: '2025-04-01T09:30:00Z',
+  },
+  {
+    id: 'ev-005',
+    type: 'text',
+    description: 'Staff certification records',
+    content: 'All surgical staff certifications are up to date.',
+    uploadedBy: 'auditor.susan',
+    uploadedAt: '2025-04-01T10:00:00Z',
+  },
+];
+export const MOCK_USERS: UserType[] = [
+  {
+    name: 'Maxwell',
+    role: 'Admins',
+    companies: [
+      'comp1',
+      'comp2',
+    ],
+    managers:['max','tax','terry']
+  },
+  {
+    name: 'ME',
+    role: 'TESTER',
+    companies: [
+      'comp1',
+      'comp2',
+      'comp3',
+    ],
+    managers:[]
+  },
+  {
+    name: 'Luiew',
+    role: 'Admins',
+    companies: [
+      'comp3',
+    ],
+    managers:['yakar']
+  },
+  {
+    name: 'max',
+    role: 'Managers',
+    locations: [
+      'comp1.1',
+    ],
+  },
+  {
+    name: 'tax',
+    role: 'Managers',
+    locations: [
+      'comp1.2',
+    ],
+  },
+  {
+    name: 'terry',
+    role: 'Managers',
+    locations: [
+      'comp2.1',
+    ],
+  },
+  {
+    name: 'yakar',
+    role: 'Managers',
+    locations: [
+      'comp3.1',
+    ],
+  }
+];
+const roomTypes = ['Single', 'Double', 'Twin', 'Suite'];
+const wings = ['A', 'B', 'C'];
+const areas = ['North Wing', 'South Wing', 'East Wing', 'West Wing'];
+const facilities = ['TV', 'Ensuite', 'Balcony', 'Sea View', 'Air Conditioning'];
+
+function getRandomItem<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+const feeEnhancementTypes = ['Sea View', 'Balcony', 'Ensuite', 'Premium Care'];
+function generateRooms(count: number, clientGroups: ClientGroup[] = []): Room[] {
+  const rooms: Room[] = [];
+  for (let i = 1; i <= count; i++) {
+    const wing = getRandomItem(wings);
+    const area = getRandomItem(areas);
+    const roomType = getRandomItem(roomTypes);
+    const roomFacilities = facilities.filter(() => Math.random() > 0.5); // Random subset
+
+    // Randomly decide if the room is occupied (50% chance)
+    const occupied = Math.random() > 0.5;
+    const occupiedClientGroup = occupied ? getRandomItem(clientGroups) : undefined;
+
+    rooms.push({
+      number: i.toString().padStart(3, '0'), // e.g., '001', '002'
+      type: roomType,
+      area: area,
+      wing: wing,
+      facilities: roomFacilities,
+      occupiedClientGroup: occupiedClientGroup, // optional, undefined if not occupied
+    });
+  }
+  return rooms;
+}
+
+function generateRoomGroups(rooms: Room[]): RoomGroup[] {
+  const roomGroups: RoomGroup[] = [];
+
+  // Group rooms by type
+  const groupedByType: Record<string, Room[]> = {};
+  rooms.forEach(room => {
+    if (!groupedByType[room.type]) groupedByType[room.type] = [];
+    groupedByType[room.type].push(room);
+  });
+
+  Object.keys(groupedByType).forEach(type => {
+    const feeRules: FeeRule[] = [
+      {
+        careBand: 'Standard',
+        dependency: 'Low',
+        rate: 1000 + Math.floor(Math.random() * 500), // Base rate between 1000-1500
+        enhancements: feeEnhancementTypes.map(e => ({
+          type: e,
+          value: Math.floor(Math.random() * 200), // Enhancement value between 0-200
+        })),
+      },
+      {
+        careBand: 'Premium',
+        dependency: 'High',
+        rate: 1500 + Math.floor(Math.random() * 500), // Base rate between 1500-2000
+        enhancements: feeEnhancementTypes.map(e => ({
+          type: e,
+          value: Math.floor(Math.random() * 300), // Enhancement value between 0-300
+        })),
+      },
+    ];
+
+    roomGroups.push({
+      name: `${type} Rooms`,
+      feeRules,
+    });
+  });
+
+  return roomGroups;
+}
+const clientEnhancementTypes = ['Extra Care', 'Special Diet', 'Mobility Assistance', 'Luxury Package'];
+
+function generateClientGroups(): ClientGroup[] {
+  return [
+    {
+      name: 'Standard Clients',
+      enhancements: clientEnhancementTypes.slice(0, 2).map(e => ({
+        type: e,
+        value: Math.floor(Math.random() * 100), // 0-100
+      })),
+    },
+    {
+      name: 'Premium Clients',
+      enhancements: clientEnhancementTypes.map(e => ({
+        type: e,
+        value: Math.floor(Math.random() * 300), // 0-300
+      })),
+    },
+  ];
+}
+
+// Example usage
+const exampleClientGroups1: ClientGroup[] = generateClientGroups();
+
+const exampleClientGroups3: ClientGroup[] = generateClientGroups();
+const exampleClientGroups4: ClientGroup[] = generateClientGroups();
+const exampleRooms1: Room[] = generateRooms(50,exampleClientGroups1);
+
+const exampleRooms3: Room[] = generateRooms(46,exampleClientGroups3);
+const exampleRooms4: Room[] = generateRooms(30,exampleClientGroups4);
+const exampleRoomGroups1: RoomGroup[] = generateRoomGroups(exampleRooms1);
+
+const exampleRoomGroups3: RoomGroup[] = generateRoomGroups(exampleRooms3);
+const exampleRoomGroups4: RoomGroup[] = generateRoomGroups(exampleRooms4);
+
+
+export const MOCK_LOCATIONS: LocationType[] = [
+  {
+    cmpID: 'comp1',
+    locationID: 'comp1.1',
+    name: 'Leivium',
+    type: 'CareHome',
+    icon: 'location_searching',
+    address: '123 Main St',
+    contactInfo: '0123456789',
+    primaryManager: 'John Doe',
+    departments: [
+      {
+        id: 'dept-care',
+        name: 'Care',
+        subDepartments: [
+          { id: 'sub-medication', name: 'Medication' },
+          { id: 'sub-careplans', name: 'Care Plans' },
+        ],
+      },
+      {
+        id: 'dept-kitchen',
+        name: 'Kitchen',
+        subDepartments: [
+          { id: 'sub-food-safety', name: 'Food Safety' },
+        ],
+      },
+    ],
+
+    staff: [
+      { id: 's1', role: 'Managers' },
+      { id: 's2', role: 'Admins' },
+      { id: 's3', role: 'Nurses' },
+      { id: 's4', role: 'Care staff' },
+      { id: 's25', role: 'Care staff' }
+    ],
+    areas: ['North Wing', 'South Wing', 'East Wing', 'West Wing'],
+    wings: ['A', 'B', 'C'],
+    roomList: exampleRooms1,
+    roomGroups: exampleRoomGroups1,
+    clientGroups: exampleClientGroups1,
+    performance: {id: 'set-001',
+      period: '2025-W05',
+      createdAt: '2025-02-05T09:00:00Z',
+      categories: [
+        {
+          id: 'cat-001',
+          type: 'KPI',
+          title: 'Operational Efficiency',
+          description: 'Key performance indicators reflecting operational output and service quality.',
+          indicators: [
+            {
+              id: 'ind-001',
+              name: 'Patient Wait Time',
+              target: 30,
+              current: 42,
+              unit: 'minutes',
+              status: 'Amber',
+              trend: 'Declining',
+              history: [
+                { date: '2025-01-01', value: 31 },
+                { date: '2025-01-15', value: 34 },
+                { date: '2025-01-22', value: 37 },
+                { date: '2025-01-29', value: 42 }
+              ],
+            },
+            {
+              id: 'ind-002',
+              name: 'Bed Occupancy Rate',
+              target: 85,
+              current: 88,
+              unit: '%',
+              status: 'Green',
+              trend: 'Stable',
+              history: [
+                { date: '2025-01-01', value: 86 },
+                { date: '2025-01-15', value: 87 },
+                { date: '2025-01-22', value: 88 },
+                { date: '2025-01-29', value: 88 }
+              ],
+            },
+          ],
+        },
+        {
+          id: 'cat-002',
+          type: 'KFI',
+          title: 'Financial Management',
+          description: 'Key financial indicators showing spending, revenue stability, and financial efficiency.',
+          indicators: [
+            {
+              id: 'ind-003',
+              name: 'Food Procurement Cost',
+              target: 10000,
+              current: 12400,
+              unit: 'GBP',
+              status: 'Red',
+              trend: 'Declining',
+              history: [
+                { date: '2025-01-01', value: 9800 },
+                { date: '2025-01-15', value: 11200 },
+                { date: '2025-01-22', value: 11800 },
+                { date: '2025-01-29', value: 12400 }
+              ],
+            },
+            {
+              id: 'ind-004',
+              name: 'Monthly Revenue',
+              target: 240000,
+              current: 231500,
+              unit: 'GBP',
+              status: 'Amber',
+              trend: 'Improving',
+              history: [
+                { date: '2025-01-01', value: 221000 },
+                { date: '2025-01-15', value: 224500 },
+                { date: '2025-01-22', value: 227000 },
+                { date: '2025-01-29', value: 231500 }
+              ],
+            },
+          ],
+        },
+        {
+          id: 'cat-003',
+          type: 'KCI',
+          title: 'Control and Compliance',
+          description: 'Indicators related to regulatory compliance, audits, and procedural adherence.',
+          indicators: [
+            {
+              id: 'ind-005',
+              name: 'Safety Audit Pass Rate',
+              target: 95,
+              current: 87,
+              unit: '%',
+              status: 'Amber',
+              trend: 'Declining',
+              history: [
+                { date: '2025-01-01', value: 94 },
+                { date: '2025-01-15', value: 92 },
+                { date: '2025-01-22', value: 89 },
+                { date: '2025-01-29', value: 87 }
+              ],
+            },
+            {
+              id: 'ind-006',
+              name: 'Staff Mandatory Training Completion',
+              target: 100,
+              current: 92,
+              unit: '%',
+              status: 'Green',
+              trend: 'Improving',
+              history: [
+                { date: '2025-01-01', value: 85 },
+                { date: '2025-01-15', value: 88 },
+                { date: '2025-01-22', value: 90 },
+                { date: '2025-01-29', value: 92 }
+              ],
+            },
+          ],
+        },
+      ],
+      alerts: [
+        {
+          id: 'alert-001',
+          indicatorId: 'ind-003',
+          severity: 'High',
+          message: 'Food procurement cost has exceeded threshold for 3 consecutive weeks.',
+          firstDetected: '2025-01-12T10:00:00Z',
+          lastDetected: '2025-02-05T09:00:00Z',
+          active: true,
+          location: 'Main Hospital – Central Unit',
+        },
+        {
+          id: 'alert-002',
+          indicatorId: 'ind-001',
+          severity: 'Medium',
+          message: 'Patient wait times remain above target for 4 weeks.',
+          firstDetected: '2025-01-15T09:00:00Z',
+          lastDetected: '2025-02-05T09:00:00Z',
+          active: true,
+          location: 'Outpatient Clinic',
+        },
+      ],
+      tasks: [
+        {
+          id: 'task-001',
+          alertId: 'alert-001',
+          assignedBy: 'admin-003',
+          assignedTo: 'manager-001',
+          category: 'Financial',
+          description: 'Investigate consistent overspend on food procurement and produce a corrective action plan.',
+          dueDate: '2025-02-12T17:00:00Z',
+          status: 'Open',
+          comments: [
+            {
+              date: '2025-02-05T12:30:00Z',
+              text: 'Manager notified. Awaiting investigation notes.'
+            }
+          ],
+        },
+        {
+          id: 'task-002',
+          alertId: 'alert-002',
+          assignedBy: 'admin-002',
+          assignedTo: 'manager-004',
+          category: 'Operational',
+          description: 'Review staffing levels and scheduling to reduce patient wait times.',
+          dueDate: '2025-02-10T17:00:00Z',
+          status: 'InProgress',
+          comments: [
+            {
+              date: '2025-02-06T10:00:00Z',
+              text: 'Initial review underway. Early signs indicate understaffing during peak hours.'
+            }
+          ],
+        },
+      ],}
+  },
+
+  {
+    cmpID: 'comp1',
+    locationID: 'comp1.2',
+    name: 'Maropier',
+    type: 'HomeCare',
+    icon: 'location_searching',
+    address: '456 Lake Rd',
+    contactInfo: '0987654321',
+    departments: [
+      {
+        id: 'dept-care',
+        name: 'Care',
+        subDepartments: [
+          { id: 'sub-medication', name: 'Medication' },
+          { id: 'sub-careplans', name: 'Care Plans' },
+        ],
+      },
+      {
+        id: 'dept-kitchen',
+        name: 'Kitchen',
+        subDepartments: [
+          { id: 'sub-food-safety', name: 'Food Safety' },
+        ],
+      },
+    ],
+
+    primaryManager: 'Jane Smith',
+    homeCareMetrics: {
+      activeCases: 7,
+      maxCases: 20,
+      billingHours: 120,
+      rateCard: 'Standard',
+      capacityOverview: 'Moderate',
+      coverage: {
+        radiusMiles: 15,
+        areas: ["new mitingam", "old Town", "Outscerts"],
+        // centerAddress: "Optional override address"
+      }
+    },
+    stats: { activeCases: 7, maxCases: 20 },
+    staff: [
+      { id: 's5', role: 'Managers' },
+      { id: 's6', role: 'Admins' },
+      { id: 's7', role: 'Care staff' }
+    ],
+    performance: {id: 'set-002',
+      period: '2025-W05',
+      createdAt: '2025-02-05T09:00:00Z',
+      categories: [
+        {
+          id: 'cat-004',
+          type: 'KPI',
+          title: 'Surgery Throughput',
+          description: 'Indicators reflecting theatre throughput and operational efficiency.',
+          indicators: [
+            {
+              id: 'ind-007',
+              name: 'Completed Surgeries',
+              target: 120,
+              current: 113,
+              unit: 'count',
+              status: 'Amber',
+              trend: 'Stable',
+              history: [
+                { date: '2025-01-01', value: 110 },
+                { date: '2025-01-15', value: 114 },
+                { date: '2025-01-22', value: 112 },
+                { date: '2025-01-29', value: 113 }
+              ],
+            },
+            {
+              id: 'ind-008',
+              name: 'Surgical Delays',
+              target: 0,
+              current: 3,
+              unit: 'incidents',
+              status: 'Red',
+              trend: 'Declining',
+              history: [
+                { date: '2025-01-01', value: 1 },
+                { date: '2025-01-15', value: 2 },
+                { date: '2025-01-22', value: 2 },
+                { date: '2025-01-29', value: 3 }
+              ],
+            },
+          ],
+        },
+        {
+          id: 'cat-005',
+          type: 'KFI',
+          title: 'Theatre Financial Indicators',
+          description: 'Monitors cost use, staffing efficiency, and budget performance.',
+          indicators: [
+            {
+              id: 'ind-009',
+              name: 'Per-Procedure Cost',
+              target: 900,
+              current: 1040,
+              unit: 'GBP',
+              status: 'Amber',
+              trend: 'Declining',
+              history: [
+                { date: '2025-01-01', value: 890 },
+                { date: '2025-01-15', value: 950 },
+                { date: '2025-01-22', value: 990 },
+                { date: '2025-01-29', value: 1040 }
+              ],
+            },
+          ],
+        },
+        {
+          id: 'cat-006',
+          type: 'KCI',
+          title: 'Compliance and Safety',
+          description: 'Shows safety and procedural compliance for surgical operations.',
+          indicators: [
+            {
+              id: 'ind-010',
+              name: 'Sterilization Compliance',
+              target: 100,
+              current: 94,
+              unit: '%',
+              status: 'Amber',
+              trend: 'Stable',
+              history: [
+                { date: '2025-01-01', value: 93 },
+                { date: '2025-01-15', value: 96 },
+                { date: '2025-01-22', value: 94 },
+                { date: '2025-01-29', value: 94 }
+              ],
+            },
+          ],
+        },
+      ],
+      alerts: [
+        {
+          id: 'alert-003',
+          indicatorId: 'ind-008',
+          severity: 'High',
+          message: 'Surgical delays increased above tolerance.',
+          firstDetected: '2025-01-20T12:00:00Z',
+          lastDetected: '2025-02-05T09:00:00Z',
+          active: true,
+          location: 'Surgical Wing – Theatre A',
+        },
+      ],
+      tasks: [
+        {
+          id: 'task-003',
+          alertId: 'alert-003',
+          assignedBy: 'admin-001',
+          assignedTo: 'manager-010',
+          category: 'Compliance',
+          description: 'Perform a root-cause analysis on recurring surgical delays.',
+          dueDate: '2025-02-15T17:00:00Z',
+          status: 'Open',
+          comments: [],
+        },
+      ],}
+  },
+
+  {
+    cmpID: 'comp2',
+    locationID: 'comp2.1',
+    name: 'Eagleton',
+    type: 'CareHome',
+    icon: 'location_searching',
+    address: '789 Oak Ave',
+    departments: [
+      {
+        id: 'dept-care',
+        name: 'Care',
+        subDepartments: [
+          { id: 'sub-medication', name: 'Medication' },
+          { id: 'sub-careplans', name: 'Care Plans' },
+        ],
+      },
+      {
+        id: 'dept-kitchen',
+        name: 'Kitchen',
+        subDepartments: [
+          { id: 'sub-food-safety', name: 'Food Safety' },
+        ],
+      },
+    ],
+
+    contactInfo: '0112233445',
+    primaryManager: 'Alice Johnson',
+    staff: [
+      { id: 's8', role: 'Managers' },
+      { id: 's9', role: 'Admins' },
+      { id: 's10', role: 'Admins' },
+      { id: 's11', role: 'Nurses' },
+      { id: 's12', role: 'Care staff' }
+    ],
+    areas: ['North Wing', 'South Wing', 'East Wing', 'West Wing'],
+    wings: ['A', 'B', 'C'],
+    roomList: exampleRooms3,
+    roomGroups: exampleRoomGroups3,
+    clientGroups: exampleClientGroups3,
+    performance: {
+      id: "set-004",
+      period: "2025-W07",
+      createdAt: "2025-02-19T09:00:00Z",
+      categories: [
+        {
+          id: "cat-010",
+          type: "KPI",
+          title: "Recovery Ward Throughput",
+          description: "Evaluates patient flow efficiency and occupancy in the recovery ward.",
+          indicators: [
+            {
+              id: "ind-015",
+              name: "Average Recovery Time",
+              target: 90,
+              current: 104,
+              unit: "minutes",
+              status: "Amber",
+              trend: "Declining",
+              history: [
+                { date: "2025-01-12", value: 92 },
+                { date: "2025-01-19", value: 95 },
+                { date: "2025-01-26", value: 99 },
+                { date: "2025-02-10", value: 104 }
+              ]
+            },
+            {
+              id: "ind-016",
+              name: "Bed Occupancy Rate",
+              target: 85,
+              current: 92,
+              unit: "%",
+              status: "Red",
+              trend: "Declining",
+              history: [
+                { date: "2025-01-12", value: 84 },
+                { date: "2025-01-19", value: 87 },
+                { date: "2025-01-26", value: 89 },
+                { date: "2025-02-10", value: 92 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "cat-011",
+          type: "KFI",
+          title: "Ward Budget Performance",
+          description: "Monitors operating costs and staffing efficiency within patient recovery wards.",
+          indicators: [
+            {
+              id: "ind-017",
+              name: "Overtime Expenditure",
+              target: 12000,
+              current: 14800,
+              unit: "GBP",
+              status: "Amber",
+              trend: "Stable",
+              history: [
+                { date: "2025-01-12", value: 11800 },
+                { date: "2025-01-19", value: 12500 },
+                { date: "2025-01-26", value: 13800 },
+                { date: "2025-02-10", value: 14800 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "cat-012",
+          type: "KCI",
+          title: "Clinical Practice Compliance",
+          description: "Assesses adherence to routine clinical standards during patient recovery.",
+          indicators: [
+            {
+              id: "ind-018",
+              name: "Vital Checks on Schedule",
+              target: 100,
+              current: 91,
+              unit: "%",
+              status: "Amber",
+              trend: "Stable",
+              history: [
+                { date: "2025-01-12", value: 90 },
+                { date: "2025-01-19", value: 92 },
+                { date: "2025-01-26", value: 91 },
+                { date: "2025-02-10", value: 91 }
+              ]
+            }
+          ]
+        }
+      ],
+      alerts: [
+        {
+          id: "alert-005",
+          indicatorId: "ind-016",
+          severity: "Medium",
+          message: "Bed occupancy rate exceeded operational comfort range.",
+          firstDetected: "2025-02-05T15:00:00Z",
+          lastDetected: "2025-02-19T09:00:00Z",
+          active: true,
+          location: "Recovery Ward – Main Unit"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-005",
+          alertId: "alert-005",
+          assignedBy: "admin-003",
+          assignedTo: "manager-004",
+          category: "Operations",
+          description: "Review patient scheduling and discharge procedures to reduce occupancy strain.",
+          dueDate: "2025-02-27T17:00:00Z",
+          status: "Open",
+          comments: []
+        }
+      ]
+    }
+  },
+
+  {
+    cmpID: 'comp3',
+    locationID: 'comp3.1',
+    name: 'Sanda st',
+    type: 'CareHome',
+    icon: 'location_searching',
+    address: '156 Oak Ave',
+    departments: [
+      {
+        id: 'dept-care',
+        name: 'Care',
+        subDepartments: [
+          { id: 'sub-medication', name: 'Medication' },
+          { id: 'sub-careplans', name: 'Care Plans' },
+        ],
+      },
+      {
+        id: 'dept-kitchen',
+        name: 'Kitchen',
+        subDepartments: [
+          { id: 'sub-food-safety', name: 'Food Safety' },
+        ],
+      },
+    ],
+
+    contactInfo: '01123232445',
+    primaryManager: 'Alice Thompson',
+    staff: [
+      { id: 's81', role: 'Managers' },
+      { id: 's91', role: 'Admins' },
+      { id: 's101', role: 'Admins' },
+      { id: 's111', role: 'Nurses' },
+      { id: 's121', role: 'Care staff' }
+    ],
+    areas: ['North Wing', 'South Wing', 'East Wing', 'West Wing'],
+    wings: ['A', 'B', 'C'],
+    roomList: exampleRooms4,
+    roomGroups: exampleRoomGroups4,
+    clientGroups: exampleClientGroups4,
+    performance: {
+      id: "set-003",
+      period: "2025-W06",
+      createdAt: "2025-02-12T09:00:00Z",
+      categories: [
+        {
+          id: "cat-007",
+          type: "KPI",
+          title: "Anaesthesia Efficiency",
+          description: "Measures timeliness and stability of anaesthesia preparation and recovery.",
+          indicators: [
+            {
+              id: "ind-011",
+              name: "On-Time Anaesthesia Start",
+              target: 95,
+              current: 89,
+              unit: "%",
+              status: "Amber",
+              trend: "Stable",
+              history: [
+                { date: "2025-01-08", value: 88 },
+                { date: "2025-01-15", value: 90 },
+                { date: "2025-01-22", value: 89 },
+                { date: "2025-02-01", value: 89 }
+              ]
+            },
+            {
+              id: "ind-012",
+              name: "Post-Anaesthesia Complications",
+              target: 0,
+              current: 2,
+              unit: "incidents",
+              status: "Red",
+              trend: "Declining",
+              history: [
+                { date: "2025-01-08", value: 0 },
+                { date: "2025-01-15", value: 1 },
+                { date: "2025-01-22", value: 1 },
+                { date: "2025-02-01", value: 2 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "cat-008",
+          type: "KFI",
+          title: "Resource Utilisation",
+          description: "Assesses the financial impact of anaesthesia equipment and medicine use.",
+          indicators: [
+            {
+              id: "ind-013",
+              name: "Anaesthetic Agent Expenditure",
+              target: 45000,
+              current: 48700,
+              unit: "GBP",
+              status: "Amber",
+              trend: "Declining",
+              history: [
+                { date: "2025-01-08", value: 43000 },
+                { date: "2025-01-15", value: 45500 },
+                { date: "2025-01-22", value: 47000 },
+                { date: "2025-02-01", value: 48700 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "cat-009",
+          type: "KCI",
+          title: "Anaesthesia Safety Compliance",
+          description: "Tracks adherence to anaesthesia safety standards and regulatory procedures.",
+          indicators: [
+            {
+              id: "ind-014",
+              name: "Checklist Completion Rate",
+              target: 100,
+              current: 96,
+              unit: "%",
+              status: "Green",
+              trend: "Improving",
+              history: [
+                { date: "2025-01-08", value: 92 },
+                { date: "2025-01-15", value: 94 },
+                { date: "2025-01-22", value: 95 },
+                { date: "2025-02-01", value: 96 }
+              ]
+            }
+          ]
+        }
+      ],
+      alerts: [
+        {
+          id: "alert-004",
+          indicatorId: "ind-012",
+          severity: "High",
+          message: "Increase in post-anaesthesia complications detected.",
+          firstDetected: "2025-01-28T11:00:00Z",
+          lastDetected: "2025-02-12T09:00:00Z",
+          active: true,
+          location: "Recovery Ward – Bay C"
+        }
+      ],
+      tasks: [
+        {
+          id: "task-004",
+          alertId: "alert-004",
+          assignedBy: "admin-002",
+          assignedTo: "manager-006",
+          category: "Safety",
+          description: "Conduct a case review and implement corrective actions for complications.",
+          dueDate: "2025-02-20T17:00:00Z",
+          status: "Open",
+          comments: []
+        }
+      ]
+    }
+
+  }
+];
+export const MOCK_COMPANY: CompanyType[] = [
+  {
+    companyID: 'comp1',
+    name: 'CareUnity Group',
+    icon: '🏢',
+    address: '88 Corporate Plaza, North Central City',
+    CQC_number: 'CQC-998877',
+    serviceTypes:['HC','CH'],
+    director: 'Jane Doe',
+    companyNumber: '12345678',
+    registeredIn: 'England',
+    adminContact: 'admin@example.com',
+    Locations: []
+  },
+  {
+    companyID: 'comp2',
+    name: 'test2',
+    icon: '🏢',
+    address: '84 Corporate Plaza, South Central City',
+    CQC_number: 'CQC-998866',
+    serviceTypes:['HC'],
+    director: 'Jane Doe',
+    companyNumber: '12345678',
+    registeredIn: 'England',
+    adminContact: 'admin@example.com',
+    Locations: []
+  },
+  {
+    companyID: 'comp3',
+    name: 'test3',
+    icon: '🏢',
+    address: '85 Corporate Plaza, East Central City',
+    CQC_number: 'CQC-998855',
+    serviceTypes:['HC'],
+    director: 'Jane Doe',
+    companyNumber: '12345678',
+    registeredIn: 'England',
+    adminContact: 'admin@example.com',
+    Locations: []
+  }
+];
+MOCK_COMPANY.forEach(c => {
+  c.Locations = MOCK_LOCATIONS
+    .filter(l => l.cmpID === c.companyID)
+    .map(l => l.name);
+});
+export const MOCK_PERFORMANCE_SETS: PerformanceSet[] = [
+  {
+    id: 'set-001',
+    period: '2025-W05',
+    createdAt: '2025-02-05T09:00:00Z',
+    categories: [
+      {
+        id: 'cat-001',
+        type: 'KPI',
+        title: 'Operational Efficiency',
+        description: 'Key performance indicators reflecting operational output and service quality.',
+        indicators: [
+          {
+            id: 'ind-001',
+            name: 'Patient Wait Time',
+            target: 30,
+            current: 42,
+            unit: 'minutes',
+            status: 'Amber',
+            trend: 'Declining',
+            history: [
+              { date: '2025-01-01', value: 31 },
+              { date: '2025-01-15', value: 34 },
+              { date: '2025-01-22', value: 37 },
+              { date: '2025-01-29', value: 42 }
+            ],
+          },
+          {
+            id: 'ind-002',
+            name: 'Bed Occupancy Rate',
+            target: 85,
+            current: 88,
+            unit: '%',
+            status: 'Green',
+            trend: 'Stable',
+            history: [
+              { date: '2025-01-01', value: 86 },
+              { date: '2025-01-15', value: 87 },
+              { date: '2025-01-22', value: 88 },
+              { date: '2025-01-29', value: 88 }
+            ],
+          },
+        ],
+      },
+      {
+        id: 'cat-002',
+        type: 'KFI',
+        title: 'Financial Management',
+        description: 'Key financial indicators showing spending, revenue stability, and financial efficiency.',
+        indicators: [
+          {
+            id: 'ind-003',
+            name: 'Food Procurement Cost',
+            target: 10000,
+            current: 12400,
+            unit: 'GBP',
+            status: 'Red',
+            trend: 'Declining',
+            history: [
+              { date: '2025-01-01', value: 9800 },
+              { date: '2025-01-15', value: 11200 },
+              { date: '2025-01-22', value: 11800 },
+              { date: '2025-01-29', value: 12400 }
+            ],
+          },
+          {
+            id: 'ind-004',
+            name: 'Monthly Revenue',
+            target: 240000,
+            current: 231500,
+            unit: 'GBP',
+            status: 'Amber',
+            trend: 'Improving',
+            history: [
+              { date: '2025-01-01', value: 221000 },
+              { date: '2025-01-15', value: 224500 },
+              { date: '2025-01-22', value: 227000 },
+              { date: '2025-01-29', value: 231500 }
+            ],
+          },
+        ],
+      },
+      {
+        id: 'cat-003',
+        type: 'KCI',
+        title: 'Control and Compliance',
+        description: 'Indicators related to regulatory compliance, audits, and procedural adherence.',
+        indicators: [
+          {
+            id: 'ind-005',
+            name: 'Safety Audit Pass Rate',
+            target: 95,
+            current: 87,
+            unit: '%',
+            status: 'Amber',
+            trend: 'Declining',
+            history: [
+              { date: '2025-01-01', value: 94 },
+              { date: '2025-01-15', value: 92 },
+              { date: '2025-01-22', value: 89 },
+              { date: '2025-01-29', value: 87 }
+            ],
+          },
+          {
+            id: 'ind-006',
+            name: 'Staff Mandatory Training Completion',
+            target: 100,
+            current: 92,
+            unit: '%',
+            status: 'Green',
+            trend: 'Improving',
+            history: [
+              { date: '2025-01-01', value: 85 },
+              { date: '2025-01-15', value: 88 },
+              { date: '2025-01-22', value: 90 },
+              { date: '2025-01-29', value: 92 }
+            ],
+          },
+        ],
+      },
+    ],
+    alerts: [
+      {
+        id: 'alert-001',
+        indicatorId: 'ind-003',
+        severity: 'High',
+        message: 'Food procurement cost has exceeded threshold for 3 consecutive weeks.',
+        firstDetected: '2025-01-12T10:00:00Z',
+        lastDetected: '2025-02-05T09:00:00Z',
+        active: true,
+        location: 'Main Hospital – Central Unit',
+      },
+      {
+        id: 'alert-002',
+        indicatorId: 'ind-001',
+        severity: 'Medium',
+        message: 'Patient wait times remain above target for 4 weeks.',
+        firstDetected: '2025-01-15T09:00:00Z',
+        lastDetected: '2025-02-05T09:00:00Z',
+        active: true,
+        location: 'Outpatient Clinic',
+      },
+    ],
+    tasks: [
+      {
+        id: 'task-001',
+        alertId: 'alert-001',
+        assignedBy: 'admin-003',
+        assignedTo: 'manager-001',
+        category: 'Financial',
+        description: 'Investigate consistent overspend on food procurement and produce a corrective action plan.',
+        dueDate: '2025-02-12T17:00:00Z',
+        status: 'Open',
+        comments: [
+          {
+            date: '2025-02-05T12:30:00Z',
+            text: 'Manager notified. Awaiting investigation notes.'
+          }
+        ],
+      },
+      {
+        id: 'task-002',
+        alertId: 'alert-002',
+        assignedBy: 'admin-002',
+        assignedTo: 'manager-004',
+        category: 'Operational',
+        description: 'Review staffing levels and scheduling to reduce patient wait times.',
+        dueDate: '2025-02-10T17:00:00Z',
+        status: 'InProgress',
+        comments: [
+          {
+            date: '2025-02-06T10:00:00Z',
+            text: 'Initial review underway. Early signs indicate understaffing during peak hours.'
+          }
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'set-002',
+    period: '2025-W05',
+    createdAt: '2025-02-05T09:00:00Z',
+    categories: [
+      {
+        id: 'cat-004',
+        type: 'KPI',
+        title: 'Surgery Throughput',
+        description: 'Indicators reflecting theatre throughput and operational efficiency.',
+        indicators: [
+          {
+            id: 'ind-007',
+            name: 'Completed Surgeries',
+            target: 120,
+            current: 113,
+            unit: 'count',
+            status: 'Amber',
+            trend: 'Stable',
+            history: [
+              { date: '2025-01-01', value: 110 },
+              { date: '2025-01-15', value: 114 },
+              { date: '2025-01-22', value: 112 },
+              { date: '2025-01-29', value: 113 }
+            ],
+          },
+          {
+            id: 'ind-008',
+            name: 'Surgical Delays',
+            target: 0,
+            current: 3,
+            unit: 'incidents',
+            status: 'Red',
+            trend: 'Declining',
+            history: [
+              { date: '2025-01-01', value: 1 },
+              { date: '2025-01-15', value: 2 },
+              { date: '2025-01-22', value: 2 },
+              { date: '2025-01-29', value: 3 }
+            ],
+          },
+        ],
+      },
+      {
+        id: 'cat-005',
+        type: 'KFI',
+        title: 'Theatre Financial Indicators',
+        description: 'Monitors cost use, staffing efficiency, and budget performance.',
+        indicators: [
+          {
+            id: 'ind-009',
+            name: 'Per-Procedure Cost',
+            target: 900,
+            current: 1040,
+            unit: 'GBP',
+            status: 'Amber',
+            trend: 'Declining',
+            history: [
+              { date: '2025-01-01', value: 890 },
+              { date: '2025-01-15', value: 950 },
+              { date: '2025-01-22', value: 990 },
+              { date: '2025-01-29', value: 1040 }
+            ],
+          },
+        ],
+      },
+      {
+        id: 'cat-006',
+        type: 'KCI',
+        title: 'Compliance and Safety',
+        description: 'Shows safety and procedural compliance for surgical operations.',
+        indicators: [
+          {
+            id: 'ind-010',
+            name: 'Sterilization Compliance',
+            target: 100,
+            current: 94,
+            unit: '%',
+            status: 'Amber',
+            trend: 'Stable',
+            history: [
+              { date: '2025-01-01', value: 93 },
+              { date: '2025-01-15', value: 96 },
+              { date: '2025-01-22', value: 94 },
+              { date: '2025-01-29', value: 94 }
+            ],
+          },
+        ],
+      },
+    ],
+    alerts: [
+      {
+        id: 'alert-003',
+        indicatorId: 'ind-008',
+        severity: 'High',
+        message: 'Surgical delays increased above tolerance.',
+        firstDetected: '2025-01-20T12:00:00Z',
+        lastDetected: '2025-02-05T09:00:00Z',
+        active: true,
+        location: 'Surgical Wing – Theatre A',
+      },
+    ],
+    tasks: [
+      {
+        id: 'task-003',
+        alertId: 'alert-003',
+        assignedBy: 'admin-001',
+        assignedTo: 'manager-010',
+        category: 'Compliance',
+        description: 'Perform a root-cause analysis on recurring surgical delays.',
+        dueDate: '2025-02-15T17:00:00Z',
+        status: 'Open',
+        comments: [],
+      },
+    ],
+  },
+  {
+    id: "set-003",
+    period: "2025-W06",
+    createdAt: "2025-02-12T09:00:00Z",
+    categories: [
+      {
+        id: "cat-007",
+        type: "KPI",
+        title: "Anaesthesia Efficiency",
+        description: "Measures timeliness and stability of anaesthesia preparation and recovery.",
+        indicators: [
+          {
+            id: "ind-011",
+            name: "On-Time Anaesthesia Start",
+            target: 95,
+            current: 89,
+            unit: "%",
+            status: "Amber",
+            trend: "Stable",
+            history: [
+              { date: "2025-01-08", value: 88 },
+              { date: "2025-01-15", value: 90 },
+              { date: "2025-01-22", value: 89 },
+              { date: "2025-02-01", value: 89 }
+            ]
+          },
+          {
+            id: "ind-012",
+            name: "Post-Anaesthesia Complications",
+            target: 0,
+            current: 2,
+            unit: "incidents",
+            status: "Red",
+            trend: "Declining",
+            history: [
+              { date: "2025-01-08", value: 0 },
+              { date: "2025-01-15", value: 1 },
+              { date: "2025-01-22", value: 1 },
+              { date: "2025-02-01", value: 2 }
+            ]
+          }
+        ]
+      },
+      {
+        id: "cat-008",
+        type: "KFI",
+        title: "Resource Utilisation",
+        description: "Assesses the financial impact of anaesthesia equipment and medicine use.",
+        indicators: [
+          {
+            id: "ind-013",
+            name: "Anaesthetic Agent Expenditure",
+            target: 45000,
+            current: 48700,
+            unit: "GBP",
+            status: "Amber",
+            trend: "Declining",
+            history: [
+              { date: "2025-01-08", value: 43000 },
+              { date: "2025-01-15", value: 45500 },
+              { date: "2025-01-22", value: 47000 },
+              { date: "2025-02-01", value: 48700 }
+            ]
+          }
+        ]
+      },
+      {
+        id: "cat-009",
+        type: "KCI",
+        title: "Anaesthesia Safety Compliance",
+        description: "Tracks adherence to anaesthesia safety standards and regulatory procedures.",
+        indicators: [
+          {
+            id: "ind-014",
+            name: "Checklist Completion Rate",
+            target: 100,
+            current: 96,
+            unit: "%",
+            status: "Green",
+            trend: "Improving",
+            history: [
+              { date: "2025-01-08", value: 92 },
+              { date: "2025-01-15", value: 94 },
+              { date: "2025-01-22", value: 95 },
+              { date: "2025-02-01", value: 96 }
+            ]
+          }
+        ]
+      }
+    ],
+    alerts: [
+      {
+        id: "alert-004",
+        indicatorId: "ind-012",
+        severity: "High",
+        message: "Increase in post-anaesthesia complications detected.",
+        firstDetected: "2025-01-28T11:00:00Z",
+        lastDetected: "2025-02-12T09:00:00Z",
+        active: true,
+        location: "Recovery Ward – Bay C"
+      }
+    ],
+    tasks: [
+      {
+        id: "task-004",
+        alertId: "alert-004",
+        assignedBy: "admin-002",
+        assignedTo: "manager-006",
+        category: "Safety",
+        description: "Conduct a case review and implement corrective actions for complications.",
+        dueDate: "2025-02-20T17:00:00Z",
+        status: "Open",
+        comments: []
+      }
+    ]
+  },
+  {
+    id: "set-004",
+    period: "2025-W07",
+    createdAt: "2025-02-19T09:00:00Z",
+    categories: [
+      {
+        id: "cat-010",
+        type: "KPI",
+        title: "Recovery Ward Throughput",
+        description: "Evaluates patient flow efficiency and occupancy in the recovery ward.",
+        indicators: [
+          {
+            id: "ind-015",
+            name: "Average Recovery Time",
+            target: 90,
+            current: 104,
+            unit: "minutes",
+            status: "Amber",
+            trend: "Declining",
+            history: [
+              { date: "2025-01-12", value: 92 },
+              { date: "2025-01-19", value: 95 },
+              { date: "2025-01-26", value: 99 },
+              { date: "2025-02-10", value: 104 }
+            ]
+          },
+          {
+            id: "ind-016",
+            name: "Bed Occupancy Rate",
+            target: 85,
+            current: 92,
+            unit: "%",
+            status: "Red",
+            trend: "Declining",
+            history: [
+              { date: "2025-01-12", value: 84 },
+              { date: "2025-01-19", value: 87 },
+              { date: "2025-01-26", value: 89 },
+              { date: "2025-02-10", value: 92 }
+            ]
+          }
+        ]
+      },
+      {
+        id: "cat-011",
+        type: "KFI",
+        title: "Ward Budget Performance",
+        description: "Monitors operating costs and staffing efficiency within patient recovery wards.",
+        indicators: [
+          {
+            id: "ind-017",
+            name: "Overtime Expenditure",
+            target: 12000,
+            current: 14800,
+            unit: "GBP",
+            status: "Amber",
+            trend: "Stable",
+            history: [
+              { date: "2025-01-12", value: 11800 },
+              { date: "2025-01-19", value: 12500 },
+              { date: "2025-01-26", value: 13800 },
+              { date: "2025-02-10", value: 14800 }
+            ]
+          }
+        ]
+      },
+      {
+        id: "cat-012",
+        type: "KCI",
+        title: "Clinical Practice Compliance",
+        description: "Assesses adherence to routine clinical standards during patient recovery.",
+        indicators: [
+          {
+            id: "ind-018",
+            name: "Vital Checks on Schedule",
+            target: 100,
+            current: 91,
+            unit: "%",
+            status: "Amber",
+            trend: "Stable",
+            history: [
+              { date: "2025-01-12", value: 90 },
+              { date: "2025-01-19", value: 92 },
+              { date: "2025-01-26", value: 91 },
+              { date: "2025-02-10", value: 91 }
+            ]
+          }
+        ]
+      }
+    ],
+    alerts: [
+      {
+        id: "alert-005",
+        indicatorId: "ind-016",
+        severity: "Medium",
+        message: "Bed occupancy rate exceeded operational comfort range.",
+        firstDetected: "2025-02-05T15:00:00Z",
+        lastDetected: "2025-02-19T09:00:00Z",
+        active: true,
+        location: "Recovery Ward – Main Unit"
+      }
+    ],
+    tasks: [
+      {
+        id: "task-005",
+        alertId: "alert-005",
+        assignedBy: "admin-003",
+        assignedTo: "manager-004",
+        category: "Operations",
+        description: "Review patient scheduling and discharge procedures to reduce occupancy strain.",
+        dueDate: "2025-02-27T17:00:00Z",
+        status: "Open",
+        comments: []
+      }
+    ]
+  }
+
+];
+
+export const MOCK_AUDITS: AuditInstance[] = [
+  {
+    id: 'audit-001',
+    templateId: MOCK_TEMPLATES[0].id,
+    auditType: 'baseline',
+    date: '2025-03-01',
+    auditorId: 'auditor.john',
+    locationId: 'comp1.1',
+    questions: [
+      {
+        templateQuestionId: 'q-001',
+        regulationId: 'Reg12',
+        text: 'Are medicines stored safely?',
+        domain: 'Safe',
+        score: 90,
+
+        evidence: [MOCK_EVIDENCE[0]],
+
+
+      },
+      {
+        templateQuestionId: 'q-002',
+        regulationId: 'Reg13',
+        text: 'Are care plans documented and effective?',
+        domain: 'Effective',
+        score: 80,
+
+        evidence: [MOCK_EVIDENCE[0], MOCK_EVIDENCE[1]],
+
+
+      },
+      {
+        templateQuestionId: 'q-003',
+        regulationId: 'Reg14',
+        text: 'Are patients treated with dignity and respect?',
+        domain: 'Caring',
+        score: 85,
+
+        evidence: [MOCK_EVIDENCE[0]],
+
+
+      },
+      {
+        templateQuestionId: 'q-005',
+        regulationId: 'Reg15',
+        text: 'Is leadership clear and accountable?',
+        domain: 'WellLed',
+        score: 75,
+
+        evidence: [MOCK_EVIDENCE[2]],
+
+
+      },
+    ],
+    overallScore: 83,
+    domainScores: {
+      Safe: 90,
+      Effective: 80,
+      Caring: 85,
+      Responsive: 0,
+      WellLed: 75,
+    },
+    createdAt: '2025-03-01T09:30:00Z',
+    updatedAt: '2025-03-01T12:00:00Z',
+  },
+  {
+    id: 'audit-002',
+    templateId: MOCK_TEMPLATES[0].id,
+    auditType: 'baseline',
+    date: '2025-03-15',
+    auditorId: 'auditor.mary',
+    locationId: 'comp1.1',
+    questions: [
+      {
+        templateQuestionId: 'q-001',
+        regulationId: 'Reg12',
+        text: 'Are medicines stored safely?',
+        domain: 'Safe',
+        score: 88,
+
+        evidence: [],
+
+
+      },
+      {
+        templateQuestionId: 'q-004',
+        regulationId: 'Reg16',
+        text: 'Are patient complaints addressed promptly?',
+        domain: 'Responsive',
+        score: 92,
+
+        evidence: [],
+
+
+      },
+    ],
+    overallScore: 90,
+    domainScores: {
+      Safe: 88,
+      Effective: 0,
+      Caring: 0,
+      Responsive: 92,
+      WellLed: 0,
+    },
+    createdAt: '2025-03-15T09:00:00Z',
+    updatedAt: '2025-03-15T11:00:00Z',
+  },
+  {
+    id: 'audit-003',
+    templateId: 'template-002',
+    auditType: 'registered_manager',
+    date: '2025-04-01',
+    auditorId: 'auditor.susan',
+    locationId: 'comp1.2',
+    questions: [
+      {
+        templateQuestionId: 'q-006',
+        regulationId: 'Reg12',
+        text: 'Are surgical instruments properly sterilized?',
+        domain: 'Safe',
+        score: 95,
+
+        evidence: [MOCK_EVIDENCE[3]],
+
+
+      },
+      {
+        templateQuestionId: 'q-008',
+        regulationId: 'Reg15',
+        text: 'Do staff maintain current surgical certifications?',
+        domain: 'WellLed',
+        score: 100,
+
+        evidence: [MOCK_EVIDENCE[4]],
+
+
+      },
+      {
+        templateQuestionId: 'q-009',
+        regulationId: 'Reg13',
+        text: 'Are surgical team briefings conducted regularly?',
+        domain: 'Effective',
+        score: 90,
+
+        evidence: [],
+
+
+      },
+    ],
+    overallScore: 95,
+    domainScores: {
+      Safe: 95,
+      Effective: 90,
+      Caring: 0,
+      Responsive: 0,
+      WellLed: 100,
+    },
+    createdAt: '2025-04-01T09:00:00Z',
+    updatedAt: '2025-04-01T11:00:00Z',
+  },
+];
+
+

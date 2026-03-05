@@ -1,0 +1,1207 @@
+<div class="chart-wrapper"
+     [style.height]="options().useFillHeight ? null : chartHeight"
+     [style.flex]="options().useFillHeight ? '1 1 0' : null"
+     [style.min-height]="chartMinHeight"
+     [style.--chart-height]="chartHeight"
+     (mousemove)="updateTooltipPosition($event)">
+  <!-- Single cursor-following tooltip (outside transformed chart content so position:fixed works) -->
+  @if (getTooltipContent(); as content) {
+  <div class="chart-tooltip chart-tooltip--follow"
+       [style.left.px]="tooltipPosition().x + tooltipOffset"
+       [style.top.px]="tooltipPosition().y + tooltipOffset">
+    <span class="chart-tooltip__label">{{ content.label }}</span>
+    <span class="chart-tooltip__value">{{ content.value }}</span>
+  </div>
+  }
+  <div class="chart-outer">
+  <!-- VERTICAL BAR (bars grow bottom-to-top, Y axis on left) -->
+  @if (typeSignal() === 'bar-vertical') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div class="chart chart--bar-vertical" style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div
+        class="chart__bar"
+        style="position: relative; flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px;"
+        (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)"
+        (mouseleave)="clearHover()"
+      >
+        <div style="flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+          <div
+            class="chart__bar-fill"
+            [style.height.%]="(d._ratio ?? 0) * 100"
+            [style.background]="getBarColor(d, i)"
+            style="width: var(--chart-bar-width, 70%); min-height: 4px; border-radius: 4px 4px 0 0; flex-shrink: 0; cursor: pointer;"
+            [title]="d.label + ': ' + (d.value ?? 0)"
+          ></div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+        @if (d.target !== undefined) {
+        <div
+          class="chart__target"
+          [style.bottom.%]="d.target"
+          style="pointer-events: none;"
+        ></div>
+        }
+        <div class="chart__label" style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- HORIZONTAL BAR (basic) -->
+  @if (typeSignal() === 'bar-horizontal') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 6px; min-height: 0;">
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="flex: 1; min-height: 1.5rem; display: flex; align-items: center; gap: 10px; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ d.label }}</span>
+      <div style="flex: 1; min-height: 0.9rem; align-self: stretch; background: #e5e7eb; border-radius: 4px; overflow: hidden; position: relative;">
+        <div
+          [style.width.%]="(d._ratio ?? 0) * 100"
+          [style.background]="getBarColor(d, i)"
+          style="height: 100%; border-radius: inherit; min-width: 4px; display: flex; align-items: center; cursor: pointer;"
+          [title]="d.label + ': ' + (d.value ?? 0)"
+        >
+          @if (options().showDataLabels && (d.value ?? 0) > 0) {
+          <span style="font-size: 0.65rem; color: #fff; padding: 0 4px; text-shadow: 0 0 1px #000;">{{ d.value }}</span>
+          }
+        </div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%);">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+    </div>
+    @if (options().showAxis !== false) {
+    <div style="flex-shrink: 0; display: flex; gap: 10px; padding-left: 5rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; left: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateX(-50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- STACKED BAR (horizontal, legend + segment labels) -->
+  @if (typeSignal() === 'bar-stacked') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 6px; min-height: 0;">
+    @if (options().showLegend !== false) {
+    <div style="flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 4px;">
+      @for (leg of getStackedLegendSeries(); track leg.series) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem;">
+        <span [style.background]="leg.color" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+        <span style="color: #374151;">{{ leg.series }}</span>
+      </div>
+      }
+    </div>
+    }
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px;">
+    @for (g of normalizedData(); track g.label; let gi = $index) {
+    <div style="flex: 1; min-height: 1.75rem; display: flex; align-items: center; gap: 10px; position: relative;" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ g.label }}</span>
+      <div style="flex: 1; min-height: 0.9rem; align-self: stretch; display: flex; background: #e5e7eb; border-radius: 4px; overflow: visible;">
+        @for (s of g.seriesItems; track s.series; let si = $index) {
+        <div
+          [style.width.%]="(s._ratio ?? 0) * 100"
+          [style.background]="getSeriesColor(s.series ?? '', si)"
+          style="min-width: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+          (mouseenter)="hoveredBarIndex.set(gi); hoveredSegmentIndex.set(si); updateTooltipPosition($event)"
+          (mouseleave)="clearHover()"
+        >
+          @if ((s.value ?? 0) > 0) {
+          <span style="font-size: 0.65rem; color: #fff; text-shadow: 0 0 1px #000;">{{ s.value }}</span>
+          }
+        </div>
+        }
+      </div>
+      @if (hoveredBarIndex() === gi && hoveredSegmentIndex() !== null && g.seriesItems[hoveredSegmentIndex()!]) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ g.label }} · {{ g.seriesItems[hoveredSegmentIndex()!].series }}</span>
+        <span class="chart-tooltip__value">{{ g.seriesItems[hoveredSegmentIndex()!].value ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+    </div>
+    @if (options().showAxis !== false) {
+    <div style="flex-shrink: 0; display: flex; gap: 10px; padding-left: 5rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; left: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateX(-50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- 100% STACKED BAR (horizontal, 0–100% axis, % labels) -->
+  @if (typeSignal() === 'bar-stacked-100') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 6px; min-height: 0;">
+    @if (options().showLegend !== false) {
+    <div style="flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 4px;">
+      @for (leg of getStackedLegendSeries(); track leg.series) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem;">
+        <span [style.background]="leg.color" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+        <span style="color: #374151;">{{ leg.series }}</span>
+      </div>
+      }
+    </div>
+    }
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px;">
+    @for (g of normalizedData(); track g.label; let gi = $index) {
+    <div style="flex: 1; min-height: 1.75rem; display: flex; align-items: center; gap: 10px; position: relative;" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ g.label }}</span>
+      <div style="flex: 1; min-height: 0.9rem; align-self: stretch; display: flex; background: #e5e7eb; border-radius: 4px; overflow: visible;">
+        @for (s of g.seriesItems; track s.series; let si = $index) {
+        <div
+          [style.width.%]="(s._ratio ?? 0) * 100"
+          [style.background]="getSeriesColor(s.series ?? '', si)"
+          style="min-width: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+          (mouseenter)="hoveredBarIndex.set(gi); hoveredSegmentIndex.set(si); updateTooltipPosition($event)"
+          (mouseleave)="clearHover()"
+        >
+          @if ((s._ratio ?? 0) > 0.02) {
+          <span style="font-size: 0.65rem; color: #fff; text-shadow: 0 0 1px #000;">{{ getPercentLabel(s._ratio ?? 0) }}</span>
+          }
+        </div>
+        }
+      </div>
+      @if (hoveredBarIndex() === gi && hoveredSegmentIndex() !== null && g.seriesItems[hoveredSegmentIndex()!]) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ g.label }} · {{ g.seriesItems[hoveredSegmentIndex()!].series }}</span>
+        <span class="chart-tooltip__value">{{ getPercentLabel(g.seriesItems[hoveredSegmentIndex()!]._ratio ?? 0) }}</span>
+      </div>
+      }
+    </div>
+    }
+    </div>
+    @if (options().showAxis !== false) {
+    <div style="flex-shrink: 0; display: flex; gap: 10px; padding-left: 5rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getBarAxisTicksPercent(); track t) {
+        <span style="position: absolute; left: {{ t }}%; transform: translateX(-50%);">{{ t }}%</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- GROUPED STACKED BAR (e.g. two stacked bars per category) -->
+  @if (typeSignal() === 'bar-grouped-stacked') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 8px;">
+    @if (options().showLegend !== false) {
+    <div style="display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 2px;">
+      @for (leg of getStackedLegendSeries(); track leg.series) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem;">
+        <span [style.background]="leg.color" style="width: 8px; height: 8px; border-radius: 2px;"></span>
+        <span style="color: #374151;">{{ leg.series }}</span>
+      </div>
+      }
+    </div>
+    }
+    @for (row of normalizedData(); track row.label; let ri = $index) {
+    <div style="display: flex; align-items: center; gap: 10px; position: relative;" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ row.label }}</span>
+      <div style="flex: 1; display: flex; gap: 8px;">
+        @for (grp of row.groupItems; track grp.group; let gi = $index) {
+        <div style="flex: 1; height: 1.5rem; display: flex; background: #e5e7eb; border-radius: 4px; overflow: visible;">
+          @for (s of grp.seriesItems; track s.series; let si = $index) {
+          <div
+            [style.width.%]="(grp.sum ? (s.value ?? 0) / grp.sum * 100 : 0)"
+            [style.background]="getSeriesColor(s.series ?? '', si)"
+            style="min-width: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+            (mouseenter)="hoveredBarIndex.set(ri); hoveredSegmentIndex.set(gi * 100 + si); updateTooltipPosition($event)"
+            (mouseleave)="clearHover()"
+          >
+            @if ((s.value ?? 0) > 0) {
+            <span style="font-size: 0.6rem; color: #fff;">{{ s.value }}</span>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+      @if (hoveredBarIndex() === ri && hoveredSegmentIndex() !== null) {
+      @if (row.groupItems[getGroupedStackedGroupIndex()]?.seriesItems[getGroupedStackedSegmentIndex()]; as seg) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ row.label }} · {{ row.groupItems[getGroupedStackedGroupIndex()].group }} · {{ seg.series }}</span>
+        <span class="chart-tooltip__value">{{ seg.value ?? 0 }}</span>
+      </div>
+      }
+      }
+    </div>
+    }
+  </div>
+  }
+
+  <!-- BAR WITH MARKERS (horizontal + target, axis 0–100% on the side) -->
+  @if (typeSignal() === 'bar-with-markers') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 8px; min-height: 0;">
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="flex: 1; min-height: 1.5rem; display: flex; align-items: center; gap: 10px; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ d.label }}</span>
+      <div style="flex: 1; min-height: 0.9rem; align-self: stretch; background: #e5e7eb; border-radius: 4px; overflow: visible; position: relative;">
+        <div
+          [style.width.%]="(d._ratio ?? 0) * 100"
+          [style.background]="getBarColor(d, i)"
+          style="height: 100%; border-radius: inherit; min-width: 4px; cursor: pointer;"
+          [title]="d.label + ': ' + (d.value ?? 0)"
+        ></div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+        @if (d.target !== undefined) {
+        <div
+          class="chart__target-horizontal"
+          [style.left.%]="d.target"
+          style="position: absolute; top: -2px; bottom: -2px; width: 2px; z-index: 1;"
+        ></div>
+        }
+      </div>
+    </div>
+    }
+    </div>
+    @if (options().showAxis !== false) {
+    <div style="flex-shrink: 0; display: flex; gap: 10px; padding-left: 5rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getBarAxisTicksPercent(); track t) {
+        <span style="position: absolute; left: {{ t }}%; transform: translateX(-50%);">{{ t }}%</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- BAR REVERSED (horizontal, axis reversed) -->
+  @if (typeSignal() === 'bar-reversed') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 8px; min-height: 0;">
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="flex: 1; min-height: 1.5rem; display: flex; align-items: center; gap: 10px; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <span style="width: 5rem; font-size: 0.75rem; color: #374151;">{{ d.label }}</span>
+      <div style="flex: 1; min-height: 0.9rem; align-self: stretch; background: #e5e7eb; border-radius: 4px; overflow: hidden; direction: rtl;">
+        <div
+          [style.width.%]="(d._ratio ?? 0) * 100"
+          [style.background]="getBarColor(d, i)"
+          style="height: 100%; border-radius: inherit; min-width: 4px; direction: ltr; cursor: pointer;"
+          [title]="d.label + ': ' + (d.value ?? 0)"
+        ></div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+    </div>
+    <div style="flex-shrink: 0; display: flex; gap: 10px; padding-left: 5rem; font-size: 0.65rem; color: #6b7280; direction: rtl;">
+      <div style="flex: 1; position: relative; min-height: 1em; direction: ltr;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; left: {{ (1 - t / getBarAxisMax()) * 100 }}%; transform: translateX(-50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- DIVERGING BAR -->
+  @if (typeSignal() === 'bar-diverging') {
+  <div class="chart chart--bar-diverging" style="height: 100%; display: flex; flex-direction: column; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="display: flex; align-items: center; gap: 8px; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <span class="chart__row-label" style="width: 4rem; font-size: 0.75rem; color: #4b5563;">{{ d.label }}</span>
+      <div class="chart__row-diverging" style="flex: 1; height: 1rem; background: #f3f4f6; border-radius: 4px; overflow: hidden; position: relative; cursor: pointer;">
+        <div
+          class="chart__row-diverging-fill"
+          [class.chart__row-diverging-fill--pos]="d._value >= 0"
+          [class.chart__row-diverging-fill--neg]="d._value < 0"
+          [style.--value]="d._value"
+          [style.--min]="d._min"
+          [style.--max]="d._max"
+          [style.--bar-color]="getBarColor(d, i)"
+        ></div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d._value ?? d.value ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+    @if (options().showAxis !== false) {
+    <div style="display: flex; gap: 10px; padding-left: 4rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getDivergingAxisTicks(); track t) {
+        <span style="position: absolute; left: {{ ((t - getDivergingAxisMin()) / ((getDivergingAxisMax() - getDivergingAxisMin()) || 1)) * 100 }}%; transform: translateX(-50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- LOLLIPOP (Y axis left, stem + dot from bottom) -->
+  @if (typeSignal() === 'lollipop') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div style="width: 70%; flex: 1; min-height: 0; position: relative;">
+          <div [style.height.%]="(d._ratio ?? 0) * 100" style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 2px; background: #94a3b8; border-radius: 2px; min-height: 4px;"></div>
+          <div [style.bottom.%]="(d._ratio ?? 0) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; left: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, 50%);"></div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- HEATMAP (optional X and Y axes from row/col labels) -->
+  @if (typeSignal() === 'heatmap') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 4px;">
+    <div style="flex: 1; min-height: 0; display: flex; gap: 6px;">
+      @if (options().showAxis !== false && getHeatmapRowLabels().length > 0) {
+      <div style="width: 2.5rem; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-evenly; font-size: 0.65rem; color: #6b7280;">
+        @for (row of getHeatmapRowLabels(); track row) {
+        <span>{{ row }}</span>
+        }
+      </div>
+      }
+      <div style="flex: 1; min-width: 0; display: grid; gap: 4px; position: relative;" [style.grid-template-columns]="'repeat(' + getHeatmapColLabels().length + ', 1fr)'" [style.grid-template-rows]="'repeat(' + getHeatmapRowLabels().length + ', 1fr)'">
+        @for (row of getHeatmapRowLabels(); track row; let ri = $index) {
+          @for (col of getHeatmapColLabels(); track col; let ci = $index) {
+          @if (getHeatmapCell(row, col); as cell) {
+          <div [style.background]="getHeatmapColor(cell._ratio ?? 0)" style="display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.7rem; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(ri); hoveredSegmentIndex.set(ci); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+            {{ getHeatmapLabelCell(cell.label) }} {{ getHeatmapHourLabel(cell.label) }}
+            @if (hoveredBarIndex() === ri && hoveredSegmentIndex() === ci) {
+            <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+              <span class="chart-tooltip__label">{{ row }} · {{ col }}</span>
+              <span class="chart-tooltip__value">{{ cell.value ?? 0 }}</span>
+            </div>
+            }
+          </div>
+          } @else {
+          <div style="background: #f3f4f6; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 0.7rem;"></div>
+          }
+          }
+        }
+      </div>
+    </div>
+    @if (options().showAxis !== false && getHeatmapColLabels().length > 0) {
+    <div style="display: flex; gap: 6px; font-size: 0.65rem; color: #6b7280;">
+      @if (getHeatmapRowLabels().length > 0) {
+      <div style="width: 2.5rem; flex-shrink: 0;"></div>
+      }
+      <div style="flex: 1; display: grid; gap: 4px;" [style.grid-template-columns]="'repeat(' + getHeatmapColLabels().length + ', 1fr)'">
+        @for (col of getHeatmapColLabels(); track col) {
+        <span style="text-align: center;">{{ col }}</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- GROUPED / CLUSTERED BAR (Y axis on left, bars from bottom) -->
+  @if (typeSignal() === 'bar-grouped') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (g of normalizedData(); track g.label; let gi = $index) {
+      <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative;" (mouseleave)="clearHover()">
+        <div style="flex: 1; min-height: 0; width: 100%; display: flex; gap: 4px; align-items: flex-end; justify-content: center;">
+          @for (s of g.seriesItems; track s.series; let si = $index) {
+          <div [style.height.%]="(s._ratio ?? 0) * 100" [style.background]="getSeriesColor(s.series ?? '', si)" style="flex: 1; min-width: 12px; min-height: 4px; border-radius: 4px 4px 0 0; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(gi); hoveredSegmentIndex.set(si); updateTooltipPosition($event)"></div>
+          }
+        </div>
+        @if (hoveredBarIndex() === gi && hoveredSegmentIndex() !== null && g.seriesItems[hoveredSegmentIndex()!]) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+          <span class="chart-tooltip__label">{{ g.label }} · {{ g.seriesItems[hoveredSegmentIndex()!].series }}</span>
+          <span class="chart-tooltip__value">{{ g.seriesItems[hoveredSegmentIndex()!].value ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ g.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+
+  <!-- AREA BAR (Y axis left, bars from bottom) -->
+  @if (typeSignal() === 'area-bar') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div style="flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+          <div [style.height.%]="(d._ratio ?? 0) * 100" [style.background]="getBarColor(d, i)" style="width: 70%; min-height: 4px; border-radius: 4px 4px 0 0; flex-shrink: 0;"></div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+
+  <!-- RANGE AREA (Y axis left, range band from bottom) -->
+  @if (typeSignal() === 'range-area') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div style="width: 70%; flex: 1; min-height: 0; position: relative;">
+          <div [style.bottom.%]="(d._ratio ?? 0) * 100" [style.height.%]="((d._ratio2 ?? 0) - (d._ratio ?? 0)) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; left: 0; right: 0; min-height: 4px; border-radius: 4px;"></div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }} – {{ d.value2 ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+
+  <!-- MIXED BAR + LINE (Y axis left, bar and line dot from bottom) -->
+  @if (typeSignal() === 'mixed-bar-line') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="position: relative; flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div style="flex: 1; min-height: 0; width: 100%; position: relative; display: flex; flex-direction: column; justify-content: flex-end;">
+          <div [style.height.%]="(d._barRatio ?? 0) * 100" [style.background]="getBarColor(d, i)" style="width: 70%; min-height: 4px; border-radius: 4px 4px 0 0; flex-shrink: 0;"></div>
+          <div [style.bottom.%]="(d._lineRatio ?? 0) * 100" style="position: absolute; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none;">
+            <div [style.background]="getBarColor(d, i)" style="width: 8px; height: 8px; border-radius: 50%; transform: translateY(50%);"></div>
+          </div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">Bar: {{ d.value ?? 0 }} · Line: {{ d.lineValue ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+
+  <!-- TIMELINE / RANGE BARS (X axis timeline below) -->
+  @if (typeSignal() === 'timeline-range') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="display: flex; align-items: center; gap: 8px; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <span style="width: 4rem; font-size: 0.75rem; color: #4b5563;">{{ d.label }}</span>
+      <div style="flex: 1; height: 1.25rem; background: #f3f4f6; border-radius: 4px; position: relative; overflow: visible; cursor: pointer;">
+        <div [style.left.%]="(d._from ?? 0) * 100" [style.width.%]="((d._to ?? 0) - (d._from ?? 0)) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; top: 0; bottom: 0; border-radius: 4px;"></div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 10;">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.start ?? 0 }} – {{ d.end ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+    @if (options().showAxis !== false) {
+    <div style="display: flex; gap: 8px; padding-left: 4rem; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; position: relative; min-height: 1em;">
+        @for (t of getTimelineRangeTicks(); track t) {
+        <span style="position: absolute; left: {{ ((t - getTimelineRangeMin()) / ((getTimelineRangeMax() - getTimelineRangeMin()) || 1)) * 100 }}%; transform: translateX(-50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+  </div>
+  }
+  <!-- FUNNEL CHART -->
+  @if (typeSignal() === 'funnel') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <div [style.width.%]="(d._ratio ?? 0) * 100" [style.background]="getBarColor(d, i)" style="height: 24px; min-width: 40px; border-radius: 4px;"></div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; top: -8px; transform: translateY(-100%);">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+      </div>
+      }
+      <div style="font-size: 0.75rem; color: #6b7280;">{{ d.label }}</div>
+    </div>
+    }
+  </div>
+  }
+  <!-- WATERFALL CHART (totals = full bar, deltas = floating, baseline, connectors) -->
+  @if (typeSignal() === 'waterfall') {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 4px;">
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: row; gap: 4px; align-items: stretch;">
+      @if (options().showAxis !== false) {
+      <div style="width: 2.5rem; flex-shrink: 0; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+        <div style="flex: 1; min-height: 0; position: relative;">
+          @for (t of getBarAxisTicks(); track t) {
+          <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+          }
+        </div>
+      </div>
+      }
+      <div style="flex: 1; min-width: 0; min-height: 0; position: relative; display: flex; gap: 6px; align-items: stretch;">
+        <!-- Baseline -->
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #ea580c; z-index: 0;"></div>
+        @for (d of normalizedData(); track d.label; let i = $index) {
+        <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <div style="flex: 1; min-height: 0; width: 100%; position: relative;">
+            <div
+              [style.height.%]="getWaterfallBarHeight(d) * 100"
+              [style.bottom.%]="getWaterfallBarBottom(d) * 100"
+              [style.background]="getBarColor(d, d.isTotal ? 0 : i)"
+              style="position: absolute; left: 10%; right: 10%; min-height: 8px; border-radius: 4px 4px 0 0; display: flex; align-items: center; justify-content: center;"
+            >
+              @if (!d.isTotal && options().showDataLabels !== false) {
+              <span style="font-size: 0.65rem; color: #fff; font-weight: 600; text-shadow: 0 0 1px #000;">{{ d.value }}</span>
+              }
+            </div>
+            @if (hoveredBarIndex() === i) {
+            <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px); z-index: 10;">
+              <span class="chart-tooltip__label">{{ d.label }}</span>
+              <span class="chart-tooltip__value">{{ d.isTotal ? formatWaterfallValue(d._cumulative ?? d.value) : (d.value ?? 0) }}</span>
+            </div>
+            }
+            @if (options().showDataLabels !== false) {
+            <div [style.bottom.%]="(d._to ?? 0) * 100" style="position: absolute; left: 0; right: 0; transform: translateY(-100%); font-size: 0.65rem; color: #374151; text-align: center; margin-bottom: 2px;">
+              {{ formatWaterfallValue(d._cumulative ?? d.value) }}
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    <div style="display: flex; gap: 6px; padding-left: {{ options().showAxis !== false ? '2.5rem' : '0' }};">
+      @for (d of normalizedData(); track d.label) {
+      <div style="flex: 1; min-width: 0; text-align: center; font-size: 0.7rem; color: #6b7280;">{{ d.label }}</div>
+      }
+    </div>
+  </div>
+  }
+  <!-- BASIC SLOPE CHART (two columns, Y = value, lines connect left→right) -->
+  @if (typeSignal() === 'slope') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div style="flex: 1; min-height: 0; position: relative; padding: 8px 0;">
+        <svg style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none;" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          @for (d of normalizedData(); track d.label; let i = $index) {
+          <line [attr.x1]="0" [attr.y1]="(1 - (d._left ?? 0)) * 100" [attr.x2]="100" [attr.y2]="(1 - (d._right ?? 0)) * 100" [attr.stroke]="getBarColor(d, i)" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/>
+          }
+        </svg>
+        @for (d of normalizedData(); track d.label; let i = $index) {
+        <div style="position: absolute; left: 0; bottom: {{ (d._left ?? 0) * 100 }}%; transform: translate(-50%, 50%); display: flex; align-items: center; gap: 4px; pointer-events: auto; cursor: pointer; z-index: 2;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <div [style.background]="getBarColor(d, i)" style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;"></div>
+          @if (hoveredBarIndex() === i) {
+          <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px);">
+            <span class="chart-tooltip__label">{{ d.label }}</span>
+            <span class="chart-tooltip__value">{{ options().slopeLeftLabel ?? 'Left' }}: {{ d.value }} · {{ options().slopeRightLabel ?? 'Right' }}: {{ d.value2 }}</span>
+          </div>
+          }
+          @if (options().showDataLabels !== false) {
+          <span style="font-size: 0.7rem; color: #374151; white-space: nowrap;">{{ d.label }}: {{ d.value }}</span>
+          }
+        </div>
+        <div style="position: absolute; right: 0; bottom: {{ (d._right ?? 0) * 100 }}%; transform: translate(50%, 50%); display: flex; align-items: center; gap: 4px; pointer-events: auto; cursor: pointer; z-index: 2;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <div [style.background]="getBarColor(d, i)" style="width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;"></div>
+          @if (options().showDataLabels !== false) {
+          <span style="font-size: 0.7rem; color: #374151; white-space: nowrap;">{{ d.label }}: {{ d.value2 }}</span>
+          }
+        </div>
+        }
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 0 8px; font-size: 0.75rem; color: #6b7280;">
+        <span>{{ options().slopeLeftLabel ?? 'Jan' }}</span>
+        <span>{{ options().slopeRightLabel ?? 'Feb' }}</span>
+      </div>
+    </div>
+  </div>
+  }
+  <!-- BASIC RADIAL BAR (single arc; center = percentage only, larger) -->
+  @if (typeSignal() === 'radial-bar') {
+  <div style="height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" [title]="(data()[0]?.label ?? '') + ': ' + (data()[0]?.value ?? 0)">
+    <div style="position: relative; width: 160px; height: 160px;">
+      <div [style.background]="'conic-gradient(' + getRadialBasicStops() + ')'" style="width: 100%; height: 100%; border-radius: 50%;"></div>
+      <div class="radial-bar__center" style="position: absolute; inset: 22%; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center;">
+        <span class="radial-bar__center-value" [style.color]="getMonoAccentColor()">{{ (normalizedData()[0]?._ratio ?? 0) * 100 | number:'1.0-0' }}%</span>
+      </div>
+    </div>
+  </div>
+  }
+  <!-- MULTIPLE RADIALBARS (concentric rings, empty center; each ring = annulus) -->
+  @if (typeSignal() === 'radial-bar-multiple') {
+  <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
+    <div style="position: relative; width: 160px; height: 160px;">
+      @for (seg of normalizedData(); track seg.label; let i = $index) {
+      <div style="position: absolute; inset: {{ getRadialRingWrapperInset(i) }}%; border-radius: 50%; box-sizing: border-box; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div [style.background]="'conic-gradient(' + getRadialRingStops(seg, i) + ')'" style="width: 100%; height: 100%; border-radius: 50%;"></div>
+        <div style="position: absolute; inset: {{ getRadialRingHoleInset(i) }}%; border-radius: 50%; background: #fff;"></div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5;">
+          <span class="chart-tooltip__label">{{ seg.label }}</span>
+          <span class="chart-tooltip__value">{{ seg.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+      <div style="position: absolute; inset: {{ getRadialCenterInset() }}%; border-radius: 50%; background: #fff;"></div>
+    </div>
+  </div>
+  }
+  <!-- CIRCLE CHART - CUSTOM ANGLE (concentric rings in sector, empty center + legend) -->
+  @if (isRadialCustomAngle(typeSignal())) {
+  <div style="height: 100%; display: flex; align-items: center; justify-content: center; gap: 16px;" [style.flex-direction]="getRadialLegendFlexDirection()">
+    @if (options().showLegend !== false) {
+    <div class="radial-custom-legend" style="display: flex; flex-direction: column; gap: 6px; font-size: 0.75rem; flex-shrink: 0;" [style.order]="getRadialLegendOrder()">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="display: flex; align-items: center; gap: 6px; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <span class="radial-custom-legend-swatch" [style.background]="getRadialRingColor(i)" style="width: 10px; height: 10px; min-width: 10px; min-height: 10px; border-radius: 2px; flex-shrink: 0;"></span>
+        <span>{{ d.label }}: {{ data()[i]?.value ?? 0 }}</span>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ data()[i]?.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+    <div class="radial-custom-chart" [style.clip-path]="getRadialCustomAngleClipPath()" style="position: relative; width: 140px; height: 140px; flex-shrink: 0;" [style.order]="getRadialChartOrder()">
+      @for (seg of normalizedData(); track seg.label; let i = $index) {
+      <div style="position: absolute; inset: {{ getRadialRingWrapperInset(i) }}%; border-radius: 50%; box-sizing: border-box; transform: rotate({{ getRadialCustomAngleRotation() }}deg); cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div [style.background]="'conic-gradient(' + getRadialRingStops(seg, i, getRadialCustomAngleSpan()) + ')'" style="width: 100%; height: 100%; border-radius: 50%;"></div>
+        <div style="position: absolute; inset: {{ getRadialRingHoleInset(i) }}%; border-radius: 50%; background: #fff;"></div>
+      </div>
+      }
+      <div style="position: absolute; inset: {{ getRadialCenterInset() }}%; border-radius: 50%; background: #fff;"></div>
+    </div>
+  </div>
+  }
+  <!-- PIE CHART (simple full pie) -->
+  @if (typeSignal() === 'pie') {
+  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+    <div [style.background]="'conic-gradient(' + getConicGradientStops() + ')'" style="width: 140px; height: 140px; border-radius: 50%;" [title]="getPieChartTitle()"></div>
+    @if (options().showLegend !== false) {
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+      @for (d of data(); track d.label; let i = $index) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()" [title]="d.label + ': ' + (d.value ?? 0)">
+        <span [style.background]="getPieSegmentColor(d, i, 'pie')" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+        <span>{{ d.label }}</span>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- PIE DONUT (hole in center, flat colors) -->
+  @if (typeSignal() === 'pie-donut') {
+  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+    <div style="position: relative; width: 140px; height: 140px;" [title]="getPieChartTitle()">
+      <div [style.background]="'conic-gradient(' + getConicGradientStops() + ')'" style="width: 100%; height: 100%; border-radius: 50%;"></div>
+      <div style="position: absolute; inset: 28%; border-radius: 50%; background: #fff;"></div>
+    </div>
+    @if (options().showLegend !== false) {
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+      @for (d of data(); track d.label; let i = $index) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()" [title]="d.label + ': ' + (d.value ?? 0)">
+        <span [style.background]="getPieSegmentColor(d, i, 'pie-donut')" style="width: 10px; height: 10px; border-radius: 50%;"></span>
+        <span>{{ d.label }}</span>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- PIE MONOCHROME (full pie, shades of blue) -->
+  @if (typeSignal() === 'pie-monochrome') {
+  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+    <div [style.background]="'conic-gradient(' + getConicGradientStops() + ')'" style="width: 140px; height: 140px; border-radius: 50%;" [title]="getPieChartTitle()"></div>
+    @if (options().showLegend !== false) {
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+      @for (d of data(); track d.label; let i = $index) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()" [title]="d.label + ': ' + (d.value ?? 0)">
+        <span [style.background]="getPieSegmentColor(d, i, 'pie-monochrome')" style="width: 10px; height: 10px; border-radius: 2px;"></span>
+        <span>{{ d.label }}</span>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- PIE DONUT GRADIENT (donut with shadow/gradient effect) -->
+  @if (typeSignal() === 'pie-donut-gradient') {
+  <div style="height: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+    <div style="position: relative; width: 140px; height: 140px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));" [title]="getPieChartTitle()">
+      <div [style.background]="'conic-gradient(' + getConicGradientStops() + ')'" style="width: 100%; height: 100%; border-radius: 50%;"></div>
+      <div style="position: absolute; inset: 28%; border-radius: 50%; background: linear-gradient(135deg, #fff 0%, #f1f5f9 100%);"></div>
+    </div>
+    @if (options().showLegend !== false) {
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+      @for (d of data(); track d.label; let i = $index) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()" [title]="d.label + ': ' + (d.value ?? 0)">
+        <span [style.background]="getPieSegmentColor(d, i, 'pie-donut-gradient')" style="width: 10px; height: 10px; border-radius: 50%;"></span>
+        <span>{{ d.label }}</span>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- SCATTER CHART -->
+  @if (typeSignal() === 'scatter') {
+  <div style="height: 100%; position: relative; background: #f8fafc; border-radius: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div [style.left.%]="(d._x ?? 0) * 100" [style.bottom.%]="(d._y ?? 0) * 100" style="position: absolute; transform: translate(-50%, 50%); cursor: pointer; z-index: 1;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <div [style.background]="getBarColor(d, i)" style="width: 10px; height: 10px; border-radius: 50%;"></div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px);">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">x: {{ d.x ?? '' }} · y: {{ d.y ?? d.value ?? '' }}</span>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- BUBBLE CHART -->
+  @if (typeSignal() === 'bubble') {
+  <div style="height: 100%; position: relative; background: #f8fafc; border-radius: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div [style.left.%]="(d._x ?? 0) * 100" [style.bottom.%]="(d._y ?? 0) * 100" style="position: absolute; transform: translate(-50%, 50%); cursor: pointer; z-index: 1;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <div [style.width.px]="12 + (d._r ?? 0) * 20" [style.height.px]="12 + (d._r ?? 0) * 20" [style.background]="getBarColor(d, i)" style="border-radius: 50%; opacity: 0.8;"></div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px);">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">x: {{ d.x }} · y: {{ d.y }} · r: {{ d.r ?? d.value ?? '' }}</span>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- BOXPLOT (Y-axis + vertical boxes with whiskers, box, median) -->
+  @if (typeSignal() === 'boxplot') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBoxplotAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ getBoxplotTickPosition(t) }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+      <div style="flex: 1; min-height: 0; display: flex; align-items: stretch; gap: 8px;">
+        @for (d of normalizedData(); track d.label; let i = $index) {
+        <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <div style="flex: 1; min-height: 0; width: 100%; position: relative;">
+            <!-- Whisker (vertical line min to max) -->
+            <div [style.bottom.%]="(d._min ?? 0) * 100" [style.height.%]="((d._max ?? 0) - (d._min ?? 0)) * 100" style="position: absolute; left: 50%; transform: translateX(-50%); width: 2px; background: #64748b;"></div>
+            <!-- Box (Q1 to Q3) -->
+            <div [style.bottom.%]="(d._q1 ?? 0) * 100" [style.height.%]="((d._q3 ?? 0) - (d._q1 ?? 0)) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; left: 15%; right: 15%; border-radius: 2px; border: 1px solid rgba(255,255,255,0.5);"></div>
+            <!-- Median line -->
+            <div [style.bottom.%]="(d._median ?? 0) * 100" style="position: absolute; left: 15%; right: 15%; height: 2px; background: #fff; transform: translateY(50%);"></div>
+          </div>
+          @if (hoveredBarIndex() === i) {
+          <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+            <span class="chart-tooltip__label">{{ d.label }}</span>
+            <span class="chart-tooltip__value">min: {{ d.min }} · Q1: {{ d.q1 }} · med: {{ d.median }} · Q3: {{ d.q3 }} · max: {{ d.max }}</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      <div style="display: flex; gap: 8px; height: 1.5rem; align-items: center;">
+        @for (d of normalizedData(); track d.label) {
+        <div style="flex: 1; min-width: 0; text-align: center; font-size: 0.7rem; color: #6b7280;">{{ d.label }}</div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+  <!-- TREEMAP -->
+  @if (typeSignal() === 'treemap') {
+  <div style="height: 100%; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div [style.flex]="'1 1 ' + ((d._size ?? 0) * 100) + '%'" [style.background]="getBarColor(d, i)" style="min-width: 60px; min-height: 40px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #fff; font-weight: 500; cursor: pointer; position: relative;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">{{ d.label }}
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+      </div>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- CANDLESTICK -->
+  @if (typeSignal() === 'candlestick') {
+  <div style="height: 100%; display: flex; align-items: flex-end; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <div style="flex: 1; width: 24px; position: relative; display: flex; flex-direction: column; justify-content: stretch;">
+        <div [style.height.%]="(1 - (d._high ?? 0)) * 100" style="min-height: 0;"></div>
+        <div style="width: 2px; background: #64748b; margin: 0 auto;"></div>
+        <div [style.height.%]="getCandleBodyHeight(d)" [style.background]="getCandleFill((d._close ?? 0) >= (d._open ?? 0))" style="min-height: 4px; width: 100%;"></div>
+        <div style="width: 2px; background: #64748b; margin: 0 auto; flex: 1;"></div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">O: {{ d.open }} H: {{ d.high }} L: {{ d.low }} C: {{ d.close }}</span>
+      </div>
+      }
+      <div style="font-size: 0.75rem; color: #6b7280;">{{ d.label }}</div>
+    </div>
+    }
+  </div>
+  }
+  <!-- BROKEN SCALE BAR: full bar from 0; break drawn inside bars that exceed scaleBreakAt -->
+  @if (typeSignal() === 'broken-scale-bar') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; position: relative; font-size: 0.65rem; color: #6b7280;">
+      <div style="position: absolute; inset: 0;">
+        @for (t of getBrokenScaleLowerTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBrokenScaleBreakAt()) * getBrokenScaleLowerPct() }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+        <div style="position: absolute; left: 0; right: 0; bottom: {{ getBrokenScaleLowerPct() }}%; height: {{ getBrokenScaleBreakPct() }}%; display: flex; align-items: center;">
+          <svg width="20" height="100%" viewBox="0 0 20 20" preserveAspectRatio="none"><path d="M 0 10 L 5 0 L 10 10 L 15 0 L 20 10" stroke="#94a3b8" stroke-width="1.5" fill="none"/></svg>
+        </div>
+        @for (t of getBrokenScaleUpperTicks(); track t) {
+        <span style="position: absolute; bottom: {{ getBrokenScaleLowerPct() + getBrokenScaleBreakPct() + ((t - getBrokenScaleBreakAt()) / (getBrokenScaleMaxUpper() - getBrokenScaleBreakAt())) * getBrokenScaleUpperPct() }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; position: relative;">
+      @if (options().scaleLabel) {
+      <div style="position: absolute; top: 4px; right: 4px; font-size: 0.6rem; color: #64748b;">{{ options().scaleLabel }}</div>
+      }
+      <div style="flex: 1; height: 100%; display: flex; align-items: flex-end; gap: 6px; padding-top: 1rem;">
+        @for (d of normalizedData(); track d.label; let i = $index) {
+        <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <span style="font-size: 0.7rem; color: #374151; margin-bottom: 2px;">{{ d.value }}</span>
+          <div style="width: 70%; height: 100%; position: relative;">
+            @if (d._segment === 'lower') {
+            <div [style.background]="getBarColor(d, i)" [style.height.%]="d._barHeightPct" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 85%; min-height: 4px; border-radius: 4px 4px 0 0;"></div>
+            }
+            @if (d._segment === 'upper') {
+            <div [style.background]="getBarColor(d, i)" [style.height.%]="d._barLowerHeightPct" style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 85%; min-height: 4px; border-radius: 0 0 4px 4px;"></div>
+            <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: {{ getBrokenScaleLowerPct() }}%; width: 85%; height: {{ getBrokenScaleBreakPct() }}%; display: flex; align-items: center; justify-content: center;">
+              <svg width="100%" height="100%" viewBox="0 0 24 20" preserveAspectRatio="none"><path d="M 0 10 L 6 0 L 12 10 L 18 0 L 24 10" stroke="#94a3b8" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div [style.background]="getBarColor(d, i)" [style.height.%]="d._barHeightPct" [style.bottom]="d._barBottomPct + '%'" style="position: absolute; left: 50%; transform: translateX(-50%); width: 85%; min-height: 4px; border-radius: 4px 4px 0 0;"></div>
+            }
+          </div>
+          @if (hoveredBarIndex() === i) {
+          <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+            <span class="chart-tooltip__label">{{ d.label }}</span>
+            <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+          </div>
+          }
+          <div style="font-size: 0.7rem; color: #6b7280; margin-top: 4px;">{{ d.label }}</div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
+  <!-- 3D BAR (groups = depth e.g. years, categories = width e.g. regions; Y = value) -->
+  @if (typeSignal() === 'bar-3d') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px; position: relative; padding-bottom: 1.5rem;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.65rem; color: #6b7280;">
+      @for (t of getBarAxisTicks(getBar3dMax()); track t) {
+      <span>{{ t }}</span>
+      }
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; gap: 6px; transform: perspective(900px) rotateX(8deg); transform-style: preserve-3d;">
+      @for (g of getBar3dGroups(); track g; let gi = $index) {
+      <div style="flex: 1; min-height: 0; display: flex; align-items: flex-end; gap: 6px; transform: translateZ({{ -gi * 12 }}px);">
+        @for (c of getBar3dCategories(); track c; let ci = $index) {
+        @if (getBar3dBar(g, c); as bar) {
+        <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(gi); hoveredSegmentIndex.set(ci); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+          <div [style.background]="'linear-gradient(to top, ' + getBar3dGroupColor(gi) + ', color-mix(in srgb, ' + getBar3dGroupColor(gi) + ' 75%, white))'" [style.height.%]="bar._ratio * 100" style="width: 82%; min-height: 6px; border-radius: 3px 3px 0 0; box-shadow: 2px -2px 6px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.2); position: relative;">
+            <span [style.background]="'linear-gradient(to top, color-mix(in srgb, ' + getBar3dGroupColor(gi) + ' 60%, black), ' + getBar3dGroupColor(gi) + ')'" style="position: absolute; right: -20%; top: -2px; width: 14%; height: 100%; border-radius: 0 2px 2px 0; transform: skewY(-8deg); transform-origin: left bottom;"></span>
+          </div>
+          @if (hoveredBarIndex() === gi && hoveredSegmentIndex() === ci) {
+          <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); z-index: 10;">
+            <span class="chart-tooltip__label">{{ g }} · {{ c }}</span>
+            <span class="chart-tooltip__value">{{ bar.value }}</span>
+          </div>
+          }
+        </div>
+        }
+        }
+      </div>
+      }
+    </div>
+    @if (options().showLegend !== false && getBar3dCategories().length) {
+    <div style="width: 5rem; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-around; font-size: 0.6rem; color: #6b7280;">
+      @for (c of getBar3dCategories(); track c) {
+      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="c">{{ c }}</span>
+      }
+    </div>
+    }
+    @if (getBar3dGroups().length && options().showLegend !== false) {
+    <div style="position: absolute; bottom: 0; left: 2.5rem; right: 5rem; display: flex; justify-content: space-around; font-size: 0.6rem; color: #6b7280;">
+      @for (g of getBar3dGroups(); track g; let gi = $index) {
+      <span [style.color]="getBar3dGroupColor(gi)">{{ g }}</span>
+      }
+    </div>
+    }
+  </div>
+  }
+  <!-- MULTI-GROUP SLOPE (N categories on X, series as polylines, legend) -->
+  @if (typeSignal() === 'slope-grouped' && getSlopeGroupedBlock(); as block) {
+  <div style="height: 100%; display: flex; flex-direction: column; gap: 8px;">
+    @if (options().showLegend !== false && block.seriesLines?.length) {
+    <div style="display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 4px;">
+      @for (line of block.seriesLines; track line.series; let si = $index) {
+      <div style="display: flex; align-items: center; gap: 4px; font-size: 0.7rem;">
+        <span [style.background]="getSeriesColor(line.series, si)" style="width: 10px; height: 10px; border-radius: 50%;"></span>
+        <span style="color: #374151;">{{ line.series }}</span>
+      </div>
+      }
+    </div>
+    }
+    <div style="flex: 1; min-height: 0; display: flex; flex-direction: row; gap: 8px;">
+      @if (options().showAxis !== false) {
+      <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+        <div style="flex: 1; min-height: 0; position: relative;">
+          @for (t of getBarAxisTicks(); track t) {
+          <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+          }
+        </div>
+      </div>
+      }
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+        <div style="flex: 1; min-height: 0; position: relative;">
+          <svg style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none;" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            @for (line of block.seriesLines; track line.series; let si = $index) {
+            <polyline [attr.points]="getSlopeGroupedPolylinePoints(line)" [attr.stroke]="getSeriesColor(line.series, si)" stroke-width="1" vector-effect="non-scaling-stroke" fill="none"/>
+            }
+          </svg>
+          @for (line of block.seriesLines; track line.series; let si = $index) {
+            @for (p of line.points; track p.x + '-' + p.y; let pi = $index) {
+            <div [style.left.%]="p.x * 100" [style.bottom.%]="p.y * 100" style="position: absolute; transform: translate(-50%, 50%); width: 8px; height: 8px; border-radius: 50%; cursor: pointer; z-index: 2;" [style.background]="getSeriesColor(line.series, si)" (mouseenter)="hoveredBarIndex.set(si); hoveredSegmentIndex.set(pi); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+              @if (hoveredBarIndex() === si && hoveredSegmentIndex() === pi) {
+              <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px); white-space: nowrap;">
+                <span class="chart-tooltip__label">{{ line.series }} · {{ block.categories[pi] }}</span>
+                <span class="chart-tooltip__value">{{ (p.y * getBarAxisMax()) | number:'1.0-2' }}</span>
+              </div>
+              }
+            </div>
+            }
+          }
+        </div>
+        <div style="display: grid; padding: 0 4px; font-size: 0.7rem; color: #6b7280;" [style.grid-template-columns]="'repeat(' + block.categories.length + ', 1fr)'">
+          @for (cat of block.categories; track cat) {
+          <span style="text-align: center;">{{ cat }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+  <!-- MIXED OVERLAY (bar + area, Y axis left) -->
+  @if (typeSignal() === 'mixed-overlay') {
+  <div style="height: 100%; display: flex; flex-direction: row; gap: 8px;">
+    @if (options().showAxis !== false) {
+    <div style="width: 2.5rem; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; font-size: 0.65rem; color: #6b7280;">
+      <div style="flex: 1; min-height: 0; position: relative;">
+        @for (t of getBarAxisTicks(); track t) {
+        <span style="position: absolute; bottom: {{ (t / getBarAxisMax()) * 100 }}%; transform: translateY(50%);">{{ t }}</span>
+        }
+      </div>
+      <div style="height: 1.5rem; flex-shrink: 0;"></div>
+    </div>
+    }
+    <div style="flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px;">
+      @for (d of normalizedData(); track d.label; let i = $index) {
+      <div style="position: relative; flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+        <div style="width: 70%; flex: 1; min-height: 0; position: relative;">
+          <div [style.height.%]="(d._area ?? 0) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; bottom: 0; left: 0; right: 0; border-radius: 4px 4px 0 0; opacity: 0.5;"></div>
+          <div [style.height.%]="(d._bar ?? 0) * 100" [style.background]="getBarColor(d, i)" style="position: absolute; bottom: 0; left: 0; right: 0; border-radius: 4px 4px 0 0;"></div>
+        </div>
+        @if (hoveredBarIndex() === i) {
+        <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-18px);">
+          <span class="chart-tooltip__label">{{ d.label }}</span>
+          <span class="chart-tooltip__value">Bar: {{ d.value ?? 0 }} · Area: {{ d.value2 ?? 0 }}</span>
+        </div>
+        }
+        <div style="font-size: 0.75rem; color: #6b7280; flex-shrink: 0;">{{ d.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+  <!-- GRADIENT BAR (vertical bars with gradient fill) -->
+  @if (typeSignal() === 'gradient-bar') {
+  <div style="height: 100%; display: flex; align-items: flex-end; gap: 8px;">
+    @for (d of normalizedData(); track d.label; let i = $index) {
+    <div style="flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; cursor: pointer;" (mouseenter)="hoveredBarIndex.set(i); updateTooltipPosition($event)" (mouseleave)="clearHover()">
+      <div style="flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-end;">
+        <div
+          [style.height.%]="(d._ratio ?? 0) * 100"
+          [style.background]="getGradientBarBackground(d, i)"
+          style="width: 70%; min-height: 4px; border-radius: 4px 4px 0 0; flex-shrink: 0;"
+        ></div>
+      </div>
+      @if (hoveredBarIndex() === i) {
+      <div class="chart-tooltip" style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);">
+        <span class="chart-tooltip__label">{{ d.label }}</span>
+        <span class="chart-tooltip__value">{{ d.value ?? 0 }}</span>
+      </div>
+      }
+      <div style="font-size: 0.75rem; color: #6b7280;">{{ d.label }}</div>
+    </div>
+    }
+  </div>
+  }
+  </div>
+</div>

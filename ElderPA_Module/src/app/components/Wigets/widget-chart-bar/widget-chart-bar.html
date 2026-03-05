@@ -1,0 +1,18 @@
+<div class="chart-wrapper">
+  @if (indicatorName) {
+    <div class="chart-indicator-name">{{ indicatorName }} / Actual (bar) vs target (line)</div>
+  } @else if (chartTitle) {
+    <div class="chart-title">{{ chartTitle }} / Actual (bar) vs target (line)</div>
+  }
+  @if (series.length === 0 && (!labels || labels.length === 0)) {
+    <div class="chart-empty">No indicators for this location. Use the widget options (gear) to select which indicators to show.</div>
+  } @else {
+    <div class="chart-container">
+      <app-smart-chart
+        chartType="bar-vertical"
+        [data]="barChartData"
+        [options]="barChartOptions">
+      </app-smart-chart>
+    </div>
+  }
+</div>

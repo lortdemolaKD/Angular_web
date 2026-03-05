@@ -1,0 +1,39 @@
+<div class="chart-container">
+  <div class="card table-wrapper">
+
+
+    <!-- empty area like the reference (you can later place donut/chart here) -->
+
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+        <tr>
+          <th>Status</th>
+          <th>Indicator</th>
+          <th>Location</th>
+          <th>Current</th>
+          <th>Target</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr *ngFor="let r of topRisks()"
+            (click)="selectIndicator(r.indicator.id)"
+            [class.selected]="r.indicator.id === selectedIndicatorId()">
+          <td>{{ r.indicator.status }}</td>
+          <td><strong>{{ r.indicator.name }}</strong></td>
+          <td>{{ r.locationName }}</td>
+          <td>{{ r.indicator.current }}</td>
+          <td>{{ r.indicator.target }}</td>
+        </tr>
+
+        <tr *ngIf="topRisks().length === 0">
+          <td colspan="5" class="no-alerts">No risks found.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

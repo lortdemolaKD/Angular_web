@@ -1,0 +1,9 @@
+<button class="panel-header"  [disabled]="disabled || false" (click)="onClick()"
+        [ngStyle]="{'background-color': headerColor}">
+  <div class="header-content" *ngIf="icon || title">
+    <span class="title">{{title}}</span>
+    <ng-container *ngIf="icon">
+      <span class="icon">{{icon}}</span>
+    </ng-container>
+  </div>
+</button>

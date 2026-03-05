@@ -1,0 +1,122 @@
+<div class="login-page">
+  <!-- Left: Branding panel (logo as background) -->
+  <div class="login-page__brand">
+    <div class="login-page__brand-inner login-page__brand-card">
+      <div class="login-page__banner-wrap">
+        <img ngSrc="Small_banner.png" alt="Sentinel Insight" width="400" height="200" class="login-page__banner-img" />
+      </div>
+      <p class="login-page__tagline">
+        Streamline your care management with our comprehensive platform designed for modern care providers.
+      </p>
+      <ul class="login-page__features">
+        <li><span class="login-page__check"></span> Easy staff management and scheduling</li>
+        <li><span class="login-page__check"></span> CQC compliant documentation</li>
+        <li><span class="login-page__check"></span> Real-time reporting and analytics</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Right: Form panel -->
+  <div class="login-page__form-wrap">
+    <div class="login-page__form-inner">
+      <div class="login-page__tabs" *ngIf="!isInvite">
+        <button type="button" class="login-page__tab" [class.login-page__tab--active]="mode === 'login'" (click)="setMode('login')">Sign In</button>
+        <button type="button" class="login-page__tab" [class.login-page__tab--active]="mode === 'register'" (click)="setMode('register')">Create Account</button>
+      </div>
+
+      <div *ngIf="isInvite && inviteData" class="login-page__invite-info">
+        You are joining <strong>{{ inviteData.companyName }}</strong> as <strong>{{ inviteData.role }}</strong>.
+      </div>
+
+      <h2 class="login-page__welcome">
+        {{ isInvite ? 'Complete your account' : (mode === 'register' ? 'Create account' : 'Welcome back') }}
+      </h2>
+      <p class="login-page__subtitle">
+        {{ isInvite ? 'Set your name and password to continue.' : (mode === 'register' ? 'Fill in your details to get started.' : 'Enter your credentials to access your account') }}
+      </p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-page__form">
+        <div class="login-page__field" *ngIf="isInvite || isRegister">
+          <label>Name <span class="login-page__required">*</span></label>
+          <input type="text" formControlName="name" placeholder="Your name" />
+        </div>
+
+        <div class="login-page__field">
+          <label>Email <span class="login-page__required">*</span></label>
+          <input type="email" formControlName="email" placeholder="Enter your email" />
+        </div>
+
+        <div class="login-page__field">
+          <label>Password <span class="login-page__required">*</span></label>
+          <div class="login-page__password-wrap">
+            <input [type]="passwordVisible ? 'text' : 'password'" formControlName="password" placeholder="Enter your password" />
+            <button type="button" class="login-page__password-toggle" (click)="passwordVisible = !passwordVisible" aria-label="Toggle password visibility">
+              <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-page__options" *ngIf="mode === 'login' && !isInvite">
+          <label class="login-page__remember">
+            <input type="checkbox" formControlName="rememberMe" />
+            <span>Remember me</span>
+          </label>
+          <a href="#" class="login-page__forgot" (click)="onForgotPassword($event)">Forgot password?</a>
+        </div>
+
+        <ng-container *ngIf="isRegister">
+          <div class="login-page__field">
+            <label>Role</label>
+            <select formControlName="role">
+              <option value="OrgAdmin">Org Admin</option>
+              <option value="RegisteredManager">Registered Manager</option>
+            </select>
+          </div>
+          <ng-container *ngIf="form.get('role')?.value === 'OrgAdmin'">
+            <div class="login-page__field">
+              <label>Company Name <span class="login-page__required">*</span></label>
+              <input formControlName="companyName" placeholder="My Care Home Ltd" />
+            </div>
+            <div class="login-page__field">
+              <label>Director</label>
+              <input formControlName="director" placeholder="John Smith" />
+            </div>
+            <div class="login-page__field">
+              <label>CQC Number</label>
+              <input formControlName="CQCnumber" placeholder="1-1234567890" />
+            </div>
+            <div class="login-page__field">
+              <label>Registered Address</label>
+              <textarea formControlName="address" placeholder="123 High St, London" rows="2"></textarea>
+            </div>
+            <div class="login-page__field">
+              <label>Registered In</label>
+              <select formControlName="registeredIn">
+                <option value="England">England</option>
+                <option value="Wales">Wales</option>
+                <option value="Scotland">Scotland</option>
+              </select>
+            </div>
+          </ng-container>
+          <div class="login-page__field" *ngIf="form.get('role')?.value === 'RegisteredManager'">
+            <label>Company ID <span class="login-page__required">*</span></label>
+            <input formControlName="companyId" placeholder="Paste Company ID" />
+          </div>
+        </ng-container>
+
+        <div class="login-page__error" *ngIf="error">{{ error }}</div>
+        <div *ngIf="showGoToLogin" class="login-page__go-login">
+          <button type="button" class="login-page__link-btn" (click)="goToLogin()">Go to Login</button> to sign in with your existing account.
+        </div>
+
+        <button type="submit" class="login-page__submit" [disabled]="form.invalid">
+          {{ isInvite ? 'Complete Setup' : (isRegister ? 'Create Account' : 'Sign In') }}
+        </button>
+      </form>
+
+      <p class="login-page__terms">
+        By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+  </div>
+</div>

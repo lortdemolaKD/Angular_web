@@ -1,0 +1,17 @@
+<div class="question-list">
+  <div class="details-grid">
+    <button
+      type="button"
+      class="question-item"
+      *ngFor="let q of questions()"
+      (click)="questionSelected.emit(q)"
+    >
+      <div class="question-item__title">{{ q.text }}</div>
+      <div class="question-item__meta">
+        <span class="pill">{{ q.domain }}</span>
+        <span class="tag">Score: {{ q.score }}</span>
+        <span class="tag">Evidence: {{ q.evidence?.length || 0 }}</span>
+      </div>
+    </button>
+  </div>
+</div>

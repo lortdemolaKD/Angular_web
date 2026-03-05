@@ -1,0 +1,5 @@
+<div class="widget-summary">
+  <div class="value" [class.has-open]="openCount() > 0">{{ openCount() }}</div>
+  <div class="label">Open tasks</div>
+  <div class="sub" *ngIf="totalCount() > 0">of {{ totalCount() }} total</div>
+</div>

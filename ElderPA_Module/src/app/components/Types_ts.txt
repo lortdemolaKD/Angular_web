@@ -1,0 +1,532 @@
+import {Type} from '@angular/core';
+import {Test} from './Wigets/test/test';
+import {WidgetPiechart} from './Wigets/widget-piechart/widget-piechart';
+import {WidgetAlerts} from './Wigets/widget-alerts/widget-alerts';
+import {WidgetChartBar} from './Wigets/widget-chart-bar/widget-chart-bar';
+import {WidgetMonitoredLocation} from './Wigets/widget-monitored-location/widget-monitored-location';
+import {WidgetRadialGauge} from './Wigets/widget-radial-gauge/widget-radial-gauge';
+import {WidgetRadialBarChart} from './Wigets/widget-radial-bar-chart/widget-radial-bar-chart';
+import {WidgetTasksBoard} from './Wigets/widget-tasks-board/widget-tasks-board';
+import {WidgetAuditCompletion} from './Wigets/widget-audit-completion/widget-audit-completion';
+import {WidgetRiskOverview} from './Wigets/widget-risk-overview/widget-risk-overview';
+import {WidgetGovernancePlanner} from './Wigets/widget-governance-planner/widget-governance-planner';
+
+
+export interface LocationStats {
+
+  occupancy?: number;
+  capacity?: number;
+
+  activeCases?: number;
+  maxCases?: number;
+}
+
+
+export interface LocationType {
+  cmpID: string;
+  locationID: string;
+  name: string;
+  type: 'CareHome' | 'HomeCare';
+  icon?: string;
+  address?: string;
+  contactInfo?: string;
+  primaryManager?: string;
+  staff?: staffType[];
+
+  // Metrics
+  stats?: LocationStats;
+  departments?: LocationDepartment[];
+  homeCareMetrics?: HomeCareMetrics;  // New field for HomeCare
+  performance: PerformanceSet;
+
+  // Care Home specific
+  areas?: string[];
+  wings?: string[];
+  roomList?: Room[];
+  roomGroups?: RoomGroup[];
+  clientGroups?: ClientGroup[];
+}
+export interface CompanyType {
+  name: string;
+  director?: string;                 // Director linked
+  companyNumber?: string;            // Company registered number
+  CQC_number?: string;               // CQC Provider ID
+  address?: string;                  // Registered address
+  registeredIn?: 'England' | 'Wales' | 'Scotland'; // Registered in
+  adminContact?: string;             // Admin contact if different from creator
+  icon?: string;
+  serviceTypes?: string[];
+  Locations?: string[];
+  companyID?: string;
+}
+export interface Room {
+  number: string;
+  type: string;          // e.g., Single, Double, Twin, Suite
+  area: string;          // area ID
+  wing?: string;         // optional wing ID
+  facilities: string[];
+  roomGroup?: RoomGroup;
+  occupiedClientGroup?: ClientGroup | null;
+}
+export interface FeeEnhancement {
+  type: string;
+  value: number;
+}
+
+export interface FeeRule {
+  careBand: string;
+  dependency: string;
+  rate: number;
+  enhancements: FeeEnhancement[];
+}
+
+export interface RoomGroup {
+  name: string;
+  feeRules: FeeRule[];
+}
+
+export interface ClientGroup {
+  name: string;
+  enhancements: FeeEnhancement[];
+}
+export interface UserType {
+  name: string;
+  role: 'Managers'| 'Admins'| 'TESTER'
+  companies?: string[];
+  locations?: string[];
+  managers?: string[];
+
+}
+export interface DashboardIndicator {
+  name: string;
+  value: number;
+  growthRate: number;
+}
+export interface staffType {
+  id: string;
+  role: 'Managers'| 'Admins'|'Nurses'|'Care staff';
+
+
+}
+export type DynamicRow = Record<string, any>;
+
+export interface DynamicTableConfig {
+  columns?: string[];
+  labelMapping?: Record<string, string>;
+  ordering?: string[];
+  stretch?: boolean;
+  sortable?: boolean;
+  sortableColumns?: string[];
+}
+export interface AuditEvidence {
+  id: string;
+  type: 'text' | 'file'| 'audit';
+  description?: string;
+  content?: string;
+  fileUrl?: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+}
+
+export interface LocationDepartment {
+  id: string;
+  name: string;
+  subDepartments: { id: string; name: string }[];
+}
+export interface TemplateQuestion {
+  id: string;
+  text: string;
+  domain: 'Safe' | 'Effective' | 'Caring' | 'Responsive' | 'WellLed';
+  regulations: RegulationRef[];
+  requiresEvidence: boolean;
+  answerType?: 'boolean' | 'scale' | 'text' | 'number';
+  guidance?: string;
+  weight: number;
+}
+export interface TemplateSection {
+  id: string;
+  title: string;
+  description: string;
+  questions: TemplateQuestion[];
+}
+
+export interface RegulationRef {
+  id: string;
+  title: string;
+  description: string;
+}
+
+// Checklist example:
+
+
+// Table example:
+
+
+// Service context (care home vs homecare) for tailoring prompts/evidence expectations.
+export type ServiceType = 'CareHome' | 'HomeCare' | 'Both';
+export interface RegulationSubsection {
+  id: string;
+  label: string;
+  text: string;
+  appliesTo: 'Both' | string;
+  defaultIncluded?: boolean;
+  domain?: string;
+  children?: RegulationSubsection[];
+}
+// Where a regulation comes from (for audit trail + future refresh).
+export interface RegulationSource {
+  publisher: 'CQC'| string;
+  hubUrl: string;        // e.g. regulations hub page
+  regulationUrl?: string; // specific regulation page
+  versionDate?: string;   // optional
+}
+
+// A whole library (e.g., "Fundamental Standards")
+export interface RegulationLibrary {
+  id: string; // e.g. "CQC-FS"
+  title: string; // "Fundamental Standards"
+  source: RegulationSource;
+  items: RegulationItem[]; // Reg 4..20 + appendices
+}
+
+// One regulation (or appendix) that users select in the UI.
+export interface RegulationItem {
+  id: string;            // e.g. "FS-REG-4", "FS-APP-1"
+  code: string;          // e.g. "4", "5", "Appendix 1"
+  title: string;         // e.g. "Where the service provider is an individual or partnership"
+  type: 'Regulation' | 'Appendix'| 'Custom';
+  description?: string;  // short summary
+  appliesTo: ServiceType; // usually 'Both', but allow override
+  source?: RegulationSource;
+
+  // Key part: children that become audit questions
+  subsections: RegulationClause[];
+}
+
+// A subsection/clause that becomes one audit question row.
+// Supports 4(4)(a) style nesting like the CQC guidance structure. [file:29]
+export interface RegulationClause {
+  id: string;          // stable ID e.g. "FS-REG-4-4-a"
+  label: string;       // display label e.g. "4(4)(a)"
+  text: string;        // the clause text users see as the question prompt
+  included?: boolean;       // selection state (UI/audit creation), default true
+  defaultIncluded?: boolean; // optional default for UI (library-driven)
+  guidance?: string;   // optional helper text/snippet
+  appliesTo: ServiceType;
+
+  // Optional metadata for automation / filtering
+  domain?: 'Safe' | 'Effective' | 'Caring' | 'Responsive' | 'WellLed';
+  tags?: string[];
+
+  // Nested clauses if needed
+  children?: RegulationClause[];
+}
+export type AuditFrequency = 'Daily'|'Weekly' | 'Monthly' | 'Quarterly' | 'Annually' | 'AdHoc';
+export type TemplateAuditType = 'baseline' | 'registered_manager' | 'provider';
+export interface AuditTemplate {
+  id: string;
+  name: string;
+
+  // keep your existing fields
+  auditType?: TemplateAuditType;
+  version: string;
+  createdAt: string;
+  sections: TemplateSection[];
+  regulationIds?: string[];
+
+  // add these
+  responsibleRoles?: string[];  // e.g. ['registered_manager', 'infection_control_lead']
+  frequency?: AuditFrequency;   // or just `string` if you want it looser
+}
+
+export type YesNo = 'Y' | 'N';
+export type QuestionCompletion = 'NotStarted' | 'InProgress' | 'Completed';
+
+export interface AuditQuestionInstance {
+  templateQuestionId: string;
+  templateType?: string;           // ← Optional
+  regulationId: string;
+  regulationClauseId?: string;
+  clauseLabel?: string;
+
+  text: string;
+  domain: 'Safe' | 'Effective' | 'Caring' | 'Responsive' | 'WellLed';
+  score: number;
+
+  evidence: AuditEvidence[];
+
+  // Make these optional (have sensible defaults)
+  evidenceSummaryText?: string;
+  actionRequired?: string;
+  assignedTo?: string;
+  targetDate?: string;
+  completed?: YesNo;
+  completionStatus?: QuestionCompletion;
+  defaultIncluded?: boolean;
+}
+
+// ADD these interfaces to Types.ts (after existing Audit/Custom types)
+
+export type CustomFieldType =
+  | 'checkbox'
+  | 'text'
+  | 'textarea'
+  | 'question'
+  | 'dropdown'
+  | 'radio'
+  | 'table'
+  | 'number'
+  | 'date';
+
+export interface CustomField {
+  id: string;
+  type: CustomFieldType;
+  label: string;
+  placeholder?: string;
+  config?: {
+    options?: string[];        // for dropdown/radio
+    headers?: string[];        // for table
+    rows?: string[][];         // initial table data
+    rowsCount?: number;        // table rows
+    colsCount?: number;        // table cols
+    min?: number;              // number/date
+    max?: number;
+    step?: number;
+    multiSelect?: boolean;     // checkboxes
+    required?: boolean;
+  };
+  required?: boolean;
+  defaultValue?: any;
+}
+
+export type CustomAuditFormat = 'checklist' | 'table' | 'form' | 'mixed';
+
+export interface CustomAuditTemplate {
+  id: string;
+  name: string;
+  format: CustomAuditFormat;
+  data: any;
+  domain?: string;
+  companyId?: string;
+  type: 'custom';       // Ensure backend recognizes
+  createdAt?: string;
+}
+
+// Extend AuditQuestionInstance for custom fields (add these optional props)
+export interface AuditQuestionInstance {
+  // ... existing fields
+  customConfig?: CustomField;  // Link back to field definition
+  customValue?: any;           // User input: string, boolean, number, string[][], etc.
+  customValidation?: {
+    isValid: boolean;
+    error?: string;
+  };
+}
+
+// Optional: Render config for UI
+export interface CustomFieldRenderConfig {
+  [key: string]: (field: CustomField, value: any) => string;
+}
+
+
+
+export interface AuditInstance {
+  _id?: string;
+  id: string;
+  title?: string;
+  templateId: string;
+  auditType: 'baseline' | 'registered_manager' | 'provider';
+  date: string;
+  auditorId?: string;
+  locationId?: string;
+  departmentId?: string;
+  subDepartmentId?: string
+  questions: AuditQuestionInstance[];
+  overallScore?: number;
+  domainScores?: Record<string, number>;
+  createdAt: string;
+  updatedAt?: string;
+  status?: 'Complete' | 'Not Complete';
+  templateType?: 'regulation' | 'custom-checklist' | 'custom-table';
+
+  rowIndex?: number;       // For table cells
+  colIndex?: number;
+}
+export interface AuditSummary {
+  completed: number;
+  outstanding: number;
+  percentComplete: number;
+  percentOutstanding: number;
+}
+
+interface CLOEScore {
+  Safe: number;
+  Effective: number;
+  Caring: number;
+  Responsive: number;
+  WellLed: number;
+}
+
+interface MasterAuditSummary {
+  averageScore: number;
+  scores: CLOEScore;
+}
+
+interface Regulation {
+  id: string;
+  title: string;
+  description: string;
+}
+export interface PerformanceSet {
+  id: string;
+  period: string;
+  createdAt: string;
+  categories: PerformanceCategory[];
+  alerts: Alert[];
+  tasks: ActionTask[];
+}
+
+
+
+export interface PerformanceCategory {
+  id: string;
+  type: 'KPI' | 'KFI' | 'KCI';
+  title: string;
+  description: string;
+  indicators: Indicator[];
+}
+
+export interface Indicator {
+  id: string;
+  name: string;
+  target: number;
+  current: number;
+  unit: string;
+  status: 'Green' | 'Amber' | 'Red';
+  trend: 'Improving' | 'Stable' | 'Declining';
+  history: IndicatorHistoryPoint[];
+}
+
+export interface IndicatorHistoryPoint {
+  date: string;
+  value: number;
+}
+
+export interface Alert {
+  id: string;
+  indicatorId: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  message: string;
+  firstDetected: string;
+  lastDetected: string;
+  active: boolean;
+  location: string;
+}
+
+export interface ActionTask {
+  id: string;
+  alertId: string;
+  assignedBy: string;
+  assignedTo: string;
+  category: string;
+  description: string;
+  dueDate: string;
+  status: 'Open' | 'InProgress' | 'Completed' | 'Overdue';
+  comments: TaskComment[];
+}
+
+export interface TaskComment {
+  date: string;
+  text: string;
+}
+export interface ChartData {
+  series: number[];
+  categories: string[];
+  target?: number;
+  markers: number[];
+}
+
+export interface CalendarEvent {
+  title: string;
+  start: Date;
+  end?: Date;
+  color?: {
+    primary: string;
+    secondary?: string;
+  };
+  recurring?: boolean;
+  rrule?: any;
+}
+
+export interface DayEvent {
+  title: string;
+  start: Date;
+  color?: {
+    primary: string;
+    secondary?: string;
+  };
+}
+
+
+export interface MonthDay {
+  date: moment.Moment;
+  events: DayEvent[];
+}
+export interface Widget {
+  id: number;
+  label: string;
+  content?: Type<unknown>;
+  contentKey: WidgetContentKey;
+  metricType?: 'KPI' | 'KFI' | 'KCI'| 'SAT'|'CLOE'|'Indicator';
+  locationId?: string,
+  rows?: number;
+  cols?: number
+  minCols?: number;
+  minRows?: number;
+  maxCols?: number;
+  maxRows?: number;
+  backgroundColor?: string;
+  color?: string;
+
+}
+export type WidgetContentKey =
+  | 'test'
+  | 'pie'
+  | 'alerts'
+  | 'bar'
+  | 'location'
+  | 'radialGauge'
+  | 'radialBarChart'
+  | 'tasksBoard'
+  | 'governancePlanner'
+  | 'auditCompletion'
+  | 'riskOverview'
+  ;
+export interface HomeCareCoverage {
+  centerAddress?: string;     // if different from location.address
+  radiusMiles?: number;       // or radiusKm
+  areas?: string[];           // towns/postcodes served
+}
+
+export interface HomeCareMetrics {
+  activeCases: number;
+  maxCases: number;
+  billingHours?: number;
+  rateCard?: string;
+  capacityOverview?: string;
+
+  coverage?: HomeCareCoverage;
+}
+export const WIDGET_COMPONENTS: Record<WidgetContentKey, Type<unknown>> = {
+  test: Test,
+  pie: WidgetPiechart,
+  alerts: WidgetAlerts,
+  bar: WidgetChartBar,
+  location: WidgetMonitoredLocation,
+  radialGauge: WidgetRadialGauge,
+  radialBarChart: WidgetRadialBarChart,
+  tasksBoard: WidgetTasksBoard,
+  governancePlanner: WidgetGovernancePlanner,
+  auditCompletion: WidgetAuditCompletion,
+  riskOverview: WidgetRiskOverview,
+};

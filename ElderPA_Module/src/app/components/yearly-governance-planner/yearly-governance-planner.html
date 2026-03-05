@@ -1,0 +1,23 @@
+<div class="planner-container">
+  <div class="controls" *ngIf="showControls">
+    <button (click)="goPrevious()">← Previous</button>
+    <button (click)="setView('month')">Month</button>
+    <button (click)="setView('week')">Week</button>
+    <button (click)="setView('day')">Day</button>
+    <button (click)="goNext()">Next →</button>
+
+
+  </div>
+
+  <div [ngSwitch]="viewType" class="dateName">
+    <div *ngSwitchCase="'month'">{{ viewDate.format('MMMM YYYY') }}</div>
+    <div *ngSwitchCase="'week'">{{ viewDate.format('MMMM') }} {{ viewDate.week() }}</div>
+    <div *ngSwitchCase="'day'">{{ viewDate.format('dddd') }}</div>
+  </div>
+
+  <div class="view-area" [ngSwitch]="viewType">
+    <app-month-view *ngSwitchCase="'month'" [events]="events()" [viewDate]="viewDate"></app-month-view>
+    <app-week-view  *ngSwitchCase="'week'"  [events]="events()" [viewDate]="viewDate"></app-week-view>
+    <app-day-view   *ngSwitchCase="'day'"   [events]="events()" [viewDate]="viewDate"></app-day-view>
+  </div>
+</div>

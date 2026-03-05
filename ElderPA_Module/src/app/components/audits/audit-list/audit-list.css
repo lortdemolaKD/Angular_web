@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+/* Audit table: use data-table; first column capped to avoid gap */
+:host ::ng-deep .data-table-wrapper {
+  min-width: 0;
+}
+
+:host ::ng-deep .data-table {
+  min-width: max-content;
+}
+
+:host ::ng-deep .data-table__cell:first-child,
+:host ::ng-deep .data-table__th:first-child {
+  max-width: 220px;
+}
+
+.table-scroll {
+  max-height: 520px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.simple-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table th,
+.simple-table td{
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.row-click{ cursor: pointer; }
+.row-click:hover{ background: rgba(0,0,0,0.03); }
+
+.pill{
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.8);
+  font-size: 12px;
+}
+
+.pill--ok{
+  background: rgba(0,160,80,0.12);
+  border-color: rgba(0,160,80,0.20);
+  color: #0a7a3c;
+}

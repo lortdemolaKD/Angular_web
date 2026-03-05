@@ -1,0 +1,177 @@
+<div class="gantt-test-page">
+  <header class="gantt-test-page__header">
+    <h1>Universal Gantt – Test Page</h1>
+    <p class="gantt-test-page__subtitle">
+      Task list, timeline, bars, milestones, dependencies (FS/SS/FF/SF), today line, zoom, and view presets.
+    </p>
+    <a routerLink="/" class="gantt-test-page__back">← Back to Home</a>
+  </header>
+
+  <div class="gantt-test-page__grid">
+    <section class="gantt-test-page__section">
+      <h2 class="gantt-test-page__title">Basic project</h2>
+      <p class="gantt-test-page__desc">Single project, task bars and progress, today line.</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="basicConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section">
+      <h2 class="gantt-test-page__title">Dependencies (FS)</h2>
+      <p class="gantt-test-page__desc">Finish-to-Start links between tasks.</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="depConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section">
+      <h2 class="gantt-test-page__title">Milestones</h2>
+      <p class="gantt-test-page__desc">Diamond markers for key dates and phase gates.</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="milestoneConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section">
+      <h2 class="gantt-test-page__title">Multi-project / portfolio</h2>
+      <p class="gantt-test-page__desc">Tasks grouped by project (Alpha, Beta, Gamma).</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="multiProjectConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section">
+      <h2 class="gantt-test-page__title">Sprint view</h2>
+      <p class="gantt-test-page__desc">Week-scale preset for sprint planning.</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="sprintConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section gantt-test-page__section--wide">
+      <h2 class="gantt-test-page__title">Worker / resource board (resource timeline)</h2>
+      <p class="gantt-test-page__desc">
+        Right-click on a person’s timeline row → “Create new task” (then drag the bar to move in time, or drag its left/right edges to resize). Drag tasks to move; unassigned tasks below can be assigned to a worker.
+      </p>
+      <div class="gantt-test-page__toolbar">
+        <div class="gantt-test-page__field">
+          <label class="gantt-test-page__label">Row mode</label>
+          <select
+            class="gantt-test-page__select"
+            [ngModel]="resourceRowMode()"
+            (ngModelChange)="resourceRowMode.set($event)"
+          >
+            <option value="compact">Compact (one row per resource)</option>
+            <option value="expanded">Expanded (task rows under resource)</option>
+          </select>
+        </div>
+      </div>
+      <div class="gantt-test-page__unassigned" *ngIf="unassignedTasks().length">
+        <h3 class="gantt-test-page__unassigned-title">Unassigned tasks</h3>
+        <ul class="gantt-test-page__unassigned-list">
+          @for (t of unassignedTasks(); track t.id) {
+            <li class="gantt-test-page__unassigned-item">
+              <span class="gantt-test-page__unassigned-name">{{ t.name }}</span>
+              <span class="gantt-test-page__unassigned-dates">{{ t.start | date:'shortDate' }} – {{ t.end | date:'shortDate' }}</span>
+              <select
+                class="gantt-test-page__select gantt-test-page__assign-select"
+                [ngModel]="t.assignee ?? ''"
+                (ngModelChange)="assignTask(t.id, $event)"
+              >
+                <option value="">Assign to…</option>
+                @for (r of workerResources; track r.id) {
+                  <option [value]="r.id">{{ r.name }}</option>
+                }
+              </select>
+            </li>
+          }
+        </ul>
+      </div>
+      <details class="gantt-test-page__add-task-details">
+        <summary class="gantt-test-page__add-task-summary">Or add task via form</summary>
+        <div class="gantt-test-page__add-task">
+          <div class="gantt-test-page__field">
+            <label class="gantt-test-page__label">Assignee</label>
+            <select
+              class="gantt-test-page__select"
+              [ngModel]="newTaskAssignee()"
+              (ngModelChange)="newTaskAssignee.set($event)"
+            >
+              @for (r of workerResources; track r.id) {
+                <option [value]="r.id">{{ r.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="gantt-test-page__field">
+            <label class="gantt-test-page__label">Task name</label>
+            <input
+              type="text"
+              class="gantt-test-page__input"
+              placeholder="New task name"
+              [ngModel]="newTaskName()"
+              (ngModelChange)="newTaskName.set($event)"
+            />
+          </div>
+          <div class="gantt-test-page__field">
+            <label class="gantt-test-page__label">Start</label>
+            <input
+              type="date"
+              class="gantt-test-page__input"
+              [ngModel]="newTaskStart()"
+              (ngModelChange)="newTaskStart.set($event)"
+            />
+          </div>
+          <div class="gantt-test-page__field">
+            <label class="gantt-test-page__label">End / deadline</label>
+            <input
+              type="date"
+              class="gantt-test-page__input"
+              [ngModel]="newTaskEnd()"
+              (ngModelChange)="newTaskEnd.set($event)"
+            />
+          </div>
+          <button type="button" class="gantt-test-page__btn" (click)="addTask()">Add task</button>
+        </div>
+      </details>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="workerConfig()"
+          [tasksSignal]="workerTasks"
+          (taskClick)="onTaskClick($event)"
+          (taskChange)="onTaskChange($event)"
+          (taskDelete)="onTaskDelete($event)"
+          (createTaskRequest)="onCreateTaskRequest($event)"
+        />
+      </div>
+    </section>
+
+    <section class="gantt-test-page__section gantt-test-page__section--wide">
+      <h2 class="gantt-test-page__title">Maxed-out demo</h2>
+      <p class="gantt-test-page__desc">Epic + tasks, milestones, dependencies, progress, today line, zoom.</p>
+      <div class="gantt-test-page__chart">
+        <app-universal-gantt
+          [config]="maxedConfig"
+          (taskClick)="onTaskClick($event)"
+        />
+      </div>
+      @if (selectedTask(); as task) {
+        <p class="gantt-test-page__selected">Selected: {{ task.name }} ({{ task.start }} – {{ task.end }})</p>
+      }
+    </section>
+  </div>
+</div>

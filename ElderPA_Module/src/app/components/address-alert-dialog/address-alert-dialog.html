@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>Address Alert</h2>
+
+<mat-dialog-content>
+
+  <mat-form-field appearance="fill" class="full">
+    <mat-label>Category</mat-label>
+    <input matInput [(ngModel)]="form.category" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full">
+    <mat-label>Description</mat-label>
+    <textarea matInput [(ngModel)]="form.description"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full">
+    <mat-label>Due date</mat-label>
+    <input matInput [matDatepicker]="picker" [(ngModel)]="form.dueDate" />
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="submit()">Create</button>
+</mat-dialog-actions>

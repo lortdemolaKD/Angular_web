@@ -1,0 +1,17 @@
+<div class="panel">
+
+  <button class="panel-header" (click)="headerClick.emit()"
+          [ngStyle]="{'background-color': headerColor}">
+    <div class="header-content" *ngIf="icon || title">
+      <ng-container *ngIf="icon">
+        <mat-icon class="icon">{{icon}}</mat-icon>
+      </ng-container>
+      <span class="title">{{title}}</span>
+    </div>
+  </button>
+
+
+  <div class="panel-body" [ngStyle]="{'height': heightIN,'width': widthIN}">
+    <ng-content></ng-content>
+  </div>
+</div>

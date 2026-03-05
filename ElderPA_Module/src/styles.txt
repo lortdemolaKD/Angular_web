@@ -1,0 +1,129 @@
+[data-theme="light"] {
+  /* Primary palette */
+  --color-primary: #1976d2;
+  --color-primary-light: #63a4ff;
+  --color-primary-dark: #004ba0;
+  --color-accent1: #ececec;
+  --color-accent2: #51003e;
+  --color-accent1-hover: #00dada;
+  --color-accent2-hover: #00c1b9;
+  /* Secondary palette */
+  --color-secondary: #f50057;
+  --color-secondary-light: #ff4081;
+  --color-secondary-dark: #c51162;
+  /* Neutral / background */
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #333333;
+  /* Sidebar */
+  --sidebar-bg: #f5f5f5;
+  --sidebar-text: #333333;
+  --sidebar-hover: #e0e0e0;
+  /* On-colors for Material */
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-on-background: #333333;
+  --color-on-surface: #333333;
+  --color-primary-container: #d1e4ff;
+  --color-on-primary-container: #001b3c;
+  --color-secondary-container: #ffc8df;
+  --color-on-secondary-container: #3f001d;
+  /* Additiona colors */
+  --color-add-primary: #c60000;
+  --color-add-secondary: #109a00;
+  --color-add-accent: #d3a200;
+  --color-add-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  /* Primary palette */
+  --color-primary: #90caf9;
+  --color-primary-light: #e3f2fd;
+  --color-primary-dark: #42a5f5;
+  --color-accent1: #af58a8;
+  --color-accent2: #146763ff;
+  --color-accent1-hover: #172a43;
+  --color-accent2-hover: #004240;
+  /* Secondary palette */
+  --color-secondary: #f8bbd9;
+  --color-secondary-light: #f3e5f5;
+  --color-secondary-dark: #f06292;
+  /* Neutral / background */
+  --color-background: #121212;
+  --color-surface: #1e1e1e;
+  --color-text: #e0e0e0;
+  /* Sidebar */
+  --sidebar-bg: #2e2e2e;
+  --sidebar-text: #ffffff;
+  --sidebar-hover: #404040;
+  /* On-colors for Material */
+  --color-on-primary: #000000;
+  --color-on-secondary: #000000;
+  --color-on-background: #e0e0e0;
+  --color-on-surface: #e0e0e0;
+  --color-primary-container: #004ba0;
+  --color-on-primary-container: #bbdefb;
+  --color-secondary-container: #f8bbd9;
+  --color-on-secondary-container: #690027;
+  /* Additiona colors */
+  --color-add-primary: #930000;
+  --color-add-secondary: #37ca00;
+  --color-add-accent: #957900;
+  --color-add-text: #e0e0e0;
+
+}
+
+[data-theme="high-contrast"] {
+  /* Primary palette - high contrast */
+  --color-primary: #000000;
+  --color-primary-light: #ffffff;
+  --color-primary-dark: #000000;
+  --color-accent1: #000000ff;
+  --color-accent2: #9a0000;
+  --color-accent1-hover: #7e7e7e;
+  --color-accent2-hover: #8a8a8a;
+  /* Secondary palette */
+  --color-secondary: #000000;
+  --color-secondary-light: #ffffff;
+  --color-secondary-dark: #000000;
+  /* Neutral / background */
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #000000;
+  /* Sidebar */
+  --sidebar-bg: #000000;
+  --sidebar-text: #ffffff;
+  --sidebar-hover: #7c7c7c;
+  /* On-colors for Material */
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-on-background: #000000;
+  --color-on-surface: #000000;
+  /* Accessibility */
+  font-weight: bold;
+  /*text-shadow: 0 0 0 #000000;*/
+  --color-primary-container: #000000;
+  --color-on-primary-container: #ffffff;
+  --color-secondary-container: #000000;
+  --color-on-secondary-container: #ffffff;
+  /* Additiona colors */
+  --color-add-primary: #ff0000;
+  --color-add-secondary: #40ff00;
+  --color-add-accent: #ffc500;
+  --color-add-text: #000000;
+
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.sidebar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+}
+
+.sidebar-item:hover {
+  background-color: var(--sidebar-hover);
+}

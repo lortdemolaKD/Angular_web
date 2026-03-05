@@ -1,0 +1,25 @@
+<div class="cqc-container">
+  <mat-form-field appearance="outline" class="w-100">
+    <mat-label>CQC Provider ID or Business Name *</mat-label>
+    <input matInput
+           [formControl]="cqcControl"
+           [matAutocomplete]="auto"
+           (input)="onSearch($any($event.target)?.value)"
+           placeholder="e.g., i-i or 1-123456789">
+    <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelection($event)">
+      <mat-option *ngFor="let provider of providers()" [value]="provider.providerId">
+        {{ provider.providerName }} (ID: {{ provider.providerId }})
+      </mat-option>
+      <mat-option *ngIf="providers().length === 0 && cqcControl.value!.length > 2" disabled>
+        No providers found
+      </mat-option>
+
+    </mat-autocomplete>
+  </mat-form-field>
+  <div *ngIf="providers().length > 0" class="results">
+    <p>Found {{ providers().length }} providers:</p>
+    <ul>
+      <li *ngFor="let p of providers()">{{ p.providerName }} - {{ p.providerId }}</li>
+    </ul>
+  </div>
+</div>

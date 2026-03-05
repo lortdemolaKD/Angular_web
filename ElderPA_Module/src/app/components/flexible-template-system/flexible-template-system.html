@@ -1,0 +1,198 @@
+<div class="template-system-container">
+
+  <!-- Top Toolbar -->
+  <mat-toolbar class="system-toolbar" color="primary">
+    <div class="toolbar-left">
+      <mat-icon>{{ mode === 'builder' ? 'build' : 'edit_note' }}</mat-icon>
+      <span class="toolbar-title">
+        {{ mode === 'builder' ? 'Template Builder' : 'Form View' }}
+      </span>
+      <ng-container *ngIf="mode === 'builder'">
+        <mat-form-field class="template-name-field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Template Name</mat-label>
+          <input matInput
+                 [(ngModel)]="templateNameInput"
+                 (input)="updateTemplateName(templateNameInput)"
+                 placeholder="Untitled Template">
+          <mat-hint *ngIf="hasUnsavedChanges()">Unsaved changes</mat-hint>
+        </mat-form-field>
+      </ng-container>
+
+      <!-- Read-only name (other modes) -->
+      <span class="template-name" *ngIf="mode !== 'builder' && template">
+      {{ template.name }}
+    </span>
+    </div>
+
+    <div class="toolbar-center">
+      <!-- Mode Switcher -->
+      <mat-button-toggle-group
+        [value]="mode"
+        (change)="switchMode($event.value)"
+        class="mode-toggle">
+        <mat-button-toggle value="builder">
+          <mat-icon>build</mat-icon>
+          <span>Builder</span>
+        </mat-button-toggle>
+        <mat-button-toggle value="form">
+          <mat-icon>edit_note</mat-icon>
+          <span>Form</span>
+        </mat-button-toggle>
+
+      </mat-button-toggle-group>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Builder Mode Actions -->
+      <ng-container *ngIf="mode === 'builder'">
+        <button
+          mat-icon-button
+          (click)="togglePreview()"
+          matTooltip="Preview">
+          <mat-icon>visibility</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="exportTemplate()"
+          matTooltip="Export JSON">
+          <mat-icon>download</mat-icon>
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept=".json"
+          (change)="importTemplate($event)"
+          style="display: none;">
+        <button
+          mat-icon-button
+          (click)="fileInput.click()"
+          matTooltip="Import JSON">
+          <mat-icon>upload</mat-icon>
+        </button>
+        <button
+          mat-stroked-button
+          (click)="discardChanges()"
+          [disabled]="!hasUnsavedChanges()"
+          class="toolbar-btn">
+          <mat-icon>refresh</mat-icon>
+          Discard
+        </button>
+        <button
+          mat-raised-button
+          (click)="saveTemplate()"
+          [disabled]="builderFields().length === 0"
+          class="toolbar-btn save-btn">
+          <mat-icon>save</mat-icon>
+          Save Template
+        </button>
+        <button
+          mat-raised-button
+          (click)="saveTemplateDraft()"
+          [disabled]="builderFields().length === 0"
+          class="toolbar-btn save-btn">
+          <mat-icon>save</mat-icon>
+          Save Draft
+        </button>
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="template && deleteTemplate(template)"
+          matTooltip="Delete template">
+          <mat-icon>delete</mat-icon>
+        </button>
+        <span class="unsaved-indicator" *ngIf="hasUnsavedChanges()">
+          <mat-icon>circle</mat-icon>
+          Unsaved
+        </span>
+      </ng-container>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+
+    <!-- BUILDER MODE -->
+    <div class="builder-layout" *ngIf="mode === 'builder' && !showPreview()">
+
+      <!-- Left: Palette -->
+      <div class="palette-section">
+        <app-field-palette
+          [connectedTo]="['builder-canvas']">
+        </app-field-palette>
+      </div>
+
+      <!-- Center: Canvas -->
+      <div class="canvas-section">
+        <ng-container *ngIf="builderFields().length > 0; else emptyCanvasState">
+          <app-field-canvas
+            [fields]="builderFields()"
+            [parentSelectedFieldId]="selectedFieldId()"
+            (fieldsChange)="onFieldsChanged($event)"
+            (fieldSelected)="onFieldSelected($event)">
+          </app-field-canvas>
+        </ng-container>
+
+        <!-- Temporary empty state while loading/empty -->
+        <ng-template #emptyCanvasState>
+          <app-field-canvas
+            [fields]="[]"
+            (fieldsChange)="onFieldsChanged($event)">
+          </app-field-canvas>
+        </ng-template>
+      </div>
+
+      <!-- Right: Properties Panel -->
+      <div class="properties-section">
+        <app-field-properties-panel
+          [selectedField]="selectedFieldForPanel"
+          (fieldUpdated)="onFieldUpdated($event)"
+          (selectionCleared)="onSelectionCleared()">
+        </app-field-properties-panel>
+      </div>
+
+    </div>
+
+    <!-- PREVIEW MODE -->
+    <div class="preview-layout" *ngIf="mode === 'builder' && showPreview()">
+      <div class="preview-container">
+        <div class="preview-header">
+          <h2>Template Preview</h2>
+          <button mat-raised-button (click)="togglePreview()">
+            <mat-icon>close</mat-icon>
+            Close Preview
+          </button>
+        </div>
+        <div class="preview-content">
+          <div *ngIf=" template" class="form-wrapper" [attr.data-template-id]="template.id">
+            <app-form-renderer
+              [template]="previewTemplate()"
+              [existingResponse]="existingResponse"
+              (formSubmit)="onFormSubmit($event)"
+              (formChange)="onPreviewFormChange($event)">
+            </app-form-renderer>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM MODE -->
+    <div class="form-layout" *ngIf="mode === 'form'">
+      <div class="form-container">
+        <div *ngIf=" template" class="form-wrapper" [attr.data-template-id]="template.id">
+          <app-form-renderer
+            [template]="template"
+            [existingResponse]="existingResponse"
+            (formSubmit)="onFormSubmit($event)"
+            (formChange)="onFormChange($event)">
+          </app-form-renderer>
+        </div>
+        <div *ngIf="!template" class="no-template">
+          <mat-icon>error_outline</mat-icon>
+          <p>No template provided</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

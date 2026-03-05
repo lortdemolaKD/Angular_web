@@ -1,0 +1,44 @@
+.page {
+  padding: 16px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Card system */
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-primary-container);
+  border-bottom: 1px solid var(--sidebar-hover);
+  color: var(--color-on-primary-container);
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+
+.card-body {
+  padding: 12px;
+  color: var(--color-text);
+}

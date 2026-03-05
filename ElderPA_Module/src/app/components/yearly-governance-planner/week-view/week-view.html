@@ -1,0 +1,28 @@
+<div class="planner-container">
+  <div class="week-view">
+
+    <div class="week-header">
+      <div class="hour-col"></div>
+      <div class="day-header" *ngFor="let day of week">{{ day.date.format('ddd DD') }}</div>
+    </div>
+
+
+    <div class="hour-rows-container">
+      <div class="hour-rows">
+        <div class="hour-row" *ngFor="let hour of hours">
+          <div class="hour-label">{{ hour }}:00</div>
+          <div class="day-column" *ngFor="let day of week">
+            <ng-container *ngFor="let event of day.events">
+              <div class="event"
+                   *ngIf="moment(event.start).hour() === hour"
+                   [style.background]="event.color?.primary"
+                   title="{{ event.title }}">
+                {{ event.title }}
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

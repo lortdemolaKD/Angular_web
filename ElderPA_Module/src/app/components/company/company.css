@@ -1,0 +1,291 @@
+.company-page {
+  padding: 16px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.header {
+  display: grid;
+  gap: 12px;
+}
+
+.meta {
+  display: grid;
+  gap: 6px;
+}
+
+.health {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.pill.danger {
+  border-color: var(--color-on-surface);
+  background: var(--color-add-primary,);
+}
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.status.light {
+  background: var(--indicator-light);
+  color: var(--color-add-text, #fff);
+}
+
+.status.mid {
+  background: var(--indicator-mid);
+  color: var(--color-add-text, #fff);
+}
+
+.status.high {
+  background: var(--indicator-high);
+  color: var(--color-add-text, #fff);
+}
+
+.grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.col {
+  display: grid;
+  gap: 16px;
+}
+
+/* === Card system matching CCGA === */
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-primary-container);
+  border-bottom: 1px solid var(--sidebar-hover);
+  color: var(--color-on-primary-container);
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+  text-transform: none;
+}
+
+.card-body {
+  padding: 12px;
+}
+
+/* mini-meta matching CCGA glance */
+.mini-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 5px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.mini-meta .k {
+  font-weight: 800;
+  margin-right: 6px;
+}
+
+/* Badges matching CCGA style */
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid var(--sidebar-hover);
+}
+
+.badge.light {
+  background: var(--indicator-light);
+  color: var(--color-add-text, #fff);
+}
+
+.badge.mid {
+  background: var(--indicator-mid);
+  color: var(--color-add-text, #fff);
+}
+
+.badge.high {
+  background: var(--indicator-high);
+  color: var(--color-add-text, #fff);
+}
+
+/* details-grid matching CCGA glance */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px 18px;
+  align-items: start;
+}
+
+.details-grid > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Table styles */
+.table-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.simple-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table th,
+.simple-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--sidebar-hover);
+  text-align: left;
+  vertical-align: top;
+  color: var(--color-text);
+}
+
+.mini-btn {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.hint {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+  color: var(--color-text);
+}
+
+.simple-table tr.inactive {
+  opacity: 0.6;
+}
+
+.simple-table tr.overdue {
+  background: var(--color-add-primary,);
+}
+
+.actions {
+  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag {
+  font-size: 12px;
+  opacity: 0.75;
+  color: var(--color-text);
+}
+
+.risk {
+  padding: 10px 12px;
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.risk-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.risk-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+  color: var(--color-text);
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.big {
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.muted {
+  margin-top: 6px;
+  opacity: 0.75;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.placeholder {
+  padding: 16px;
+  border: 1px dashed var(--sidebar-hover);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    white-space: normal;
+  }
+}

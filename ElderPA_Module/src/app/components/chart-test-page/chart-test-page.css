@@ -1,0 +1,60 @@
+.chart-test-page {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.chart-test-page__header {
+  margin-bottom: 2rem;
+}
+
+.chart-test-page__header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.chart-test-page__subtitle {
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+}
+
+.chart-test-page__back {
+  display: inline-block;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.chart-test-page__back:hover {
+  text-decoration: underline;
+}
+
+.chart-test-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 2rem;
+}
+
+.chart-test-page__section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.chart-test-page__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #374151;
+}
+
+.chart-test-page__chart {
+  min-height: 280px;
+}
+
+.chart-test-page__chart app-smart-chart {
+  display: block;
+}

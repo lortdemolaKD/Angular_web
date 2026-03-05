@@ -1,0 +1,7 @@
+<div class="radial-selector">
+  <button *ngFor="let item of items"
+          [class.selected]="item === selected"
+          (click)="selectItem(item)">
+    {{ labelFn(item) }}
+  </button>
+</div>

@@ -1,0 +1,9 @@
+<div class="chart-container">
+  @if (radialBarData.length) {
+    <app-smart-chart
+      chartType="radial-bar-multiple"
+      [data]="radialBarData"
+      [options]="radialBarOptions">
+    </app-smart-chart>
+  }
+</div>

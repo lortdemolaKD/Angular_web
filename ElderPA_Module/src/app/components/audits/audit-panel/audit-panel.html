@@ -1,0 +1,189 @@
+<section class="audit-library">
+  <header class="audit-library__header">
+    <h1 class="audit-library__title">Audit Library</h1>
+    <app-cst-button
+      title="Return"
+      headerColor="var(--color-primary-container)"
+      (headerClick)="moveTo('companies')">
+    </app-cst-button>
+  </header>
+
+  <div class="audit-library__layout">
+    <!-- Left: Audit list card -->
+    <aside class="audit-library__list-card card">
+      <div class="card__head">
+        <span class="card__head-title">Audits</span>
+        <div class="card__head-actions">
+          <button type="button" class="btn btn--primary" (click)="createNewAudit()">
+            New audit
+          </button>
+          @if (isAdmin()) {
+            <button type="button" class="btn btn--secondary" (click)="editSelectedAudit()">
+              Edit selected
+            </button>
+          }
+        </div>
+      </div>
+      <div class="card__body card__body--scroll">
+        <app-audit-list
+          [audits]="auditListData"
+          (auditSelected)="onAuditSelected($event)">
+        </app-audit-list>
+      </div>
+    </aside>
+
+    <!-- Right: Detail panel -->
+    <main class="audit-library__detail">
+      @if (selectedAudit(); as a) {
+        <div class="detail-panel">
+          <!-- Meta card -->
+          <div class="card detail-panel__meta">
+            <div class="card__body detail-meta">
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">ID</span>
+                <span class="detail-meta__value detail-meta__value--mono">{{ a.id }}</span>
+              </div>
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">Type</span>
+                <span class="detail-meta__value">{{ a.auditType }}</span>
+              </div>
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">Date</span>
+                <span class="detail-meta__value">{{ a.date }}</span>
+              </div>
+              @if (hasOverallScore()) {
+                <div class="detail-meta__row">
+                  <span class="detail-meta__label">Overall score</span>
+                  <span class="detail-meta__value detail-meta__score" [class.detail-meta__score--high]="(overallScore() ?? 0) >= 70" [class.detail-meta__score--low]="(overallScore() ?? 0) < 50">
+                    {{ overallScore() ?? 0 }}%
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Timeline: creation, edits, submission, status -->
+          <div class="card detail-panel__section">
+            <div class="card__head card__head--sub">
+              <span class="card__head-title">Timeline</span>
+            </div>
+            <div class="card__body">
+              <div class="audit-timeline">
+                @for (ev of auditTimeline(); track ev.date + ev.label) {
+                  <div class="audit-timeline__item" [class.audit-timeline__item--created]="ev.type === 'created'" [class.audit-timeline__item--updated]="ev.type === 'updated'" [class.audit-timeline__item--submitted]="ev.type === 'submitted'">
+                    <span class="audit-timeline__dot"></span>
+                    <div class="audit-timeline__content">
+                      <span class="audit-timeline__label">{{ ev.label }}</span>
+                      @if (ev.by) {
+                        <span class="audit-timeline__by">by {{ ev.by }}</span>
+                      }
+                      <span class="audit-timeline__date">{{ ev.date }}</span>
+                    </div>
+                  </div>
+                }
+                @empty {
+                  <span class="detail-meta__value detail-meta__value--muted">No timeline events</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Location card -->
+          <div class="card detail-panel__section">
+            <div class="card__head card__head--sub">
+              <span class="card__head-title">Location</span>
+            </div>
+            <div class="card__body detail-meta">
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">Site</span>
+                <span class="detail-meta__value">{{ getLocationName(a.locationId) }}</span>
+              </div>
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">Department</span>
+                <span class="detail-meta__value">{{ getDepartmentName(a.locationId, a.departmentId) || '—' }}</span>
+              </div>
+              <div class="detail-meta__row">
+                <span class="detail-meta__label">Sub-department</span>
+                <span class="detail-meta__value">{{ getSubDepartmentName(a.locationId, a.departmentId, a.subDepartmentId) || '—' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Domain scores (only when measures calculate domain scores) -->
+          @if (hasDomainScores()) {
+            <div class="card detail-panel__section">
+              <div class="card__head card__head--sub">
+                <span class="card__head-title">Domain scores</span>
+              </div>
+              <div class="card__body">
+                <div class="domain-scores">
+                  @for (kv of domainScores() | keyvalue; track kv.key) {
+                    <div class="domain-score">
+                      <span class="domain-score__name">{{ kv.key }}</span>
+                      <span class="domain-score__value" [class.domain-score__value--high]="kv.value >= 70" [class.domain-score__value--low]="kv.value < 50">{{ kv.value }}%</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Status / Approval -->
+          @if (isAdmin()) {
+            <div class="card detail-panel__section detail-panel__approval">
+              <div class="card__body approval-bar">
+                <span class="approval-bar__label">Status</span>
+                <span class="badge" [class.badge--success]="a.status === 'approved'" [class.badge--neutral]="a.status !== 'approved'">{{ a.status ?? '—' }}</span>
+                <button type="button" class="btn btn--primary" (click)="onApproveAudit(a)" [disabled]="a.status === 'approved'">
+                  Approve audit
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="card detail-panel__section">
+              <div class="card__body approval-bar approval-bar--readonly">
+                <span class="approval-bar__label">View only</span>
+                <span class="detail-meta__value detail-meta__value--muted">Admin approval required to change status.</span>
+              </div>
+            </div>
+          }
+
+          <!-- Content: Responses (full file) or Questions & evidence -->
+          <div class="card detail-panel__content">
+            <div class="card__head card__head--sub">
+              <span class="card__head-title">{{ isSelectedCustom() ? 'Responses (full audit)' : 'Questions & evidence' }}</span>
+            </div>
+            <div class="card__body">
+              @if (isSelectedCustom()) {
+                @if (isSelectedCustom() && customTemplate(); as tmpl) {
+                  <app-form-renderer
+                    [template]="tmpl"
+                    [existingResponse]="getCustomResponses()"
+                    [readonly]="true"
+                    class="detail-panel__form">
+                  </app-form-renderer>
+                }
+              } @else {
+                <app-question-list
+                  [questions]="selectedAuditQuestions"
+                  (questionSelected)="onQuestionSelected($event)">
+                </app-question-list>
+                @if (selectedQuestion(); as q) {
+                  <app-evidence-list [evidence]="selectedEvidence" class="detail-panel__evidence"></app-evidence-list>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="audit-library__empty card">
+          <div class="card__body empty-state">
+            <p class="empty-state__title">No audit selected</p>
+            <p class="empty-state__text">Select an audit from the list or create a new one.</p>
+            <button type="button" class="btn btn--primary" (click)="createNewAudit()">New audit</button>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</section>

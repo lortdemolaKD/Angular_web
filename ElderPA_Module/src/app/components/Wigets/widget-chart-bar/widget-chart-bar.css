@@ -1,0 +1,49 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-height: 300px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+}
+
+.chart-title,
+.chart-indicator-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 0 6px 0;
+  flex-shrink: 0;
+  word-break: break-word;
+}
+
+.chart-empty {
+  padding: 1rem;
+  font-size: 0.85rem;
+  text-align: center;
+  color: inherit;
+  opacity: 0.9;
+}
+
+.chart-container {
+  flex: 1 1 auto;
+  min-height: 200px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}

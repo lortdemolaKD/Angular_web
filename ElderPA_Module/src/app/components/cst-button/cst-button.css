@@ -1,0 +1,71 @@
+/* Button surface should match company.css "card" look/feel */
+.panel-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+
+  border-radius: 12px;
+  padding: 10px 12px;
+
+  /* remove the old "floating up" behavior */
+  margin-top: 0;
+  margin-bottom: 0;
+
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.12);
+  outline: none;
+
+  /* allow parent containers to control width; still works with fit-content */
+  width: 100%;
+
+  background: rgba(255,255,255,0.85);
+  color: inherit;
+
+  /* softer shadow like company.css cards */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.panel-header:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+  filter: brightness(1.02);
+}
+
+.panel-header:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.panel-header:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.22);
+  outline-offset: 2px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.icon {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+/* If CSTButton has a label/title span, keep it compact like the app's meta text */
+.title,
+.text,
+.label {
+  color:var(--sidebar-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* If your component uses [headerColor] by setting inline background-color,
+   this will still work because inline styles win. This just improves defaults. */

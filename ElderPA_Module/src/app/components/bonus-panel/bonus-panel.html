@@ -1,0 +1,256 @@
+<div class="container">
+  <div class="top-row">
+    <h2 class="page-title">Finances</h2>
+
+    <div class="location-select" *ngIf="canChangeLocation()">
+      <label>Location</label>
+      <select [value]="selectedLocationId()" (change)="onLocationChange($event)">
+        <option *ngFor="let loc of locationOptions" [value]="loc.locationID">
+          {{ loc.name }}
+        </option>
+      </select>
+    </div>
+
+
+  </div>
+
+  <div class="content">
+    <!-- Petty cash -->
+    <section class="card petty">
+      <div class="card-header">
+        <h3>Petty cash</h3>
+        <div class="pill pill-open">Always available</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat">
+          <div class="k">Monthly limit</div>
+          <div class="v">£{{ pettyCashMonthlyLimit() | number:'1.0-0' }}</div>
+        </div>
+
+        <div class="stat">
+          <div class="k">Spent</div>
+          <div class="v">£{{ pettySpentTotal() | number:'1.0-0' }}</div>
+        </div>
+
+        <div class="stat">
+          <div class="k">Remaining</div>
+          <div class="v">£{{ pettyBalance() | number:'1.0-0' }}</div>
+        </div>
+      </div>
+
+      <div class="spend-block" *ngIf="canSpendPettyCash(); else pettyReadonly">
+        <h4>Use petty cash (monthly)</h4>
+
+        <div class="spend-form">
+          <input type="text" #pettyLabel placeholder="Category / purpose (e.g. Supplies)">
+          <input type="number"
+                 #pettyAmount
+                 placeholder="Amount £"
+                 min="0"
+                 [max]="pettyBalance()"
+                 (input)="onPettyAmountInput(pettyAmount.value)">
+
+          <button class="btn"
+                  (click)="addPettySpendItem(pettyLabel.value, pettyAmount.value); pettyAmount.value=''; pettyLabel.value='';"
+                  [disabled]="pettyBalance() <= 0 || pettySpendPreview() <= 0">
+            Spend
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="table small">
+            <thead>
+            <tr>
+              <th>Purpose</th>
+              <th>Amount</th>
+              <th>Date</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr *ngFor="let s of pettyCashSpendItems()">
+              <td>{{ s.label }}</td>
+              <td>£{{ s.amount | number:'1.0-0' }}</td>
+              <td>{{ s.createdAt | date:'yyyy-MM-dd' }}</td>
+            </tr>
+
+            <tr *ngIf="pettyCashSpendItems().length === 0">
+              <td colspan="3" class="empty">No petty cash spending recorded.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="hint">
+          Petty cash entries cannot be revoked here. Contact administration for corrections.
+        </p>
+      </div>
+
+      <ng-template #pettyReadonly>
+        <p class="hint">Managers can log petty cash spending items here.</p>
+      </ng-template>
+    </section>
+
+    <!-- Bonus pot -->
+    <section class="card bonus">
+      <div class="card-header">
+        <h3>Bonus pot</h3>
+        <div class="pill"
+             [class.pill-open]="isBonusSpendWindowOpen()"
+             [class.pill-closed]="!isBonusSpendWindowOpen()">
+          Spend window: {{ isBonusSpendWindowOpen() ? 'OPEN (22 Dec - 31 Dec)' : 'CLOSED' }}
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Left: totals + deposits -->
+        <div>
+          <div class="grid-3">
+            <div class="stat">
+              <div class="k">Total accumulated</div>
+              <div class="v">£{{ potState().totalAccumulated | number:'1.0-0' }}</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Spent</div>
+              <div class="v">£{{ bonusSpentTotal() | number:'1.0-0' }}</div>
+            </div>
+
+            <div class="stat">
+              <div class="k">Available (bonus pot)</div>
+              <div class="v">£{{ bonusBalance() | number:'1.0-0' }}</div>
+            </div>
+          </div>
+
+          <p class="hint">
+            Bonus pot spending is locked until 22 Dec and closes after 31 Dec.
+          </p>
+
+          <div class="monthly-history">
+            <h4>Monthly deposits ({{ potState().currentMonth }}/12)</h4>
+
+            <div class="month-bars">
+              <div class="month-bar" *ngFor="let deposit of potState().monthlyDeposits; let i = index">
+                <div class="month-bar-fill" [style.height.%]="normalizedDeposits()[i]"></div>
+                <div class="month-bar-label">M{{ i + 1 }}</div>
+                <div class="month-bar-value">£{{ deposit | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: bonus lines table (uses TS computed lines()) -->
+        <div>
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+              <tr>
+                <th>Role</th>
+                <th>Base %</th>
+                <th>Financial</th>
+                <th>Stakeholder</th>
+                <th>Auto %</th>
+                <th>Manual +/- %</th>
+                <th>Final %</th>
+              </tr>
+              </thead>
+
+              <tbody>
+              <tr *ngFor="let l of lines()">
+                <td>{{ l.role }}</td>
+                <td>{{ l.basePercent | number:'1.0-1' }}</td>
+                <td>{{ l.financialScore | number:'1.0-1' }}</td>
+                <td>{{ l.stakeholderScore | number:'1.0-1' }}</td>
+                <td class="strong">{{ l.autoBonusPercent | number:'1.0-1' }}</td>
+
+                <td>
+                  <!-- Admin-only editing; TS already blocks Managers in updateManualAdjust() -->
+                  <input
+                    class="num"
+                    type="number"
+                    [value]="manualAdjustments()[l.role] ?? 0"
+                    (input)="updateManualAdjust(l.role, ($any($event.target)).value)"
+                    [disabled]="!canEditManualAdjustments()"
+                  >
+                </td>
+
+                <td class="strong">{{ l.finalBonusPercent | number:'1.0-1' }}</td>
+              </tr>
+
+              <tr class="total-row">
+                <td colspan="6" class="strong">Total</td>
+                <td class="strong">{{ totalFinalPercent() | number:'1.0-1' }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spend bonus pot -->
+      <div class="spend-block">
+        <h4>Spend bonus pot (e.g., Christmas presents)</h4>
+
+        <div class="hint" *ngIf="!isBonusSpendWindowOpen()">
+          Spend button will unlock on 22 Dec.
+        </div>
+
+        <div class="spend-form" *ngIf="isBonusSpendWindowOpen() && canSpendBonus()">
+          <input type="text" #bonusLabel placeholder="Purpose (e.g. Presents)">
+          <input type="number"
+                 #bonusAmount
+                 placeholder="Amount £"
+                 min="0"
+                 [max]="bonusBalance()"
+                 (input)="onBonusAmountInput(bonusAmount.value)">
+
+          <button
+            class="btn"
+            (click)="addBonusSpendItem(bonusLabel.value, bonusAmount.value); bonusAmount.value=''; bonusLabel.value='';"
+            [disabled]="bonusBalance() <= 0 || bonusSpendPreview() <= 0"
+          >
+            Spend
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="table small">
+            <thead>
+            <tr>
+              <th>Purpose</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th *ngIf="canSpendBonus() && isBonusSpendWindowOpen()">Action</th>
+
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr *ngFor="let s of bonusSpendItems()">
+              <td>{{ s.label }}</td>
+              <td>£{{ s.amount | number:'1.0-0' }}</td>
+              <td>{{ s.createdAt | date:'yyyy-MM-dd' }}</td>
+
+              <td *ngIf="canSpendBonus() && isBonusSpendWindowOpen()">
+
+              <button class="btn-danger" (click)="removeBonusSpendItem(s.id)">
+                  Remove
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="bonusSpendItems().length === 0">
+              <td [attr.colspan]="(canSpendBonus() && isBonusSpendWindowOpen()) ? 4 : 3" class="empty">
+
+              No bonus spending recorded.
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+

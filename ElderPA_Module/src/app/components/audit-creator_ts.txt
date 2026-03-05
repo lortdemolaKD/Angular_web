@@ -1,0 +1,1102 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { CdkDrag, CdkDropList, CdkDragDrop, CdkDropListGroup } from '@angular/cdk/drag-drop';
+import { MatDialog } from '@angular/material/dialog';
+import { MOCK_REGULATIONS,CUSTOM_LIBRARY } from '../../mock-data';
+import { CSTButton } from '../../cst-button/cst-button';
+import { EvidenceDialog, EvidenceDialogResult } from '../evidence-dialog/evidence-dialog';
+
+
+import {
+  AuditInstance,
+  AuditQuestionInstance,
+  AuditEvidence,
+  AuditTemplate,
+  AuditFrequency,
+  TemplateAuditType,
+  RegulationSubsection,
+  CompanyType,
+  UserType, LocationDepartment, CustomAuditTemplate
+} from '../../Types';
+type RegulationItem = (typeof MOCK_REGULATIONS.items)[number] & {
+  type?: 'Regulation' | 'Custom';
+  subsections?: any[];
+  domain?: string;
+};
+type RegulationClause = any;
+import { AuthService } from '../../../Services/Auth.service';
+import { CompanyService } from '../../../Services/Company.service';
+
+// Replace these with your new HTTP services (create them if not yet created)
+import { AuditService } from '../../../Services/audit.service';
+import { AuditTemplateService } from '../../../Services/audit-template.service';
+import { EvidenceService } from '../../../Services/evidence.service';
+import {firstValueFrom} from 'rxjs';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {MatExpansionPanelHeader, MatExpansionPanelTitle} from '@angular/material/expansion';
+
+
+type DbLocation = {
+  id: string;
+  name: string;
+  departments?: LocationDepartment[];
+};
+@Component({
+  selector: 'app-audit-creator',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    CdkDrag,
+    CdkDropList,
+    CdkDropListGroup,
+    CSTButton,
+
+  ],
+  templateUrl: './audit-creator.html',
+  styleUrls: ['./audit-creator.css']
+})
+export class AuditCreator implements OnInit {
+  audits = signal<AuditInstance[]>([]);
+  selectedAudit = signal<AuditInstance | null>(null);
+
+  auditTitle = signal('');
+  auditType = signal<'baseline' | 'registered_manager' | 'provider'>('baseline');
+  auditDate = signal(new Date().toISOString().slice(0, 10));
+
+  questions = signal<AuditQuestionInstance[]>([]);
+
+  // templates
+  templates = signal<AuditTemplate[]>([]);
+  selectedTemplateId = signal<string | null>(null);
+
+  // company/user
+  company: CompanyType | null = null;
+  user: UserType | null = null;
+
+  // location selection (DB ids)
+
+  locationId = signal<string | null>(null);
+  departmentId = signal<string | null>(null);
+  subDepartmentId = signal<string | null>(null);
+
+  // assuming this.locations is now DbLocation[] (from /api/locations)
+  selectedLocation = computed(() =>
+    this.locations.find(l => l.id === this.locationId()) ?? null
+  );
+
+  availableDepartments = computed(() => this.selectedLocation()?.departments ?? []);
+
+  availableSubDepartments = computed(() => {
+    const depId = this.departmentId();
+    const dep = (this.selectedLocation()?.departments ?? []).find(d => d.id === depId);
+    return dep?.subDepartments ?? [];
+  });
+
+
+  // context menu state
+  showEvidenceMenu = false;
+  evidenceMenuPosition = { x: 0, y: 0 };
+  activeEvidenceQuestionId: string | null = null;
+
+  private pendingAuditId: string | null = null;
+
+  constructor(
+    private auditService: AuditService,
+    private templateService: AuditTemplateService,
+    private evidenceService: EvidenceService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private dialog: MatDialog,
+    private authService: AuthService,
+    private companyService: CompanyService,
+    private http: HttpClient
+  ) {
+
+    this.pendingAuditId = this.route.snapshot.queryParamMap.get('auditId');
+
+    const routeLocationId = this.route.snapshot.queryParamMap.get('locationId');
+    if (routeLocationId) this.locationId.set(routeLocationId);
+
+  }
+
+
+  locations: DbLocation[] = [];
+  companyId = signal<string | null>(null);
+
+  ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    if (!user) return;
+    this.user = user;
+
+    if (user.role === 'Managers') {
+      this.companyService.currentLocation$.subscribe((loc) => {
+        if (this.locationId()) {
+          // locationId already set via route; donâ€™t override
+          this.loadAudits();
+          return;
+        }
+
+        if (!loc?.id) return;
+        this.locationId.set(loc.id);
+        this.locations = [{ id: loc.id, name: loc.name ?? 'My location' }];
+        this.loadAudits();
+      });
+      return;
+    }
+
+    if (user.role === 'Admins') {
+      this.companyService.currentCompany$.subscribe({
+        next: (c: any) => {
+          const id = c?.id ?? c?.companyID ?? null;
+          if (!id) {
+            this.locations = [];
+            this.locationId.set(null);
+            return;
+          }
+
+          this.companyId.set(id);
+          this.locationId.set(null);
+          this.departmentId.set(null);
+          this.subDepartmentId.set(null);
+
+          const params = new HttpParams().set('companyId', id);
+          this.http
+            .get<DbLocation[]>('/api/locations', { params })
+            .subscribe((locs: any) => {
+              console.log('Locations loaded:', locs);
+              this.locations = locs ?? [];
+
+              // Only set initial location if list has items
+              if (this.locations.length > 0) {
+                this.onLocationChange(this.locations[0].id);
+              }
+
+              // Load audits/templates AFTER locations are ready
+              this.loadTemplates();
+              this.loadCustomTemplates();
+              this.loadAudits();
+            });
+        },
+        error: (err) => console.error('currentCompany$ error', err),
+      });
+    }
+    this.loadCustomRegs();
+  }
+
+
+  customTemplates = signal<CustomAuditTemplate[]>([]);
+  newCustomTemplate: Partial<CustomAuditTemplate> = {
+    name: '',
+    format: 'checklist',
+    data: [] as any[]
+  };
+
+
+
+/*
+  createChecklistTemplate() {
+    const template: CustomAuditTemplate = {
+      id: `TEMP-${crypto.randomUUID()}`,
+      name: this.newCustomTemplate.name || 'New checklist',
+      format: 'checklist',
+      data: [],
+    };
+    this.customTemplates.update(list => [...list, template]);
+    this.currentTemplateId.set(template.id);
+    this.showChecklistBuilderFn();
+  }
+
+  createTableTemplate() {
+    const template: CustomAuditTemplate = {
+      id: `TEMP-${crypto.randomUUID()}`,
+      name: this.newCustomTemplate.name || 'New table',
+      format: 'table',
+      data: [], // youâ€™ll fill on save
+    };
+    this.customTemplates.update(list => [...list, template]);
+    this.currentTemplateId.set(template.id);
+    this.showTableBuilderFn();
+  }*/
+
+  addChecklistQuestion() {
+    const tid = this.currentTemplateId();
+    const text = this.newQuestionText.trim();
+    if (!tid || !text) return;
+
+    this.customTemplates.update(list =>
+      list.map(t => t.id === tid ? { ...t, data: [...(t.data as string[]), text] } : t)
+    );
+
+    this.newQuestionText = '';
+  }
+
+  loadCustomTemplate(templateId: string) {
+    const template = this.customTemplates().find(t => t.id === templateId);
+    if (!template) return;
+
+    const questions: AuditQuestionInstance[] = [];
+
+    if (template.format === 'checklist') {
+      (template.data as string[]).forEach((q: string, i: number) => {
+        questions.push({
+          templateQuestionId: crypto.randomUUID(),
+          templateType: 'custom-checklist' as any,
+          regulationId: template.id,  // â† Use template ID as "regulation" ID
+          regulationClauseId: `CL-${i}`,  // â† Fake clause ID
+          clauseLabel: `Q${i + 1}`,  // â† "Q1", "Q2"...
+
+          text: q,
+          domain: (template.domain || 'WellLed') as any,
+          score: 0,
+
+          evidence: [],  // â† Required empty array
+
+          evidenceSummaryText: '',
+          actionRequired: 'None',
+          assignedTo: '',
+          targetDate: '',
+          completed: 'N' as any,
+          completionStatus: 'NotStarted' as any,
+          defaultIncluded: true
+        } as AuditQuestionInstance);
+      });
+    }
+
+    else if (template.format === 'table') {
+      (template.data as string[][]).forEach((row: string[], rowIdx: number) => {
+        row.forEach((cell: string, colIdx: number) => {
+          questions.push({
+            templateQuestionId: crypto.randomUUID(),
+            templateType: 'custom-table' as any,
+            regulationId: template.id,
+            regulationClauseId: `R${rowIdx}C${colIdx}`,
+            clauseLabel: `R${rowIdx + 1}C${colIdx + 1}`,
+            text: cell || `Cell ${rowIdx + 1},${colIdx + 1}`,
+            domain: (template.domain || 'WellLed') as any,
+            score: 0,
+            evidence: [],
+            // ... all other required fields with defaults
+          } as AuditQuestionInstance);
+        });
+      });
+    }
+
+
+    this.questions.set([...this.questions(), ...questions]);
+  }
+
+  addChecklistItem(templateId: string, question: string) {
+    this.customTemplates.update(list =>
+      list.map(t =>
+        t.id === templateId
+          ? { ...t, data: [...t.data as string[], question] }
+          : t
+      )
+    );
+  }
+
+
+  // ---------- Loading ----------
+
+  loadAudits() {
+    const companyId =
+      (this.company as any)?.id ?? (this.company as any)?.companyID ?? undefined;
+
+    const rawLocationId = this.locationId();
+    const locationId =
+      rawLocationId && rawLocationId !== 'null' ? rawLocationId : undefined;
+
+    this.auditService.list({ companyId, locationId }).subscribe((items) => {
+      this.audits.set(items ?? []);
+
+      const auditId = this.pendingAuditId;
+      if (auditId) {
+        const match = (items ?? []).find(a => a.id === auditId);
+        if (match) this.selectAudit(match);
+      }
+
+      if (!this.selectedAudit() && (items ?? []).length) {
+        this.selectAudit((items ?? [])[0]);
+      }
+    });
+  }
+
+
+  loadTemplates() {
+    this.templateService.list().subscribe(t => {
+      this.templates.set(t ?? []);
+      console.log('templates raw:', this.templates()); // best for debugging
+    });
+  }
+
+
+
+  // ---------- Selecting / creating ----------
+  selectAudit(audit: AuditInstance) {
+    console.log('selectAudit', audit);
+
+    // Core audit metadata
+    this.selectedAudit.set(audit);
+    this.auditTitle.set((audit as any).title ?? `${audit.auditType} audit`);
+    this.auditType.set(audit.auditType);
+    this.auditDate.set(audit.date);
+
+    this.locationId.set((audit as any).locationId ?? null);
+    this.departmentId.set(audit.departmentId ?? null);
+    this.subDepartmentId.set(audit.subDepartmentId ?? null);
+
+    // Questions from audit
+    const auditQuestions = audit.questions ?? [];
+    this.questions.set(auditQuestions);
+
+    // Rebuild selected regs from questions (or from audit.regulations if you have that)
+    const usedRegIds = new Set(
+      auditQuestions
+        .map(q => q.regulationId)
+        .filter((id: string | null | undefined): id is string => !!id)
+    );
+
+    const allRegs = this.regulations();
+    const selectedRegs = allRegs.filter(r => usedRegIds.has(r.id));
+    const availableRegs = allRegs.filter(r => !usedRegIds.has(r.id));
+
+
+    this.selectedRegs.set(
+      [...selectedRegs].sort((a: any, b: any) =>
+        String(a.code).localeCompare(String(b.code), undefined, { numeric: true })
+      )
+    );
+    this.availableRegs.set(availableRegs);
+
+    // Optionally, ensure each selected reg has clauses/questions (similar to dropRegulation)
+    for (const reg of selectedRegs) {
+      this.addRegulationClausesToAudit(reg, { includeAll: true });
+
+      if (this.getQuestionsByRegulation(reg.id).length === 0) {
+        this.questions.set([
+          ...this.questions(),
+          {
+            templateQuestionId: crypto.randomUUID(),
+            regulationId: reg.id,
+            text: reg.description ?? reg.title ?? 'Regulation added',
+            domain: 'WellLed',
+            score: 0,
+            evidence: [],
+            clauseLabel: '-',
+            evidenceSummaryText: '',
+            actionRequired: 'None',
+            assignedTo: '',
+            targetDate: '',
+            completed: 'N',
+            defaultIncluded: true
+          } as any
+        ]);
+      }
+    }
+  }
+
+
+  createNewAudit() {
+    this.selectedAudit.set(null);
+    this.selectedTemplateId.set(null);
+
+    this.auditTitle.set('');
+    this.auditType.set('baseline');
+    this.auditDate.set(new Date().toISOString().slice(0, 10));
+
+    this.questions.set([]);
+
+    this.departmentId.set(null);
+    this.subDepartmentId.set(null);
+    this.pendingAuditId = null;
+
+    // reset regulations
+    this.selectedRegs.set([]);
+    this.availableRegs.set([...this.regulations()]);
+  }
+
+
+  onAuditIdSelected(auditId: string | null) {
+
+    if (!auditId) return;
+    this.auditService.get(auditId).subscribe((item) => {
+      if (item ?? null) {
+        this.selectAudit(item ?? null);
+      }
+    });
+  }
+
+
+  onLocationChange(id: string) {
+    this.locationId.set(id || null);
+    this.departmentId.set(null);
+    this.subDepartmentId.set(null);
+    this.loadAudits();
+  }
+
+  onDepartmentChange(id: string) {
+    this.departmentId.set(id || null);
+    this.subDepartmentId.set(null);
+  }
+
+  createAuditFromTemplate(templateId: string | null) {
+    if (!templateId) return;
+
+    // Find the template from the already-loaded list:
+    const template = this.templates().find(t =>
+      (t as any).id === templateId || (t as any)._id === templateId
+    );
+    if (!template) return;
+
+    this.selectedAudit.set(null);
+    this.selectedTemplateId.set(templateId);
+
+    this.auditTitle.set((template as any).name ?? '');
+    this.auditType.set(((template as any).auditType as any) ?? 'baseline');
+    this.auditDate.set(new Date().toISOString().slice(0, 10));
+
+    const rows: AuditQuestionInstance[] = [];
+
+    for (const section of (template as any).sections ?? []) {
+      for (const q of section.questions ?? []) {
+        const regId = q.regulations?.[0]?.id ?? '';
+        rows.push({
+          templateQuestionId: crypto.randomUUID(),
+          templateType: 'regulation' as any,  // â† ADD THIS
+          regulationId: this.normalizeRegulationId(regId),
+          text: q.text,
+          domain: q.domain ?? 'WellLed' as any,
+          score: 0,
+          evidence: [],
+          // Add other required fields your interface needs:
+          evidenceSummaryText: '',
+          actionRequired: 'None',
+          assignedTo: '',
+          targetDate: '',
+          completed: 'N' as any,
+          defaultIncluded: true
+        } as AuditQuestionInstance);
+
+      }
+    }
+
+    this.questions.set(rows);
+
+    const selectedIds = new Set(rows.map(r => r.regulationId).filter(Boolean));
+    const allRegs = this.regulations();
+    const selected = allRegs
+      .filter(r => selectedIds.has(r.id))
+      .sort((a: any, b: any) =>
+        String(a.code).localeCompare(String(b.code), undefined, { numeric: true })
+      );
+
+    const available = allRegs.filter(r => !selectedIds.has(r.id));
+
+    this.selectedRegs.set(selected);
+    this.availableRegs.set(available);
+  }
+
+  private normalizeRegulationId(id: string | null | undefined): string {
+    const raw = (id ?? '').trim();
+    if (!raw) return raw;
+
+    // already in library format
+    if (raw.startsWith('FS-REG-')) return raw;
+
+    // old mock audit format: Reg12 -> FS-REG-12
+    const m = /^Reg(\d+)$/i.exec(raw);
+    if (m) return `FS-REG-${m[1]}`;
+
+    return raw;
+  }
+  // ---------- Evidence menu / dialog ----------
+  openEvidenceMenu(event: MouseEvent, q: AuditQuestionInstance) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.activeEvidenceQuestionId = q.templateQuestionId;
+    this.evidenceMenuPosition = { x: event.clientX, y: event.clientY };
+    this.showEvidenceMenu = true;
+  }
+
+  closeEvidenceMenu() {
+    this.showEvidenceMenu = false;
+    this.activeEvidenceQuestionId = null;
+  }
+
+  clearEvidence() {
+    const audit = this.selectedAudit();
+    const qid = this.activeEvidenceQuestionId;
+    if (!audit || !qid) return;
+
+    this.auditService.patchQuestion(audit.id, qid, { evidence: [], evidenceSummaryText: '' } as any)
+      .subscribe((updated) => {
+        this.selectAudit(updated);
+        this.closeEvidenceMenu();
+      });
+  }
+
+  manageEvidence() {
+    const audit = this.selectedAudit();
+    const qid = this.activeEvidenceQuestionId;
+    if (!audit || !qid) return;
+
+    const q = this.questions().find(x => x.templateQuestionId === qid);
+    if (!q) return;
+
+    this.closeEvidenceMenu();
+
+    const dialogRef = this.dialog.open(EvidenceDialog, {
+      width: '760px',
+      data: {
+        title: 'Manage evidence',
+        evidenceSummaryText: (q as any).evidenceSummaryText ?? '',
+        evidence: q.evidence ?? []
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: EvidenceDialogResult | undefined) => {
+      if (!result) return;
+
+      this.auditService.patchQuestion(audit.id, qid, {
+        evidence: result.evidence,
+        evidenceSummaryText: result.evidenceSummaryText
+      } as any).subscribe((updated) => this.selectAudit(updated));
+    });
+  }
+
+  // Optional: upload a file and attach immediately (if you still have â€œadd evidenceâ€ inline UI)
+  uploadFileEvidence(questionId: string, file: File, description = '') {
+    const audit = this.selectedAudit();
+    if (!audit) return;
+
+    this.evidenceService.uploadFile(file, { description, uploadedBy: this.user?.name }).subscribe((ev: AuditEvidence) => {
+      // simplest: patch the question evidence array
+      const q = this.questions().find(x => x.templateQuestionId === questionId);
+      const next = [...(q?.evidence ?? []), ev];
+      this.auditService.patchQuestion(audit.id, questionId, { evidence: next } as any)
+        .subscribe((updated) => this.selectAudit(updated));
+    });
+  }
+
+  // ---------- Save audit header ----------
+  saveAudit() {
+    const audit = this.selectedAudit();
+
+    if (!audit) {
+      const templateId = this.selectedTemplateId();
+      if (!templateId) {
+        alert('Select a template first (templateId is required).');
+        return;
+      }}
+
+    // If audit exists: patch header fields only
+    if (audit) {
+      this.auditService.patch(audit.id, {
+        auditType: this.auditType(),
+        date: this.auditDate(),
+        departmentId: this.departmentId() ?? undefined,
+        subDepartmentId: this.subDepartmentId() ?? undefined
+      }).subscribe((updated) => this.selectAudit(updated));
+      return;
+    }
+
+    // If no audit yet: create empty audit (or require templateId)
+    const payload: Partial<AuditInstance> = {
+      title:this.auditTitle()|| undefined,
+      templateId: this.selectedTemplateId() || undefined,
+      auditType: this.auditType(),
+      date: this.auditDate(),
+      locationId: this.locationId() || undefined,
+      departmentId: this.departmentId() || undefined,
+      subDepartmentId: this.subDepartmentId() || undefined,
+      questions: this.questions().map(q => ({
+        templateQuestionId: q.templateQuestionId,
+        templateType: q.templateType || 'regulation' as any,  // â† ADD
+        regulationId: q.regulationId,
+        text: q.text,
+        domain: q.domain,
+        score: q.score ?? 0,
+        evidence: q.evidence ?? [],
+        completionStatus: q.completionStatus ?? 'NotStarted',
+        defaultIncluded: q.defaultIncluded ?? true,
+        // Add other missing required fields:
+        evidenceSummaryText: q.evidenceSummaryText ?? '',
+        actionRequired: q.actionRequired ?? 'None',
+        assignedTo: q.assignedTo ?? '',
+        targetDate: q.targetDate ?? '',
+        completed: q.completed ?? 'N' as any
+      } as any))
+
+    };
+
+// Log before send
+    console.log('Sending audit payload:', payload);
+    this.auditService.create(payload).subscribe({
+      next: created => {
+        this.audits.update(audits => [created, ...audits]);
+        this.selectAudit(created);
+      },
+      error: err => console.error('Create failed:', err.error)
+    });
+
+
+  }
+// State
+  showChecklistBuilder = false;
+  showTableBuilder = false;
+  newQuestionText = '';
+  currentTemplateId = signal<string | null>(null); // For adding to specific template
+
+// Methods
+  showChecklistBuilderFn() {
+    this.showChecklistBuilder = true;
+    this.showTableBuilder = false;
+  }
+
+
+
+// Table state
+  tableHeaders: string[] = [];
+  tableRows: string[][] = [];
+
+// Methods
+  showTableBuilderFn() {
+    this.showTableBuilder = true;
+    this.showChecklistBuilder = false;
+    this.tableHeaders = ['Col1', 'Col2', 'Col3'];  // Default
+    this.tableRows = [['', '', '']];  // 1 empty row
+  }
+
+  addTableColumn() {
+    this.tableHeaders.push(`Col${this.tableHeaders.length + 1}`);
+    this.tableRows.forEach(row => row.push(''));
+  }
+  trackByIndex(index: number): number {
+    return index;
+  }
+  addTableRow() {
+    const newRow = this.tableHeaders.map(() => '');
+    this.tableRows.push(newRow);
+  }
+// Add these methods for table builder
+  deleteTableColumn(colIdx: number) {
+    this.tableHeaders.splice(colIdx, 1);
+    this.tableRows.forEach(row => row.splice(colIdx, 1));
+  }
+
+  deleteTableRow(rowIdx: number) {
+    this.tableRows.splice(rowIdx, 1);
+  }
+
+  saveTableTemplate() {
+    if (!this.newCustomTemplate.name) return;
+/*
+    const template: CustomAuditTemplate = {
+      id: `TABLE-${crypto.randomUUID()}`,
+      name: this.newCustomTemplate.name,
+      format: 'table',
+      data: [this.tableHeaders, ...this.tableRows]  // headers + rows
+    };
+
+    this.customTemplates.update(list => [...list, template]);*/
+    this.showTableBuilder = false;
+  }
+  // Add with other signals (near selectedTemplateId)
+  selectedCustomTemplateId = signal<string | null>(null);
+
+  loadCustomTemplates() {
+    const params = new HttpParams()
+      .set('companyId', this.companyId() || '')
+      .set('type', 'custom');  // â† Backend filters by type field
+
+    this.http.get<CustomAuditTemplate[]>('/api/auditTemplates', { params })
+      .subscribe(t => {
+        console.log('Custom templates loaded:', t);
+        this.customTemplates.set(t ?? []);
+      });
+  }
+
+// optional save (if endpoint exists)
+  saveCustomTemplate(template: CustomAuditTemplate) {
+    this.http.post<CustomAuditTemplate>('/api/auditTemplates', {
+      ...template,
+      type: 'custom',  // â† Backend needs this field
+      companyId: this.companyId()
+    }).subscribe(saved => {
+      this.customTemplates.update(list => [...list, saved]);
+    });
+  }
+
+
+
+  insertCustomTemplate(templateId: string | null) {
+    if (!templateId) return;  // â† Guards null
+    this.loadCustomTemplate(templateId);  // Now templateId is string
+    this.selectedCustomTemplateId.set(null);
+  }// Add these methods
+  get selectedCustomTemplateIdValue(): string | null {
+    return this.selectedCustomTemplateId();
+  }
+
+  set selectedCustomTemplateIdValue(value: string | null) {
+    this.selectedCustomTemplateId.set(value);
+  }
+
+
+
+
+  cancel() {
+    this.router.navigate(['CCGA']);
+  }
+
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && this.showEvidenceMenu) this.closeEvidenceMenu();
+  }
+  moveTo(route: string) {
+    this.router.navigate([route]);
+  }
+  customRegs = signal<RegulationItem[]>([]);
+  currentCustomRegId = signal<string | null>(null);
+
+  newCustomReg: Partial<RegulationItem> = {
+    code: '', title: '', description: '',
+    domain: 'WellLed', type: 'Custom' as any, appliesTo: 'Both' as any
+  };
+
+  newCustomSub: Partial<RegulationSubsection> = {
+    label: '', text: '', defaultIncluded: true, domain: 'WellLed', appliesTo: 'Both' as any
+  };
+
+// For *ngFor async pipe syntax
+  // Delete the computed/pipe syntax entirely
+  findById(regId: string): RegulationItem | undefined {
+    return this.customRegs().find(r => r.id === regId);
+  }
+
+// Make it take no args, use currentCustomRegId internally
+  currentCustomReg = computed(() => {
+    const id = this.currentCustomRegId();
+    return id ? this.customRegs().find(r => r.id === id) : undefined;
+  });
+
+// Add a single-question â€œregulationâ€ per custom field
+  addCustomReg() {
+    const reg: RegulationItem = {
+      id: `CUSTOM-${crypto.randomUUID()}`,
+      code: this.newCustomReg?.code?.trim() || 'CUST',
+      title: this.newCustomReg?.title?.trim() || 'New custom reg',
+      description: this.newCustomReg.description?.trim() || '',
+      type: 'Custom' as any,
+      appliesTo: this.newCustomReg.appliesTo || 'Both' as any,
+      subsections: [] as any[],
+    } as any;
+
+    this.customRegs.update(list => [...list, reg]);
+    this.currentCustomRegId.set(reg.id);  // Switch to editing this reg
+    this.newCustomReg = { code: '', title: '', description: '', domain: 'WellLed', type: 'Custom', appliesTo: 'Both' };
+  }
+
+  addCustomSubsection() {
+    const regId = this.currentCustomRegId();
+    if (!regId || !this.newCustomSub.text?.trim()) return;
+
+    const sub: RegulationSubsection = {
+      id: `${regId}-SUB-${crypto.randomUUID().slice(0,8)}`,
+      label: this.newCustomSub.label?.trim() || '',
+      text: this.newCustomSub.text.trim(),
+      appliesTo: this.newCustomSub.appliesTo || 'Both' as any,
+      defaultIncluded: this.newCustomSub.defaultIncluded ?? true,
+      domain: this.newCustomSub.domain || 'WellLed',
+    };
+
+    this.customRegs.update(list =>
+      list.map(reg =>
+        reg.id === regId
+          ? { ...reg, subsections: [...(reg.subsections || []), sub] }
+          : reg
+      ) as any
+    );
+
+    this.newCustomSub = { label: '', text: '', defaultIncluded: true, domain: 'WellLed', appliesTo: 'Both' };
+  }
+
+  deleteCustomReg(regId: string) {
+    this.customRegs.update(list => list.filter(r => r.id !== regId) as any);
+    if (this.currentCustomRegId() === regId) this.currentCustomRegId.set(null);
+  }
+
+  deleteCustomSub(regId: string, subId: string) {
+    if (!regId) return;  // Guard null
+    this.customRegs.update(list =>
+      list.map(reg =>
+        reg.id === regId
+          ? { ...reg, subsections: (reg.subsections || []).filter(s => s.id !== subId) }
+          : reg
+      ) as any
+    );
+  }
+
+
+  // at top of class
+  readonly regulations = signal<RegulationItem[]>([
+    ...MOCK_REGULATIONS.items as any,
+    ...(CUSTOM_LIBRARY.items as any),
+  ]);
+
+
+// convenience
+  get allRegulations() { return this.regulations(); }
+
+
+  availableRegs = signal<any[]>([...this.regulations()]);
+  selectedRegs = signal<RegulationItem[]>([]);
+
+  dropRegulation(event: CdkDragDrop<RegulationItem[]>) {
+    const reg = event.item.data as RegulationItem;
+    if (!reg) return;
+    if (this.selectedRegs().some(r => r.id === reg.id)) return;
+
+    const nextSelected = [...this.selectedRegs(), reg].sort((a: any, b: any) =>
+      String(a.code).localeCompare(String(b.code), undefined, { numeric: true })
+    );
+
+    this.selectedRegs.set(nextSelected);
+    this.availableRegs.set(this.availableRegs().filter(r => r.id !== reg.id));
+
+    this.addRegulationClausesToAudit(reg, { includeAll: true });
+
+    if (this.getQuestionsByRegulation(reg.id).length === 0) {
+      this.questions.set([
+        ...this.questions(),
+        {
+          templateQuestionId: crypto.randomUUID(),
+          regulationId: reg.id,
+          text: reg.description ?? reg.title ?? 'Regulation added',
+          domain: 'WellLed',
+          score: 0,
+          evidence: [],
+          clauseLabel: '-',
+          evidenceSummaryText: '',
+          actionRequired: 'None',
+          assignedTo: '',
+          targetDate: '',
+          completed: 'N',
+          defaultIncluded: true
+        } as any
+      ]);
+    }
+  }
+
+  removeRegulation(regId: string) {
+    const reg = this.selectedRegs().find(r => r.id === regId);
+    if (!reg) return;
+
+    this.selectedRegs.set(this.selectedRegs().filter(r => r.id !== regId));
+    this.availableRegs.set([...this.availableRegs(), reg]);
+
+    this.questions.set(this.questions().filter(q => q.regulationId !== regId));
+  }
+
+  getQuestionsByRegulation(regId: string): AuditQuestionInstance[] {
+    return this.questions().filter(q => q.regulationId === regId);
+  }
+
+// --- clause helpers (same logic you already had) ---
+  private getRegulationClauses(reg: any): RegulationClause[] {
+    const raw = reg.subsections ?? reg.sections ?? reg.clauses ?? [];
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  private flattenClauses(clauses: RegulationClause[]): RegulationClause[] {
+    const out: RegulationClause[] = [];
+    const walk = (c: RegulationClause) => {
+      out.push(c);
+      const children = c.children ?? c.subsections ?? c.items ?? [];
+      if (Array.isArray(children)) children.forEach(walk);
+    };
+    clauses.forEach(walk);
+    return out;
+  }
+
+  private findQuestionForClause(regId: string, clause: any): AuditQuestionInstance | undefined {
+    const clauseId = clause.id ?? clause.clauseId ?? null;
+    const clauseLabel = clause.label ?? clause.code ?? clause.clauseLabel ?? '';
+    const clauseText = clause.text ?? clause.requirement ?? clause.description ?? '';
+
+    if (clauseId) {
+      return (this.questions() as any[]).find(
+        q => q.regulationId === regId && (q as any).regulationClauseId === clauseId
+      );
+    }
+
+    return this.questions().find(
+      q => q.regulationId === regId && q.text === clauseText && (q as any).clauseLabel === clauseLabel
+    );
+  }
+
+  private createQuestionFromClause(reg: RegulationItem, clause: any): AuditQuestionInstance {
+    const clauseId = clause.id ?? clause.clauseId ?? crypto.randomUUID();
+    const clauseLabel = clause.label ?? clause.code ?? clause.clauseLabel ?? '';
+    const clauseText = clause.text ?? clause.requirement ?? clause.description ?? '(no text)';
+    const domain = clause.domain ?? 'WellLed';
+
+    return {
+      templateQuestionId: crypto.randomUUID(),
+      regulationId: reg.id,
+      text: clauseText,
+      domain,
+      score: 0,
+      evidence: [],
+      regulationClauseId: clauseId,
+      clauseLabel,
+      evidenceSummaryText: '',
+      actionRequired: 'None',
+      assignedTo: '',
+      targetDate: '',
+      completed: 'N',
+      defaultIncluded: clause.defaultIncluded ?? false
+    } as any;
+  }
+
+  private addRegulationClausesToAudit(reg: RegulationItem, opts: { includeAll: boolean }) {
+    const clauses = this.flattenClauses(this.getRegulationClauses(reg));
+    if (!clauses.length) return;
+
+    const existing = this.questions();
+    const toAdd: AuditQuestionInstance[] = [];
+
+    for (const clause of clauses) {
+      const already = this.findQuestionForClause(reg.id, clause);
+      if (already) continue;
+      if (!opts.includeAll) continue;
+      toAdd.push(this.createQuestionFromClause(reg, clause));
+    }
+
+    if (toAdd.length) this.questions.set([...existing, ...toAdd]);
+  }
+  // Recurring kept (stub) â€“ should call auditService.create for each date
+  isRecurring = signal(false);
+  recurringFrequency = signal<AuditFrequency>('Monthly');
+  recurringTemplateAuditType = signal<TemplateAuditType>('baseline');
+  generateMonthsAhead = signal<3 | 6 | 12>(6);
+
+
+
+  async generateRecurringFromCurrentDraft() {
+    const templateId = this.selectedTemplateId();
+    if (!templateId) return;
+
+    // Fetch template via AuditTemplateService.get(id)
+    const template = await firstValueFrom(this.templateService.get(templateId));
+    console.log('template:', template);
+    const monthsAhead = this.generateMonthsAhead();            // 3 | 6 | 12
+    const freq = this.recurringFrequency();                    // 'Daily' | 'Weekly' | ...
+    const auditType = this.recurringTemplateAuditType();       // 'baseline' | 'registered_manager' | 'provider'
+
+    const toIsoDate = (d: Date) => d.toISOString().slice(0, 10);
+
+    const addPeriod = (d: Date, f: any): Date => {
+      const x = new Date(d);
+      switch (f) {
+        case 'Daily': x.setDate(x.getDate() + 1); break;
+        case 'Weekly': x.setDate(x.getDate() + 7); break;
+        case 'Monthly': x.setMonth(x.getMonth() + 1); break;
+        case 'Quarterly': x.setMonth(x.getMonth() + 3); break;
+        case 'Annually': x.setFullYear(x.getFullYear() + 1); break;
+        case 'AdHoc':
+        default: x.setMonth(x.getMonth() + 1); break;
+      }
+      return x;
+    };
+
+    const normalizeRegulationId = (id: string | null | undefined): string => {
+      const raw = (id ?? '').trim();
+      if (!raw) return raw;
+      if (raw.startsWith('FS-REG-')) return raw;
+      const m = /^Reg(\d+)$/i.exec(raw);
+      if (m) return `FS-REG-${m[1]}`;
+      return raw;
+    };
+
+    const buildRowsFromTemplate = (): AuditQuestionInstance[] => {
+      const rows: AuditQuestionInstance[] = [];
+      for (const section of template.sections ?? []) {
+        for (const q of section.questions ?? []) {
+          const regId = q.regulations?.[0]?.id ?? '';
+          rows.push({
+            templateQuestionId: crypto.randomUUID(),
+            regulationId: normalizeRegulationId(regId),
+            text: q.text,
+            domain: q.domain ?? 'WellLed',
+            score: 0,
+            evidence: [],
+            evidenceSummaryText: '',
+            actionRequired: 'None',
+            assignedTo: '',
+            targetDate: '',
+            completed: 'N',
+            defaultIncluded: true
+          } as any);
+        }
+      }
+      return rows;
+    };
+
+    const start = new Date(this.auditDate());
+    if (Number.isNaN(start.getTime())) return;
+
+    const until = new Date(start);
+    until.setMonth(until.getMonth() + monthsAhead);
+
+    const existing = this.audits();
+
+    for (let d = new Date(start); d <= until; d = addPeriod(d, freq)) {
+      const dateStr = toIsoDate(d);
+
+      // Duplicate guard: date + type + location
+      const already = existing.some(a =>
+        a.date === dateStr &&
+        a.auditType === auditType &&
+        (a.locationId ?? null) === (this.locationId() ?? null)
+      );
+      if (already) continue;
+
+      const payload: Partial<AuditInstance> = {
+        templateId,
+        title: this.auditTitle() ?? undefined,
+        auditType,
+        date: dateStr,
+        locationId: this.locationId() ?? undefined,
+        departmentId: this.departmentId() ?? undefined,
+        subDepartmentId: this.subDepartmentId() ?? undefined,
+        questions: buildRowsFromTemplate()
+      };
+
+      // Create via AuditService.create(...)
+      await firstValueFrom(this.auditService.create(payload));
+    }
+
+    // Refresh list once
+    this.loadAudits();
+  }
+
+
+  loadCustomRegs() {
+    const all = [
+      ...MOCK_REGULATIONS.items,
+      ...this.customRegs()
+    ] as any[];
+
+    all.sort((a, b) => String(a.code).localeCompare(String(b.code)));
+    this.regulations.set(all);
+
+    // Refresh available (exclude selected)
+    const selectedIds = new Set(this.selectedRegs().map(r => r.id));
+    this.availableRegs.set(all.filter(r => !selectedIds.has(r.id)));
+  }
+
+}

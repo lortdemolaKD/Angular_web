@@ -1,0 +1,381 @@
+<div class="home-container">
+
+  <!-- Standalone mode: only ONE panel -->
+  <ng-container *ngIf="!embedded; else embeddedTpl">
+    <app-panel
+      title="Key Metrics"
+      icon=""
+      headerColor="var(--color-accent2)"
+      heightIN="fit-content"
+      widthIN="80vw">
+      <ng-container *ngTemplateOutlet="embeddedTpl"></ng-container>
+    </app-panel>
+  </ng-container>
+
+  <!-- Embedded mode -->
+  <ng-template #embeddedTpl>
+    <div class="dashboard-container">
+
+      <header class="dashboard-header">
+        <div class="header-left">
+          <div class="page-title">Key metrics</div>
+
+          <!-- DB-backed: we only know the performance period here -->
+          <div class="page-subtitle" *ngIf="selectedSet?.period as p">
+            Period: {{ p }}
+          </div>
+          <div class="page-subtitle data-source-hint" *ngIf="hasAuditSourcedIndicators()">
+            Some indicators are calculated from custom (basic) audits. Use «Refresh from audits» to update.
+          </div>
+          <div class="page-subtitle data-source-hint" *ngIf="selectedSet && !hasAuditSourcedIndicators()">
+            Use «Update from template» to load the latest indicator set (including audit-linked metrics).
+          </div>
+          <!-- Optional period override for recalculate (e.g. 2026-04 to include April audits) -->
+          <div class="recalc-override" *ngIf="selectedSet && hasAuditSourcedIndicators()">
+            <label>Recalc period (optional):</label>
+            <input type="text" [(ngModel)]="recalcPeriodOverride" placeholder="e.g. 2026-04" />
+          </div>
+        </div>
+
+        <div class="controls">
+          <button
+            type="button"
+            class="btn-refresh"
+            *ngIf="selectedSet && !hasAuditSourcedIndicators()"
+            [disabled]="syncing"
+            (click)="syncFromTemplate()">
+            {{ syncing ? 'Updating…' : 'Update from template' }}
+          </button>
+          <button
+            type="button"
+            class="btn-refresh"
+            *ngIf="selectedSet && locationId && hasAuditSourcedIndicators()"
+            [disabled]="recalculating"
+            (click)="recalculateFromAudits()">
+            {{ recalculating ? 'Updating…' : 'Refresh from audits' }}
+          </button>
+          <!-- Removed internal location selector:
+               location selection happens in parent Locations page via [locationId] -->
+          <app-cst-button
+            *ngIf="canAssignTasks"
+            title="Create Action Task"
+            icon=""
+            headerColor="var(--color-accent2)"
+            (headerClick)="openTaskCreator()">
+          </app-cst-button>
+
+          <!-- modal -->
+          <div class="modal-backdrop" *ngIf="canAssignTasks && showTaskCreator" (click)="handleTaskCancelled()">
+            <div class="modal" (click)="$event.stopPropagation()">
+              <div class="modal-head">
+                <div class="modal-title">Create Action Task</div>
+                <button class="modal-close" type="button" (click)="handleTaskCancelled()">×</button>
+              </div>
+
+              <app-task-creator
+                [alertIndicatorOptions]="alertIndicatorOptions"
+                [preselectedAlertId]="selectedAlertForTask?.id ?? ''"
+                [preselectedMessage]="selectedAlertForTask?.message ?? ''"
+                (taskCreated)="handleTaskCreated($event)"
+                (cancelled)="handleTaskCancelled()">
+              </app-task-creator>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Loading / error / data -->
+      <div class="placeholder" *ngIf="loading">Loading key metrics…</div>
+      <div class="placeholder error" *ngIf="loadError && !loading">{{ loadError }}</div>
+      <ng-container *ngIf="!loading && !loadError && selectedSet as set; else noData">
+
+        <!-- Main 3-column layout: left = radials, middle = overview/alerts/tasks, right = bar categories -->
+        <section class="main-grid">
+          <!-- LEFT: radial indicators stacked -->
+          <div class="left-col">
+          <!-- Performance (KPI) -->
+          <div class="card diagram-card">
+            <div class="card-head">
+              <div class="card-title">Performance</div>
+              <span class="badge card-head-badge" *ngIf="performanceCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
+            </div>
+            <div class="card-body diagram-card-body">
+              <div
+                class="diagram-swipe"
+                (mousedown)="diagramDragStart('performance', $event)"
+                (mouseup)="diagramDragEnd('performance', $event)"
+                (touchstart)="diagramDragStart('performance', $event)"
+                (touchend)="diagramDragEnd('performance', $event)">
+                <ng-container *ngFor="let ind of getDiagramCarouselItem('performance'); trackBy: trackByDiagramItem">
+                  <div class="diagram-carousel-slide" [class.diagram-carousel-slide--next]="performanceSlideDirection === 1" [class.diagram-carousel-slide--prev]="performanceSlideDirection === -1">
+                    <ng-container *ngIf="ind; else noPerf">
+                      <div class="diagram-head">
+                        <span class="diagram-indicator-name" [title]="ind.name">{{ ind.name }}</span>
+                      </div>
+                      <div class="gauge-wrapper chart-fill-wrapper">
+                        <app-smart-chart
+                          chartType="radial-bar"
+                          [data]="getRadialGaugeData(ind)"
+                          [options]="getRadialGaugeOptions(ind)">
+                        </app-smart-chart>
+                      </div>
+                      <div class="mini-meta">
+                        <div><span class="k">Current:</span> {{ ind.current }} {{ ind.unit }}</div>
+                        <div><span class="k">Target:</span> {{ ind.target }} {{ ind.unit }}</div>
+                      </div>
+                    </ng-container>
+                    <ng-template #noPerf>
+                      <p class="diagram-empty">No performance indicators</p>
+                    </ng-template>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="diagram-hint">Drag left = previous, right = next · auto-rotates every {{ diagramRotateIntervalMs / 1000 }}s</p>
+            </div>
+          </div>
+
+          <!-- Finances (KFI) -->
+          <div class="card diagram-card">
+            <div class="card-head">
+              <div class="card-title">Finances</div>
+              <span class="badge card-head-badge" *ngIf="financesCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
+            </div>
+            <div class="card-body diagram-card-body">
+              <div
+                class="diagram-swipe"
+                (mousedown)="diagramDragStart('finances', $event)"
+                (mouseup)="diagramDragEnd('finances', $event)"
+                (touchstart)="diagramDragStart('finances', $event)"
+                (touchend)="diagramDragEnd('finances', $event)">
+                <ng-container *ngFor="let ind of getDiagramCarouselItem('finances'); trackBy: trackByDiagramItem">
+                  <div class="diagram-carousel-slide" [class.diagram-carousel-slide--next]="financesSlideDirection === 1" [class.diagram-carousel-slide--prev]="financesSlideDirection === -1">
+                    <ng-container *ngIf="ind; else noFin">
+                      <div class="diagram-head">
+                        <span class="diagram-indicator-name" [title]="ind.name">{{ ind.name }}</span>
+                      </div>
+                      <div class="gauge-wrapper chart-fill-wrapper">
+                        <app-smart-chart
+                          chartType="radial-bar"
+                          [data]="getRadialGaugeData(ind)"
+                          [options]="getRadialGaugeOptions(ind)">
+                        </app-smart-chart>
+                      </div>
+                      <div class="mini-meta">
+                        <div><span class="k">Current:</span> {{ ind.current }} {{ ind.unit }}</div>
+                        <div><span class="k">Target:</span> {{ ind.target }} {{ ind.unit }}</div>
+                      </div>
+                    </ng-container>
+                    <ng-template #noFin>
+                      <p class="diagram-empty">No financial indicators</p>
+                    </ng-template>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="diagram-hint">Drag left = previous, right = next · auto-rotates every {{ diagramRotateIntervalMs / 1000 }}s</p>
+            </div>
+          </div>
+
+          <!-- Control (KCI) -->
+          <div class="card diagram-card">
+            <div class="card-head">
+              <div class="card-title">Control</div>
+              <span class="badge card-head-badge" *ngIf="controlCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
+            </div>
+            <div class="card-body diagram-card-body">
+              <div
+                class="diagram-swipe"
+                (mousedown)="diagramDragStart('control', $event)"
+                (mouseup)="diagramDragEnd('control', $event)"
+                (touchstart)="diagramDragStart('control', $event)"
+                (touchend)="diagramDragEnd('control', $event)">
+                <ng-container *ngFor="let ind of getDiagramCarouselItem('control'); trackBy: trackByDiagramItem">
+                  <div class="diagram-carousel-slide" [class.diagram-carousel-slide--next]="controlSlideDirection === 1" [class.diagram-carousel-slide--prev]="controlSlideDirection === -1">
+                    <ng-container *ngIf="ind; else noCtrl">
+                      <div class="diagram-head">
+                        <span class="diagram-indicator-name" [title]="ind.name">{{ ind.name }}</span>
+                      </div>
+                      <div class="gauge-wrapper chart-fill-wrapper">
+                        <app-smart-chart
+                          chartType="radial-bar"
+                          [data]="getRadialGaugeData(ind)"
+                          [options]="getRadialGaugeOptions(ind)">
+                        </app-smart-chart>
+                      </div>
+                      <div class="mini-meta">
+                        <div><span class="k">Current:</span> {{ ind.current }} {{ ind.unit }}</div>
+                        <div><span class="k">Target:</span> {{ ind.target }} {{ ind.unit }}</div>
+                      </div>
+                    </ng-container>
+                    <ng-template #noCtrl>
+                      <p class="diagram-empty">No control indicators</p>
+                    </ng-template>
+                  </div>
+                </ng-container>
+              </div>
+              <p class="diagram-hint">Drag left = previous, right = next · auto-rotates every {{ diagramRotateIntervalMs / 1000 }}s</p>
+            </div>
+          </div>
+          </div>
+
+          <!-- Row 1 right: Active alerts only -->
+          <div class="alerts-col">
+          <div class="card alerts-card">
+            <div class="card-head">
+              <div class="card-title">Active alerts</div>
+            </div>
+            <div class="card-body">
+              <ng-container *ngIf="activeAlerts.length === 0">
+                <p class="muted">No active alerts.</p>
+              </ng-container>
+              <ul class="alert-list" *ngIf="activeAlerts.length > 0">
+                <li *ngFor="let alert of activeAlerts" class="alert-item">
+                  <span class="alert-severity" [ngClass]="alertSeverityLevel(alert)">{{ alertSeverityLabel(alert) }}</span>
+                  <span class="alert-message">{{ alert.message }}</span>
+                  <button type="button" class="btn-assign" *ngIf="canAssignTasks && alert.severity === 'High'" (click)="assignTaskFromAlert(alert)">Assign task</button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          </div>
+
+          <!-- Row 2: bar charts only (nothing else in this row) -->
+          <div class="right-col">
+        <section class="categories-grid">
+          <ng-container *ngFor="let cat of set.categories || []">
+
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">{{ cat.title }}</div>
+              </div>
+
+              <div class="card-body">
+                <p class="category-description">{{ cat.description }}</p>
+
+                <div class="category-layout">
+
+                  <div class="indicator-picker">
+                    <label class="muted">Indicator</label>
+                    <select class="select_KNI"
+                      [value]="chartState[cat.id]?.selectedIndicator?.id"
+                      (change)="onIndicatorSelect(cat.id, $any($event.target).value)">
+                      <option *ngFor="let ind of cat.indicators || []" [value]="ind.id" class="select_KNI">
+                        {{ ind.name }} ({{ ind.status }}){{ ind.sourceType === 'audit' ? ' — from audits' : '' }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="category-chart" *ngIf="chartState[cat.id]?.selectedIndicator">
+                    <div class="chart-head">
+                      <h3 class="chart-title">
+                        {{ chartState[cat.id].selectedIndicator?.name }}
+                      </h3>
+                      <span class="badge" [ngClass]="indicatorLevel(chartState[cat.id].selectedIndicator?.status)">
+                        {{ indicatorLabel(chartState[cat.id].selectedIndicator?.status) }}
+                      </span>
+                    </div>
+                    <div class="chart-meta">
+                      <div>
+                        Current:
+                        <strong>{{ getDisplayCurrent(chartState[cat.id].selectedIndicator, cat.type) }}</strong>
+                        {{ chartState[cat.id].selectedIndicator?.unit }}
+                      </div>
+                      <div class="target-row">
+                        <span>Target:</span>
+                        <input
+                          type="number"
+                          class="target-input"
+                          [value]="chartState[cat.id].selectedIndicator?.target ?? 0"
+                          (change)="saveIndicatorTarget(cat.id, chartState[cat.id].selectedIndicator!.id, $any($event.target).value)"
+                          step="any"
+                          title="Change and blur to save" />
+                        <span class="target-unit">{{ chartState[cat.id].selectedIndicator?.unit }}</span>
+                      </div>
+                      <p class="target-zero-hint muted" *ngIf="(chartState[cat.id].selectedIndicator?.target ?? 0) === 0 && chartState[cat.id].selectedIndicator?.sourceType === 'audit'">
+                        Set a target above to see breach status and alerts for this indicator.
+                      </p>
+                      <div class="chart-meta-source" *ngIf="chartState[cat.id].selectedIndicator?.sourceType === 'audit'">
+                        From custom audits ({{ cat.type === 'KCI' ? 'single value' : (chartState[cat.id].selectedIndicator?.resetPeriod || 'monthly') }})
+                      </div>
+                    </div>
+                    <div class="chart-fill-wrapper chart-fill-wrapper--full-width">
+                      <app-smart-chart
+                        chartType="bar-vertical"
+                        [data]="getBarChartData(cat.id)"
+                        [options]="getBarChartOptions(cat.id)">
+                      </app-smart-chart>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </ng-container>
+        </section>
+          </div>
+
+          <!-- Row 3: Indicators overview + Tasks -->
+          <div class="middle-col"><!--
+          <div class="card indi">
+            <div class="card-head">
+              <div class="card-title">Indicators overview</div>
+            </div>
+
+            <div class="card-body">
+              <div class="summary-stats">
+                <div class="stat">
+                  <div class="stat-label">Total</div>
+                  <div class="stat-value">{{ totalIndicators }}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">Light</div>
+                  <div class="stat-value light">{{ statusCounts.Green }}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">Mid</div>
+                  <div class="stat-value mid">{{ statusCounts.Amber }}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-label">High</div>
+                  <div class="stat-value high">{{ statusCounts.Red }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+            -->
+          <!-- Tasks -->
+          <div class="card tasks-card">
+            <div class="card-head">
+              <div class="card-title">Tasks</div>
+            </div>
+            <div class="card-body">
+              <p class="muted tasks-placeholder" *ngIf="(set.tasks ?? []).length === 0">No task assigned at the current moment.</p>
+              <div class="resolve-row" *ngIf="(set.tasks ?? []).length > 0">
+                <label>Mark task as done (removes alert and task):</label>
+                <select [(ngModel)]="taskToResolve" class="select-task">
+                  <option [ngValue]="null">Select task…</option>
+                  <option *ngFor="let t of set.tasks" [ngValue]="t">{{ t.description }} — {{ t.assignedTo }}</option>
+                </select>
+                <button type="button" class="btn-resolve" [disabled]="!taskToResolve" (click)="taskToResolve && resolveAlert(taskToResolve.alertId)">Mark done</button>
+              </div>
+              <app-dynamic-flex-table
+                *ngIf="(set.tasks ?? []).length > 0"
+                [data]="set.tasks || []"
+                [config]="{ columns: ['description','assignedTo','dueDate','status'] }">
+              </app-dynamic-flex-table>
+            </div>
+          </div>
+          </div>
+        </section>
+
+      </ng-container>
+
+      <ng-template #noData>
+        <div class="placeholder" *ngIf="!loading && !loadError">
+          No performance set for this location yet. Create one from the template or ask an admin.
+        </div>
+      </ng-template>
+
+    </div>
+  </ng-template>
+</div>

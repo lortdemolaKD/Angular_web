@@ -1,0 +1,30 @@
+<div class="chart-container">
+  <div class="card table-wrapper">
+    <div class="table-scroll">
+    <table>
+      <thead>
+      <tr>
+        <th>Severity</th>
+        <th>Message</th>
+        <th>Location</th>
+        <th *ngIf="isAdmin">Management</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let alert of allAlerts">
+        <td><span class="severity-tag" [attr.data-severity]="alert.severity">{{ alert.severity }}</span></td>
+        <td>{{ alert.message }}</td>
+        <td>{{ alert.location }}</td>
+        <td *ngIf="isAdmin" class="action-cell">
+          <button class="primary-btn sm" (click)="openAddressDialog(alert)">Address</button>
+          <button *ngIf="hasTask(alert)" class="ghost-btn sm" (click)="pingManager(alert)">Ping</button>
+        </td>
+      </tr>
+      <tr *ngIf="allAlerts.length === 0">
+        <td colspan="4" class="no-alerts">All systems clear. No active alerts.</td>
+      </tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>

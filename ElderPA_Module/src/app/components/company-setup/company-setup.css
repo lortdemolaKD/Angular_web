@@ -1,0 +1,122 @@
+.step-content {
+  padding: 20px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.step-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.step-actions {
+  margin-top: 1rem;
+}
+
+.hint {
+  color: var(--color-text-secondary, #666);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.service-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.service-card {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.service-header h3 {
+  margin: 0 0 0.75rem 0;
+}
+
+.location-block {
+  border: 1px solid #eee;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.location-block-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.location-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.location-fields mat-form-field {
+  width: 100%;
+}
+
+.remove-loc-btn {
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+
+.care-home-pack ul {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.care-home-pack p {
+  margin: 0.75rem 0 0.25rem 0;
+}
+
+.muted {
+  color: var(--color-text-secondary, #666);
+  font-size: 0.85rem;
+  margin-top: 1rem;
+}
+
+.cqc-provider-field {
+  max-width: 320px;
+}
+
+.cqc-verify-message {
+  margin: -12px 0 8px 0;
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+.cqc-verify-message .valid {
+  color: var(--color-success, #2e7d32);
+}
+
+.cqc-verify-message .invalid {
+  color: var(--color-error, #c62828);
+}
+
+.invites-button-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.invites-button-wrap .invite-count {
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}

@@ -1,0 +1,9 @@
+<div class="chart-container">
+  @if (pieChartData.length) {
+    <app-smart-chart
+      chartType="pie-donut"
+      [data]="pieChartData"
+      [options]="{ showLegend: true }">
+    </app-smart-chart>
+  }
+</div>

@@ -1,0 +1,74 @@
+{
+  "name": "elder-pa-module",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng.js serve",
+    "build": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng.js build",
+    "watch": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
+    "obfuscate": "javascript-obfuscator dist/ElderPA_Module/browser --output dist/ElderPA_Module/browser --overwrite --compact true --self-defending true",
+    "test": "ng test",
+    "serve:ssr:ElderPA_Module": "node dist/ElderPA_Module/server/server.mjs"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "packageManager": "npm@11.6.2",
+  "dependencies": {
+    "@angular/cdk": "^21.0.1",
+    "@angular/common": "^21.0.0",
+    "@angular/compiler": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/material": "^21.0.1",
+    "@angular/platform-browser": "^21.0.0",
+    "@angular/platform-server": "^21.0.0",
+    "@angular/router": "^21.0.0",
+    "@angular/ssr": "^21.0.1",
+    "@auth0/angular-jwt": "^5.2.0",
+    "angular-calendar": "^0.32.0",
+    "angular-draggable-droppable": "^9.0.1",
+    "angular-gridster2": "^21.0.0",
+    "angular-resizable-element": "^8.0.0",
+    "animate-css-grid": "^1.5.1",
+    "apexcharts": "^5.3.6",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.6.0",
+    "mongodb": "^7.0.0",
+    "mongoose": "^9.1.3",
+    "nodemailer": "^7.0.12",
+    "rrule": "^2.8.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.0.1",
+    "@angular/cli": "^21.0.1",
+    "@angular/compiler-cli": "^21.0.0",
+    "@types/express": "^5.0.1",
+    "@types/jspdf": "^1.3.3",
+    "@types/node": "^20.17.19",
+    "javascript-obfuscator": "^5.1.0",
+    "jsdom": "^27.1.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  }
+}

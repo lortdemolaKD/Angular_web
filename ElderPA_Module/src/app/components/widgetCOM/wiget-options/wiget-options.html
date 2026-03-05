@@ -1,0 +1,74 @@
+<button mat-icon-button class="close-button" (click)="showOptions.set( false)">
+  <mat-icon>close</mat-icon>
+</button>
+<div>
+  Width
+  <mat-button-toggle-group hideSingleSelectionIndicator="true" [value]="effectiveCols()" (change)="store.updateWidget(data().id,{cols: +$event.value})">
+    <mat-button-toggle *ngFor="let col of range(data().minCols, data().maxCols)" [value]="col">
+      {{ col }}
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+<div>
+  Height
+  <mat-button-toggle-group hideSingleSelectionIndicator="true" [value]="effectiveRows()" (change)="store.updateWidget(data().id,{rows: +$event.value})">
+    <mat-button-toggle *ngFor="let row of range(data().minRows, data().maxRows)" [value]="row">
+      {{ row }}
+    </mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+@if (data().locationId && isLocationMetricType(data().metricType)) {
+  <div class="indicator-select-block">
+    <span class="option-label">Indicator</span>
+    <mat-form-field appearance="outline" class="indicator-dropdown">
+      <mat-select [value]="selectedIndicatorId" (selectionChange)="setSelectedIndicator($event.value)">
+        <mat-option [value]="null">All indicators</mat-option>
+        @for (ind of locationIndicators; track ind.id) {
+          <mat-option [value]="ind.id">{{ ind.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+}
+@if (data().metricType && data().metricType === 'Indicator'){
+  <div>
+    <button mat-raised-button [mat-menu-trigger-for]="widgetMenu"><mat-icon>chevron_right</mat-icon>SelectData</button>
+    <mat-menu #widgetMenu="matMenu">
+      @for (tests of performanceData; track tests.id){
+        @for (tt of tests.categories; track tt.id){
+          @for (ttt of tt.indicators; track ttt.id){
+            <button mat-menu-item (click)="updateIncicator(ttt)">{{ttt.name}}</button>
+          }
+        }
+      } @empty {
+
+        <button mat-menu-item >No Widgets to add</button>
+      }
+    </mat-menu>
+  </div>
+}
+@if (data().contentKey && data().contentKey === 'governancePlanner'){
+  <div>
+    <button mat-raised-button [mat-menu-trigger-for]="widgetMenu"><mat-icon>chevron_right</mat-icon>SelectData</button>
+    <mat-menu #widgetMenu="matMenu">
+      @for (tests of viewTypeS; track tests){
+
+        <button mat-menu-item (click)="updateViewType(tests)">{{ tests }}</button>
+
+      } @empty {
+
+        <button mat-menu-item >test 2{{ viewTypeS }}</button>
+      }
+    </mat-menu>
+  </div>
+}
+<button mat-icon-button class="move-forward-button"
+(click)="store.moveWidgetToRight(data().id)">
+  <mat-icon>chevron_right</mat-icon>
+</button>
+<button mat-icon-button class="move-backward-button" (click)="store.moveWidgetToLeft(data().id)">
+  <mat-icon>chevron_left</mat-icon>
+</button>
+<button mat-icon-button class="remove-widget-button" (click)="store.removeWidget(data().id)">
+  <mat-icon>delete</mat-icon>
+</button>

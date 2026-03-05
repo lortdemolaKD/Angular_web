@@ -1,0 +1,429 @@
+<section class="page">
+  <div class="page-head">
+    <h2>Audit Creator</h2>
+    <div class="top-tabs">
+
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab() === 'daily'"
+        (click)="setTab('daily')"
+      >
+        Daily Audit
+      </button>
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab() === 'advanced'"
+        (click)="setTab('advanced')"
+      >
+        Advanced Audit
+      </button>
+    </div>
+    <app-cst-button
+      title="Return"
+      headerColor="var(--color-primary-container)"
+      (headerClick)="moveTo('locations')">
+    </app-cst-button>
+  </div>
+  <div class="audit-creator" (keydown)="onKeyDown($event)" tabindex="0">
+
+
+    <div class="audit-creator__grid_col">
+      <!-- Audit details -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Audit details</div>
+        </div>
+        <div class="card-body form-grid">
+
+          <label class="field">
+            <span class="field__label">Title</span>
+            <input type="text" [ngModel]="auditTitle()" (ngModelChange)="auditTitle.set($event)" />
+          </label>
+
+          <label class="field">
+            <span class="field__label">Type</span>
+            <select [ngModel]="auditType()" (ngModelChange)="auditType.set($event)">
+              <option value="baseline">Baseline</option>
+              <option value="registered_manager">Monthly</option>
+              <option value="provider">Provider</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field__label">Date</span>
+            <input type="date" [ngModel]="auditDate()" (ngModelChange)="auditDate.set($event)" />
+          </label>
+
+        </div>
+      </div>
+      <ng-container *ngIf="activeTab() === 'daily'" class="audit-creator__grid"><!-- Custom Template Builder/Form Section -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Daily (custom) audit</div>
+          </div>
+          <div class="card-body">
+            <label class="field">
+              <span class="field__label">Edit existing or create new</span>
+              <select
+                [ngModel]="selectedAudit()?.id ?? selectedAudit()?._id"
+                (ngModelChange)="onAuditIdSelected($event)"
+              >
+                <option [ngValue]="null">Create new audit (select template below)</option>
+                <option *ngFor="let audit of audits()" [ngValue]="audit.id ?? audit._id">
+                  {{ audit.title }} – {{ audit.date }}
+                </option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field__label">Template</span>
+              <select
+                [ngModel]="selectedCustomTemplateId()"
+                (ngModelChange)="onTemplateSelectChange($event)"
+              >
+                <option *ngFor="let t of customTemplates()" [ngValue]="t.id">{{ t.name }} – {{ t.status }}</option>
+              </select>
+            </label>
+          </div>
+        </div>
+          <app-flexible-template-system
+            [mode]="(selectedAudit() && (dailyDisplayTemplate() || dailyDisplayResponse())) ? 'form' : 'builder'"
+            [template]="dailyDisplayTemplate() ?? currentCustomTemplate()"
+            [existingResponse]="dailyDisplayResponse() ?? existingAuditResponse()"
+            (templateDeleted)="handleTemplateDelete($event)"
+            [autoSave]="false"
+            (templateSaved)="onTemplateSaved($event)"
+            [locationId]="locationId()"
+            (formSubmit)="onFormSubmit($event)"
+            (formChange)="onFormChange($event)"
+            (modeChanged)="onModeChanged($event)"
+            (templateChanged)="onTemplateChanged($event)">
+          </app-flexible-template-system>
+
+
+
+      </ng-container>
+
+      <ng-container *ngIf="activeTab() === 'advanced'" class="audit-creator__grid">
+
+
+
+
+      <!-- Select audit -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Select audit</div>
+        </div>
+        <div class="card-body">
+
+          <label class="field">
+            <span class="field__label">Edit existing audit</span>
+            <select
+              [ngModel]="selectedAudit()?.id ?? selectedAudit()?._id"
+              (ngModelChange)="onAuditIdSelected($event)"
+            >
+              <option [ngValue]="null">-- Select an audit --</option>
+
+              <option *ngFor="let audit of advancedAudits()" [ngValue]="audit.id ?? audit._id">
+                {{ audit.title }} - {{ audit.date }}
+              </option>
+            </select>
+
+          </label>
+          <div class="select-audit-grid">
+            <div class="select-audit-actions">
+              <button class="mini-btn primary" (click)="createNewAudit()">Create empty audit</button>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Location</span>
+              <select [ngModel]="locationId()" (ngModelChange)="onLocationChange($event)">
+                <option [ngValue]="null">-- Select location --</option>
+                <option *ngFor="let l of locations" [ngValue]="l.id">
+                  {{ l.name }}
+                </option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Department</span>
+              <select
+                [disabled]="!selectedLocation()"
+                [ngModel]="departmentId()"
+                (ngModelChange)="onDepartmentChange($event)"
+              >
+                <option [ngValue]="null">-- Select department --</option>
+                <option *ngFor="let d of availableDepartments()" [value]="d.id">
+                  {{ d.name }}
+                </option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Sub-department</span>
+              <select
+                [disabled]="!departmentId()"
+                [ngModel]="subDepartmentId()"
+                (ngModelChange)="subDepartmentId.set($event)"
+              >
+                <option [ngValue]="null">-- Select sub-department --</option>
+                <option *ngFor="let s of availableSubDepartments()" [value]="s.id">
+                  {{ s.name }}
+                </option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field__label">Template</span>
+              <select
+                [ngModel]="selectedNormalTemplateId()"
+                (ngModelChange)="selectedNormalTemplateId.set($event)"
+              >
+                <option *ngFor="let t of normalTemplates()" [ngValue]="t.id">{{ t.name }}</option>
+              </select>
+
+            </label>
+
+            <div class="select-audit-actions">
+              <button
+                class="mini-btn primary"
+                [disabled]="!selectedNormalTemplateId()"
+                (click)="createAuditFromTemplate(selectedNormalTemplateId())"
+              >
+                Generate from template
+              </button>
+            </div>
+
+            <label class="field checkbox-field">
+              <span class="field__label">Recurring</span>
+              <label class="checkbox-row">
+                <input
+                  type="checkbox"
+                  [checked]="isRecurring()"
+                  (change)="isRecurring.set($any($event.target).checked)"
+                />
+                <span>Is recurring?</span>
+              </label>
+            </label>
+
+            <div class="recurring-grid" *ngIf="isRecurring()">
+              <label class="field">
+                <span class="field__label">Frequency</span>
+                <select [ngModel]="recurringFrequency()" (ngModelChange)="recurringFrequency.set($event)">
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Annually">Annually</option>
+                  <option value="AdHoc">AdHoc</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Type</span>
+                <select [ngModel]="recurringTemplateAuditType()" (ngModelChange)="recurringTemplateAuditType.set($event)">
+                  <option value="baseline">baseline</option>
+                  <option value="registered_manager">registered_manager</option>
+                  <option value="provider">provider</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field__label">Generate next</span>
+                <select [ngModel]="generateMonthsAhead()" (ngModelChange)="generateMonthsAhead.set($event)">
+                  <option [ngValue]="3">3 months</option>
+                  <option [ngValue]="6">6 months</option>
+                  <option [ngValue]="12">12 months</option>
+                </select>
+              </label>
+
+              <div class="select-audit-actions">
+                <button class="mini-btn primary" (click)="generateRecurringFromCurrentDraft()">
+                  Create recurring audits
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Advanced: always show regulation table (same view as Audit Library) – build with drag or edit existing -->
+      <div class="card audit-creator__span2" *ngIf="activeTab() === 'advanced'">
+        <div class="card-head">
+          <div class="card-title">{{ questions().length ? 'Audit questions &amp; evidence' : 'Audit regulations (drag from library)' }}</div>
+        </div>
+
+        <div class="card-body audit-layout" cdkDropListGroup>
+
+          <!-- LEFT SIDE: regulation library -->
+          <aside
+            class="reg-sidebar"
+            cdkDropList
+            [cdkDropListData]="availableRegs()"
+            [cdkDropListSortingDisabled]="true"
+          >
+            <div class="reg-sidebar__title">Regulation library</div>
+
+            <div
+              class="reg-card"
+              *ngFor="let reg of availableRegs()"
+              cdkDrag
+              [cdkDragData]="reg"
+            >
+              <div class="reg-card__name">Regulation {{ reg.code }} - {{ reg.title }}</div>
+              <div class="reg-card__desc">{{ reg.description }}</div>
+              <div class="reg-card__hint">Drag into the audit</div>
+            </div>
+          </aside>
+
+          <!-- RIGHT SIDE: audit drop zone -->
+          <section
+            class="audit-zone"
+            cdkDropList
+            [cdkDropListData]="selectedRegs()"
+            (cdkDropListDropped)="dropRegulation($event)"
+          >
+            <div class="audit-zone__title">Audit table (drop regulations here)</div>
+
+            <div *ngIf="selectedRegs().length === 0" class="empty-state">
+              Drag a regulation from the left panel to start building the audit.
+            </div>
+
+            <div class="reg-section" *ngFor="let reg of selectedRegs()">
+              <div class="reg-section__head">
+                <div class="reg-section__title">
+                  Regulation {{ reg.code }} - {{ reg.title }}
+                </div>
+                <button class="mini-btn" (click)="removeRegulation(reg.id)">
+                  Remove regulation
+                </button>
+              </div>
+
+              <div class="table-scroll">
+                <table class="simple-table">
+                  <thead>
+                  <tr>
+                    <th style="width: 10%;">Clause</th>
+                    <th style="width: 20%;">Requirement</th>
+                    <th style="width: 15%;">Evidence</th>
+                    <th style="width: 15%;">Further action</th>
+                    <th style="width: 10%;">By whom</th>
+                    <th style="width: 10%;">Target date</th>
+                    <th style="width: 5%;">Completed</th>
+                    <th style="width: 5%;">Included</th>
+                    <th style="width: 10%;">Evidence items</th>
+                  </tr>
+                  </thead>
+
+                  <tbody>
+                  <tr *ngFor="let q of getQuestionsByRegulation(reg.id)">
+                    <td class="muted">{{ q.clauseLabel || '-' }}</td>
+
+                    <td>
+                      <div class="req-text">{{ q.text }}</div>
+                    </td>
+
+                    <td>
+                        <textarea
+                          rows="2"
+                          class="cell-textarea"
+                          [(ngModel)]="q.evidenceSummaryText"
+                          placeholder="Evidence summary..."
+                        ></textarea>
+                    </td>
+
+                    <td>
+                        <textarea
+                          rows="2"
+                          class="cell-textarea"
+                          [(ngModel)]="q.actionRequired"
+                          placeholder="None"
+                        ></textarea>
+                    </td>
+
+                    <td>
+                      <input
+                        type="text"
+                        class="cell-input"
+                        [(ngModel)]="q.assignedTo"
+                        placeholder="User ID"
+                      />
+                    </td>
+
+                    <td>
+                      <input
+                        type="date"
+                        class="cell-input"
+                        [(ngModel)]="q.targetDate"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        class="cell-input"
+                        [(ngModel)]="q.defaultIncluded"
+                      />
+                    </td>
+                    <td>
+                      <select class="cell-input" [(ngModel)]="q.completed">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                      </select>
+                    </td>
+
+                    <!-- Right-click evidence menu -->
+                    <td (contextmenu)="openEvidenceMenu($event, q)">
+                      <div class="evidence-cell">
+                        <span class="tag">Items: {{ q.evidence?.length ?? 0 }}</span>
+                        <span class="muted"><br/>Right‑click</span>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="getQuestionsByRegulation(reg.id).length === 0">
+                    <td colspan="8" class="muted">
+                      No clause rows were generated for this regulation.
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Evidence context menu -->
+      <div
+        class="ctx-menu"
+        *ngIf="showEvidenceMenu"
+        [style.left.px]="evidenceMenuPosition.x"
+        [style.top.px]="evidenceMenuPosition.y"
+        (click)="$event.stopPropagation()"
+      >
+        <button class="ctx-item" (click)="manageEvidence()">Manage evidence</button>
+        <button class="ctx-item danger" (click)="clearEvidence()">Clear evidence</button>
+        <button class="ctx-item" (click)="closeEvidenceMenu()">Cancel</button>
+      </div>
+      <div class="ctx-backdrop" *ngIf="showEvidenceMenu" (click)="closeEvidenceMenu()"></div>
+
+      </ng-container>
+      <!-- Footer actions: Save audit saves current state (table or form) -->
+      <div class="footer-actions">
+        <button
+          class="mini-btn primary"
+          (click)="saveAudit()">
+          Save audit
+        </button>
+        <button class="mini-btn" (click)="cancel()">Cancel</button>
+      </div>
+
+    </div>
+
+
+  </div>
+</section>

@@ -1,0 +1,33 @@
+<div class="header">
+  <div class="dashboard-header">
+    <h2>Welcome, {{ user?.name }}</h2>
+    <p class="role-badge">{{ roleLabel }}</p>
+  </div>
+  <button type="button" class="add-widgets-btn" [mat-menu-trigger-for]="widgetMenu" aria-label="Add widgets">
+    <mat-icon aria-hidden="true">add_circle</mat-icon>
+    <span>Add widgets</span>
+  </button>
+  <mat-menu #widgetMenu="matMenu" class="add-widgets-menu">
+    @for (widget of store.widgetsToAdd(); track widget.id) {
+      <button mat-menu-item (click)="store.addWidget(widget)">{{ widget.label }}</button>
+    } @empty {
+      <button mat-menu-item disabled>No widgets to add</button>
+    }
+  </mat-menu>
+</div>
+<div class="dashboard-widgets" #dashboard cdkDropListGroup >
+  @for (w of store.addedWidgets(); track w.id){
+    <app-widget
+      cdkDropList
+      [data]="w"
+      [locations]="LocElements"
+      [isAdmin]="isOrgAdmin"
+      [user]="user"
+      [canCreateTask]="canCreateTask"
+      [companies]="ComElements"
+      (cdkDropListDropped)="drop($event)"
+      [cdkDropListData]="w.id"
+    ></app-widget>
+  }
+
+</div>

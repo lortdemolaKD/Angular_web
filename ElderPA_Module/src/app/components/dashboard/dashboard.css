@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.dashboard-widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-auto-rows: 150px;
+  gap: 16px;
+  align-items: stretch;
+  min-width: 0;
+  width: 100%;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Add widgets button – theme-aware, matches app primary actions */
+.add-widgets-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-on-primary, #fff);
+  background: var(--color-primary, #6750a4);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.add-widgets-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.add-widgets-btn:focus-visible {
+  outline: 2px solid var(--color-primary, #6750a4);
+  outline-offset: 2px;
+}
+
+.add-widgets-btn mat-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  opacity: 0.95;
+}
+
+/* Menu inherits theme from Material; ensure contrast */
+.add-widgets-menu {
+  margin-top: 4px;
+}

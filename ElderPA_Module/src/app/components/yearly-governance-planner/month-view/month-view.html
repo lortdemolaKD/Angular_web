@@ -1,0 +1,35 @@
+
+<div class="month-view">
+  <div class="week-header">
+    <div class="day-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
+      {{ d }}
+    </div>
+  </div>
+
+
+  <div class="weeks" [ngClass]="'weeks-' + weeks.length">
+    <div class="week" *ngFor="let week of weeks">
+      <div class="day"
+           *ngFor="let day of week"
+           [class.outside-month]="day.date.month() !== viewDate.month()"
+           [title]="getDayTooltip(day)">
+        <div class="date">{{ day.date.date() }}</div>
+        <div class="dots-container" *ngIf="day.events.length > 0">
+          <!-- Color-grouped dots with per-color tooltip -->
+          <div class="dot"
+               *ngFor="let group of getColorCounts(day); let i = index"
+               [style.background]="group.color"
+               [title]="group.titles?.join('\n') || group.count + ' events'">
+            {{ group.count }}
+          </div>
+
+          <div class="more-count" *ngIf="day.events.length > 3"
+               [title]="'+' + (day.events.length - 3) + ' more events'">
+            +{{ day.events.length - 3 }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

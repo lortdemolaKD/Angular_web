@@ -1,0 +1,28 @@
+.radial-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width:100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.radial-selector button {
+  border: none;
+  padding: 6px 12px;
+  border-radius: 0%;
+  cursor: pointer;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition: all 0.2s ease;
+  min-width: 40px;
+  width:100%;
+  min-height: 40px;
+}
+.radial-selector button.selected {
+  background-color: var(--color-accent2, #9a538e);
+  color: var(--color-text);
+  font-weight: 600;
+}
+.radial-selector button:hover {
+  filter: brightness(1.1);
+}

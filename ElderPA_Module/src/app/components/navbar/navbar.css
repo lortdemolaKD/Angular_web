@@ -1,0 +1,841 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 72px;
+  overflow: hidden;
+  transition: width 0.25s ease;
+}
+
+:host.navbar--expanded {
+  width: 280px;
+}
+
+.navbar-root {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+:host.navbar--expanded .navbar-root {
+  min-width: 280px;
+}
+
+.navbar {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+}
+
+.navbar-center {
+  flex: 1;
+  min-height: 0;
+}
+/* Add inside navbar.css */
+
+/* Invite Button */
+.invite-btn {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 15px;
+  transition: all 0.2s;
+}
+
+.invite-btn__icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.invite-btn:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.desktop-only { display: block; }
+.mobile-only { display: none; }
+
+/* Mobile menu button: hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+}
+.mobile-menu-btn mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile overlay and dropdown: hidden on desktop */
+.mobile-nav-overlay,
+.mobile-nav-dropdown {
+  display: none;
+}
+.navbar a {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 16px;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.nav-link {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.nav-link .nav-link__icon,
+.nav-link mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  max-width: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.navbar a:hover,
+.navbar a.active {
+  background-color: var(--sidebar-hover);
+}
+
+/* Collapsed (default): icon-only, centered */
+:host:not(.navbar--expanded) .nav-link span,
+:host:not(.navbar--expanded) .brand span,
+:host:not(.navbar--expanded) .company-button__label,
+:host:not(.navbar--expanded) .company-button__chevron,
+:host:not(.navbar--expanded) .invite-btn span,
+:host:not(.navbar--expanded) .user-pill__text,
+:host:not(.navbar--expanded) .user-pill .user-pill__chevron {
+  display: none !important;
+}
+
+:host:not(.navbar--expanded) .nav-link,
+:host:not(.navbar--expanded) .brand {
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+:host:not(.navbar--expanded) .company-button {
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+:host:not(.navbar--expanded) .invite-btn {
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+:host:not(.navbar--expanded) .user-pill {
+  justify-content: center;
+  max-width: 48px;
+  padding: 6px;
+}
+
+:host:not(.navbar--expanded) .company-dropdown {
+  left: 0;
+  min-width: 200px;
+}
+
+/* Collapsed: theme + logout stack vertically and fit in 72px */
+:host:not(.navbar--expanded) .navbar-actions-row {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+:host:not(.navbar--expanded) .navbar-right,
+:host:not(.navbar--expanded) .navbar-right-bottom {
+  align-items: center;
+  width: 100%;
+}
+
+:host:not(.navbar--expanded) .logout-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+:host:not(.navbar--expanded) .invite-btn {
+  max-width: 72px;
+  box-sizing: border-box;
+}
+
+/* Theme switcher button (child component) – fixed size when collapsed */
+:host:not(.navbar--expanded) ::ng-deep app-theme-switcher .theme-switcher__btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+/* Company dropdown – same look as nav links, seamless */
+.company-picker {
+  position: relative;
+}
+
+.company-button {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--sidebar-text);
+  font-size: 16px;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.company-button:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.company-button__icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.company-button__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.company-button__chevron {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.company-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 100%;
+  padding: 4px 0;
+  background: var(--sidebar-bg);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  border: 1px solid var(--sidebar-hover);
+}
+
+.company-item {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--sidebar-text);
+  font-size: 16px;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.company-item:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.company-item__icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  flex-shrink: 0;
+  opacity: 0.9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-title {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.navbar-right {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+/* User at bottom, then theme + logout in a row underneath */
+.navbar-right-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navbar-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* User pill: avatar + name/role, opens account panel */
+.user-pill-wrap {
+  position: relative;
+}
+
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background 0.2s;
+  font: inherit;
+  width: 100%;
+  max-width: 220px;
+}
+
+.user-pill:hover {
+  background: var(--sidebar-hover);
+}
+
+.user-pill__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--color-primary);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-on-primary, #fff);
+}
+
+.user-pill__avatar--initials {
+  background: var(--color-primary);
+  color: var(--color-on-primary, #fff);
+}
+
+.user-pill__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+
+.user-pill .user-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.user-pill .user-role {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.user-pill__chevron {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.user-pill--open .user-pill__chevron {
+  transform: rotate(180deg);
+}
+
+/* Account panel: modal-style popup (fixed, centered) so it stays in view */
+.user-account-dropdown {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.user-account-dropdown__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
+.user-account-dropdown__panel {
+  position: relative;
+  z-index: 1001;
+  pointer-events: auto;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  margin: 16px;
+}
+
+/* Logout: icon-only button */
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.logout-btn:hover {
+  background: var(--sidebar-hover);
+}
+
+.logout-btn mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.link {
+  font-size: 20px;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+
+}
+.icon {
+  justify-content: end;
+
+
+}
+.company-selector {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+}
+
+.company-selector .title {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--sidebar-text); /* Match sidebar text color */
+}
+
+.company-selector .dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background-color: var(--sidebar-bg); /* Dark sidebar background */
+  color: var(--sidebar-text); /* White text */
+  border: 1px solid var(--sidebar-hover); /* subtle border */
+  border-radius: 4px;
+  min-width: 150px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.company-selector .dropdown li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.company-selector .dropdown li:hover {
+  background-color: var(--sidebar-hover); /* Hover effect */
+  color: var(--sidebar-text); /* Keep text visible */
+}
+
+
+@media (max-width: 768px) {
+  :host {
+    width: 100% !important;
+    overflow: visible;
+  }
+  :host.navbar--expanded {
+    width: 100% !important;
+  }
+  .navbar-root {
+    min-width: 0;
+    overflow: visible;
+  }
+
+  /* Phone layout: [ App name | Menu ] …… space …… [ User | Theme | Logout ] – no compression */
+  .navbar {
+    direction: ltr;
+    width: 100%;
+    box-sizing: border-box;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    min-height: 56px;
+    padding: 0 16px;
+    gap: 20px;
+  }
+
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block; }
+
+  /* Left: 1) App name, 2) Menu button – never shrink below content */
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 1 auto;
+    min-width: 0;
+    order: 0;
+  }
+
+  :host .brand {
+    justify-content: flex-start;
+    padding: 8px 0;
+    text-decoration: none;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  /* Show app logo (icon) on mobile – first thing on the left */
+  :host .brand .nav-link__icon {
+    display: inline-flex !important;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+    width: 28px;
+    height: 28px;
+  }
+  /* Logo text (app name) visible on mobile – override desktop collapsed rule */
+  :host .brand span.brand-title {
+    display: inline !important;
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  /* Menu button: three lines (hamburger) only, no text */
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--sidebar-text);
+  }
+  .mobile-menu-btn mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  .mobile-menu-btn:hover {
+    background: var(--sidebar-hover);
+  }
+
+  .navbar-center.desktop-nav-center {
+    display: none !important;
+  }
+
+  /* Right: Invite (left of user), User, Theme, Logout – force to the right */
+  :host .navbar-right {
+    margin-left: auto !important;
+    margin-top: 0;
+    flex: none !important;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: auto !important;
+    max-width: none;
+    order: 1;
+  }
+
+  :host .navbar-right-bottom {
+    flex-direction: row !important;
+    align-items: center;
+    width: auto !important;
+    gap: 12px;
+  }
+
+  /* Invite on mobile: icon-only, pushed down to align with Theme/Logout */
+  :host .invite-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 8px;
+    padding-top: 12px;
+    box-sizing: border-box;
+    border: none;
+    align-self: center;
+    margin-top: 10px;
+  }
+  :host .invite-btn span {
+    display: none;
+  }
+  :host .invite-btn .invite-btn__icon,
+  :host .invite-btn mat-icon {
+    margin: 0;
+    display: block;
+  }
+
+  :host .navbar-actions-row {
+    flex-direction: row !important;
+    gap: 12px;
+  }
+
+  /* User icon (first of three) */
+  .user-pill-wrap {
+    margin: 0;
+  }
+  :host .user-pill {
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    padding: 8px;
+    justify-content: center;
+    box-sizing: border-box;
+    border: none;
+  }
+  :host .user-pill .user-pill__text,
+  :host .user-pill .user-pill__chevron {
+    display: none !important;
+  }
+  .user-pill__avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .logout-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: none;
+  }
+
+  ::ng-deep app-theme-switcher .theme-switcher__btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: none;
+  }
+
+  /* Mobile dropdown overlay and panel (above app .navbar z-index: 2000) */
+  .mobile-nav-overlay {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1999;
+  }
+
+  .mobile-nav-dropdown {
+    display: block !important;
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    height: auto;
+    max-height: calc(100vh - 56px - 24px);
+    background: var(--sidebar-bg);
+    z-index: 2001;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 12px 12px;
+  }
+
+  .mobile-nav-dropdown__inner {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobile-nav-dropdown .company-picker {
+    margin-bottom: 8px;
+  }
+  .mobile-nav-dropdown .company-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .mobile-nav-dropdown .company-dropdown {
+    position: static;
+    margin-top: 4px;
+    box-shadow: none;
+    border: 1px solid var(--sidebar-hover);
+  }
+
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 12px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sidebar-text);
+    font-size: 16px;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .mobile-nav-link:hover,
+  .mobile-nav-dropdown .nav-link:hover {
+    background: var(--sidebar-hover);
+  }
+  .mobile-nav-dropdown .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--sidebar-text);
+  }
+  .mobile-nav-dropdown .nav-link.active {
+    background: var(--sidebar-hover);
+  }
+
+  /* Dropdown: always show text next to icons (override desktop collapsed rule) */
+  .mobile-nav-dropdown .nav-link span,
+  .mobile-nav-dropdown .company-button span {
+    display: inline !important;
+  }
+  .mobile-nav-dropdown .nav-link .nav-link__icon,
+  .mobile-nav-dropdown .company-button .nav-link__icon {
+    flex-shrink: 0;
+  }
+}
+[data-theme="light"] .navbar {
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .navbar {
+  box-shadow: 2px 0 5px rgba(255,255,255,0.1);
+}
+
+[data-theme="high-contrast"] .navbar {
+  box-shadow: 2px 0 5px #000000;
+  border-right: 3px solid #000000;
+}
+
+[data-theme="high-contrast"] .navbar a,
+[data-theme="high-contrast"] .company-selector .title,
+[data-theme="high-contrast"] .menu-button {
+  font-weight: bold;
+  text-shadow: 1px 1px 0 #ffffff;
+}
+
+.company-selector .dropdown,
+.menu-selector .dropdown {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] .company-selector .dropdown,
+[data-theme="light"] .menu-selector .dropdown {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] .company-selector .dropdown,
+[data-theme="dark"] .menu-selector .dropdown {
+  box-shadow: 0 4px 8px rgba(255,255,255,0.1);
+}
+
+[data-theme="high-contrast"] .company-selector .dropdown,
+[data-theme="high-contrast"] .menu-selector .dropdown {
+  box-shadow: 0 4px 8px #000000;
+  border: 2px solid #000000;
+}

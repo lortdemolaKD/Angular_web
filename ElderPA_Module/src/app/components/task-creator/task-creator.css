@@ -1,0 +1,31 @@
+.task-creator-modal{
+  font-size: 0.8vw;
+  padding: 12px;
+}
+.tc-title{ margin: 0 0 12px; font-weight: 800; }
+
+.tc-grid{
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px 12px;
+  align-items: start;
+}
+
+.tc-grid input,
+.tc-grid select,
+.tc-grid textarea{
+  width: 95%;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.95);
+}
+
+.tc-grid textarea{ min-height: 90px; resize: vertical; }
+
+.tc-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top: 14px;
+}

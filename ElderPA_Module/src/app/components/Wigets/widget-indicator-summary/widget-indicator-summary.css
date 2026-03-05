@@ -1,0 +1,33 @@
+.widget-summary {
+  padding: 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 60px;
+  justify-content: center;
+  color: var(--color-text, #333);
+}
+
+.label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.badge.light { background: color-mix(in srgb, var(--indicator-light) 25%, transparent); color: var(--color-text, #333); }
+.badge.mid { background: color-mix(in srgb, var(--indicator-mid) 25%, transparent); color: var(--color-text, #333); }
+.badge.high { background: color-mix(in srgb, var(--indicator-high) 25%, transparent); color: var(--color-text, #333); }

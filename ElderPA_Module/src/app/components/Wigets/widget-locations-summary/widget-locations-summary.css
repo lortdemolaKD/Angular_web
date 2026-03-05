@@ -1,0 +1,40 @@
+.widget-summary {
+  padding: 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 60px;
+  justify-content: center;
+  color: var(--color-text, #333);
+}
+
+.value.primary {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.label {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.chip {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--color-text, #333);
+}
+
+.chip.care-home { background: rgba(76, 175, 80, 0.2); }
+.chip.home-care { background: rgba(33, 150, 243, 0.2); }

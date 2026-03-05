@@ -1,0 +1,505 @@
+:host {
+  display: block;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.audit-creator {
+  padding: 16px;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.audit-creator__grid_col{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+.top-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.top-tab {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 8px;
+  background: var(--color-primary-container);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+.top-tab:hover {
+  background: var(--color-accent1-hover);
+}
+
+.top-tab.active {
+  background: var(--color-accent1-hover);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.audit-creator__grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+.audit-layout{
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.reg-sidebar{
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  max-height: 520px;
+  overflow: auto;
+  color: var(--color-text);
+}
+
+.reg-sidebar__title{
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--color-text);
+}
+
+.reg-card{
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--color-surface);
+  margin-bottom: 10px;
+  cursor: grab;
+  color: var(--color-text);
+}
+
+.toolbar { flex-wrap: wrap; }
+
+.toolbar select {
+  min-width: 240px;
+  max-width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--sidebar-hover);
+  color: var(--color-text);
+}
+
+.reg-card:active{ cursor: grabbing; }
+
+.reg-card__name{ font-weight: 600; margin-bottom: 6px; color: var(--color-text); }
+
+.reg-card__desc{ font-size: 12px; opacity: 0.85; margin-bottom: 6px; color: var(--color-text); }
+
+.reg-card__hint{ font-size: 12px; opacity: 0.65; color: var(--color-text); }
+
+.audit-zone{
+  border: 1px dashed var(--color-primary);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  min-height: 220px;
+  color: var(--color-text);
+}
+
+.audit-zone__title{
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--color-text);
+}
+
+.reg-section{
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.ctx-backdrop{
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 999;
+}
+
+.page{
+  padding: 16px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.page-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ctx-menu{
+  position: fixed;
+  z-index: 1000;
+  background: var(--color-surface);
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 10px;
+  min-width: 200px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+  padding: 6px;
+  color: var(--color-text);
+}
+
+.ctx-item{
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  color: var(--color-text);
+}
+
+.ctx-item:hover{
+  background: var(--color-primary-container, var(--color-primary-light));
+  color: var(--color-on-primary-container, var(--color-on-primary));
+}
+
+.ctx-item.danger{
+  color: var(--color-secondary);
+}
+
+.reg-section__head{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 10px 12px;
+  background: var(--color-primary-container, var(--color-surface));
+  color: var(--color-on-primary-container, var(--color-text));
+}
+
+.reg-section__title{
+  font-weight: 600;
+}
+
+.cell-input,
+.cell-textarea{
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--sidebar-hover);
+  color: var(--color-text);
+}
+
+.audit-creator__span2 { grid-column: 1 / -1; }
+
+.form-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-grid input,
+.form-grid select{
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  outline: none;
+  color: var(--color-text);
+}
+
+.field{ display: grid; gap: 6px; }
+
+.field__label{
+  font-size: 12px;
+  opacity: 0.8;
+  color: var(--color-text);
+}
+
+input,
+select{
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  outline: none;
+  color: var(--color-text);
+}
+
+.toolbar{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.actions-col { width: 1%; white-space: nowrap; }
+
+.actions{
+  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.footer-actions{
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* evidence editor */
+.audit-creator__evidence{
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sidebar-hover);
+}
+
+.evidence-head{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.evidence-title{
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.evidence-list{
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px 0;
+  display: grid;
+  gap: 6px;
+}
+
+.evidence-list li{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--color-text);
+}
+
+/* “company.css” card look (local copy) */
+.card{
+  border-radius: 14px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-primary-container, var(--color-surface));
+  border-bottom: 1px solid var(--sidebar-hover);
+  color: var(--color-on-primary-container, var(--color-text));
+}
+
+.card-title{
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2px;
+}
+
+.card-body{
+  padding: 12px;
+  color: var(--color-text);
+}
+
+.table-scroll{
+  max-height: 420px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.simple-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.simple-table th,
+.simple-table td{
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--sidebar-hover);
+  text-align: left;
+  vertical-align: top;
+  color: var(--color-text);
+}
+
+.mini-btn{
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.mini-btn.primary{
+  border-color: var(--color-primary);
+  background: var(--color-primary-container, var(--color-primary-light));
+  font-weight: 700;
+  color: var(--color-on-primary-container, var(--color-on-primary));
+}
+
+.pill{
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--sidebar-hover);
+  background: var(--color-surface);
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+.tag{
+  font-size: 12px;
+  opacity: 0.75;
+  color: var(--color-text);
+}
+
+.muted{
+  opacity: 0.75;
+  font-size: 12px;
+  color: var(--color-text);
+}
+
+@media (max-width: 1100px){
+  .audit-creator__grid{ grid-template-columns: 1fr; }
+  .form-grid{ grid-template-columns: 1fr; }
+}
+
+/* Phone: compress layout, single column, no fixed widths */
+@media (max-width: 768px) {
+  :host { overflow-x: hidden; }
+  .page { padding: 10px; }
+  .audit-creator { padding: 10px; }
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .page-head h2 { margin: 0; }
+  .top-tabs { justify-content: flex-start; }
+  .audit-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .reg-sidebar { max-height: 320px; }
+  .toolbar select { min-width: 0; width: 100%; }
+  .select-audit-grid {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+  .recurring-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .card-body { padding: 10px; }
+  .table-scroll { max-height: 280px; }
+  .table-row-editor input { min-width: 0; }
+}
+
+/* Make action blocks visually equivalent to fields */
+.select-audit-actions {
+  display: flex;
+  align-items: flex-end;
+  min-height: 58px;
+}
+
+.checkbox-field .field__label{ margin-bottom: 2px; }
+
+.checkbox-row{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Recurring area reads as a sub-section */
+.recurring-grid{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px solid var(--sidebar-hover);
+}
+
+/* Better stacking on smaller screens */
+@media (max-width: 1100px){
+  .select-audit-grid{ grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .recurring-grid{ grid-template-columns: 1fr 1fr 1fr 1fr }
+}
+
+/* Select-audit grid: responsive + consistent spacing */
+.select-audit-grid{
+  display: grid;
+  grid-template-columns: minmax(0, 25%) minmax(0, 25%) minmax(0, 25%) minmax(0, 25%);
+  gap: 12px;
+  justify-items: center;
+  align-items: end;
+  margin-top: 10px;
+}
+.table-builder .table-row-editor {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0;
+}
+.table-row-editor input {
+  flex: 1;
+  min-width: 80px;
+}
+.mini-btn.danger {
+  background: var(--color-secondary);
+  color: var(--color-on-secondary);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.select-audit-grid > *{ min-width: 0; }
+
+.field{ min-width: 0; }
+
+select{ width: 100%; min-width: 0; }
+
+.select-audit-actions{
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  min-height: 40px;
+}

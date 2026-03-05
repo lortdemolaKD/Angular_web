@@ -1,0 +1,815 @@
+import {
+  AuditTemplate,
+  RegulationRef,
+} from '../../../src/app/components/Types';
+
+// Helper function to create regulation references
+const regRef = (id: string, title: string, description: string): RegulationRef => ({
+  id,
+  title,
+  description,
+});
+
+// ============================================================================
+// REGISTERED MANAGER AUDITS - Weekly audits conducted by Registered Manager (RM)
+// ============================================================================
+
+export const REGISTERED_MANAGER_AUDIT_TEMPLATES: AuditTemplate[] = [
+  // 1. DOLs, Safeguarding & CQC Notifications
+  {
+    id: 'template-rm-001',
+    name: 'DOLs, Safeguarding & CQC Notifications Audit',
+    auditType: 'registered_manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-rm001-001',
+        title: 'Deprivation of Liberty Safeguards (DOLs)',
+        description: 'Verification of DOLs applications, assessments, and ongoing compliance.',
+        questions: [
+          {
+            id: 'q-rm001-001',
+            text: 'Are residents assessed for capacity to make their own decisions about care?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-11',
+                'Need for consent',
+                'Care must only be provided with consent'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review capacity assessments for residents receiving care against their wishes.',
+          },
+          {
+            id: 'q-rm001-002',
+            text: 'Are DOLs applications submitted to the local authority when required?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-11',
+                'Need for consent',
+                'Legal requirements for DOLs'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check DOLs application logs and status tracking.',
+          },
+          {
+            id: 'q-rm001-003',
+            text: 'Are authorized DOLs conditions being met and monitored?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-11',
+                'Need for consent',
+                'Compliance with authorization conditions'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review DOLs authorizations and compliance records.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm001-002',
+        title: 'Safeguarding Concerns & Reporting',
+        description: 'Assessment of safeguarding incident management and reporting procedures.',
+        questions: [
+          {
+            id: 'q-rm001-004',
+            text: 'Are safeguarding concerns reported to local safeguarding teams promptly?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-13',
+                'Safeguarding from abuse',
+                'Service users must be protected'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check safeguarding referral logs and reporting timelines.',
+          },
+          {
+            id: 'q-rm001-005',
+            text: 'Are safeguarding investigations conducted and documented thoroughly?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-13',
+                'Safeguarding from abuse',
+                'Investigations required'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review investigation files and outcomes.',
+          },
+          {
+            id: 'q-rm001-006',
+            text: 'Are lessons learned from safeguarding incidents shared with staff?',
+            domain: 'Effective',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Learning from incidents'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check for evidence of staff briefings and policy updates.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm001-003',
+        title: 'CQC Notifications',
+        description: 'Verification of CQC notification procedures for notifiable events.',
+        questions: [
+          {
+            id: 'q-rm001-007',
+            text: 'Are notifiable events reported to CQC within required timeframes?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-20',
+                'Duty of candour',
+                'Be open and transparent'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check CQC notification logs and dates of submission.',
+          },
+          {
+            id: 'q-rm001-008',
+            text: 'Are CQC notification records kept and made available for inspection?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Records management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Verify notification filing system and records.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 2. COVID, PPE & Hand Hygiene
+  {
+    id: 'template-rm-002',
+    name: 'COVID, PPE & Hand Hygiene Audit',
+    auditType: 'registered_manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-rm002-001',
+        title: 'COVID-19 Preparedness & Response',
+        description: 'Assessment of COVID-19 contingency planning and current procedures.',
+        questions: [
+          {
+            id: 'q-rm002-001',
+            text: 'Is there a current COVID-19 response plan in place?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Infection control measures'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review COVID-19 response policy and procedures.',
+          },
+          {
+            id: 'q-rm002-002',
+            text: 'Are staff trained on COVID-19 prevention and response procedures?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff must be trained'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check training records and competency assessments.',
+          },
+          {
+            id: 'q-rm002-003',
+            text: 'Are COVID-19 testing procedures in place and followed?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Infection control'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review testing logs and procedures.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm002-002',
+        title: 'PPE Management & Stock Control',
+        description: 'Verification of PPE availability, stock levels, and proper usage.',
+        questions: [
+          {
+            id: 'q-rm002-004',
+            text: 'Are adequate PPE supplies available and accessible to staff?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'IPC provisions'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check PPE stock levels and storage locations.',
+          },
+          {
+            id: 'q-rm002-005',
+            text: 'Are staff wearing PPE correctly and according to guidelines?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Proper use of PPE'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Observe staff during audit visit for correct PPE usage.',
+          },
+          {
+            id: 'q-rm002-006',
+            text: 'Is PPE waste disposed of safely and separately?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Waste management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check PPE waste disposal procedures.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm002-003',
+        title: 'Hand Hygiene Practices',
+        description: 'Assessment of hand hygiene compliance and protocol adherence.',
+        questions: [
+          {
+            id: 'q-rm002-007',
+            text: 'Are hand hygiene facilities readily available throughout the facility?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Infection control'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check sinks, hand sanitizers, and soap availability.',
+          },
+          {
+            id: 'q-rm002-008',
+            text: 'Are staff observed practicing proper hand hygiene techniques?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-12',
+                'Safe care and treatment',
+                'Hand hygiene'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Observe hand hygiene during audit visit.',
+          },
+          {
+            id: 'q-rm002-009',
+            text: 'Has hand hygiene training been completed by all staff?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff training'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Review training records.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 3. Staff Training & Supervisions
+  {
+    id: 'template-rm-003',
+    name: 'Staff Training & Supervisions Audit',
+    auditType: 'registered_manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-rm003-001',
+        title: 'Mandatory Training Compliance',
+        description: 'Verification of staff completion of mandatory training courses.',
+        questions: [
+          {
+            id: 'q-rm003-001',
+            text: 'Have all staff completed mandatory safeguarding training?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff must be trained'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check training records for all staff members.',
+          },
+          {
+            id: 'q-rm003-002',
+            text: 'Have all staff completed Health & Safety training?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff training requirements'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Verify H&S training certificates and dates.',
+          },
+          {
+            id: 'q-rm003-003',
+            text: 'Have all staff completed infection prevention & control training?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff competency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check IPC training records.',
+          },
+          {
+            id: 'q-rm003-004',
+            text: 'Is mandatory training refreshed annually?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Ongoing training'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review training expiry dates and renewal schedules.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm003-002',
+        title: 'Staff Supervision & Appraisal',
+        description: 'Assessment of regular supervision and appraisal processes.',
+        questions: [
+          {
+            id: 'q-rm003-005',
+            text: 'Are staff supervisions scheduled regularly (at least quarterly)?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Supervision requirement'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check supervision schedules and records.',
+          },
+          {
+            id: 'q-rm003-006',
+            text: 'Are supervision sessions documented with clear records and actions?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Records must be maintained'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review supervision records for completeness.',
+          },
+          {
+            id: 'q-rm003-007',
+            text: 'Are performance concerns addressed through supervision?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Performance management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check for documentation of performance discussions.',
+          },
+          {
+            id: 'q-rm003-008',
+            text: 'Are appraisals conducted annually?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff appraisal'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review annual appraisal records.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm003-003',
+        title: 'Staff Competency & Development',
+        description: 'Verification of staff competency assessments and development plans.',
+        questions: [
+          {
+            id: 'q-rm003-009',
+            text: 'Have staff been assessed for competency in their role?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Competency assessment'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check competency assessment records.',
+          },
+          {
+            id: 'q-rm003-010',
+            text: 'Are staff development needs identified and plans created?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff development'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review development plans in supervision records.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 4. Emails, Appointments & Letters
+  {
+    id: 'template-rm-004',
+    name: 'Emails, Appointments & Letters Audit',
+    auditType: 'registered_manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager', 'Admin'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-rm004-001',
+        title: 'Communication Management',
+        description: 'Assessment of incoming and outgoing communications.',
+        questions: [
+          {
+            id: 'q-rm004-001',
+            text: 'Are all emails and communications responded to in a timely manner?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Effective communication'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Review email logs and response times.',
+          },
+          {
+            id: 'q-rm004-002',
+            text: 'Are external communications (to CQC, local authority) logged and tracked?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Record keeping'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check external communication logs.',
+          },
+          {
+            id: 'q-rm004-003',
+            text: 'Are sensitive communications appropriately handled and filed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Confidentiality'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review confidential communication procedures.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm004-002',
+        title: 'Resident Appointments & Visits',
+        description: 'Verification of appointment scheduling and visiting arrangements.',
+        questions: [
+          {
+            id: 'q-rm004-004',
+            text: 'Are resident appointments recorded and organized effectively?',
+            domain: 'Effective',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Organization of care'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review appointment system and records.',
+          },
+          {
+            id: 'q-rm004-005',
+            text: 'Are external appointment letters/reminders sent to residents?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Support for appointments'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check for letters/reminders for external appointments.',
+          },
+          {
+            id: 'q-rm004-006',
+            text: 'Are visiting arrangements flexible and supported?',
+            domain: 'Caring',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Family involvement'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Speak with residents and families about visiting access.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 5. Spot Checks & Ward Rounds
+  {
+    id: 'template-rm-005',
+    name: 'Spot Checks & Ward Rounds Audit',
+    auditType: 'registered_manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-rm005-001',
+        title: 'Registered Manager Visibility',
+        description: 'Assessment of Registered Manager presence and leadership visibility.',
+        questions: [
+          {
+            id: 'q-rm005-001',
+            text: 'Is the Registered Manager visible and accessible to residents and staff?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Leadership visibility'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Observe RM engagement during visit.',
+          },
+          {
+            id: 'q-rm005-002',
+            text: 'Are regular ward rounds/spot checks conducted by the RM?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Quality monitoring'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review RM ward round records and schedules.',
+          },
+          {
+            id: 'q-rm005-003',
+            text: 'Are issues identified during spot checks followed up and resolved?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Problem-solving'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check spot check records and follow-up actions.',
+          },
+        ],
+      },
+      {
+        id: 'section-rm005-002',
+        title: 'Care Quality Observations',
+        description: 'Assessment of care quality during ward rounds and observations.',
+        questions: [
+          {
+            id: 'q-rm005-004',
+            text: 'Are residents well-dressed, clean, and well-groomed?',
+            domain: 'Caring',
+            regulations: [
+              regRef(
+                'FS-REG-10',
+                'Dignity and respect',
+                'Residents must be treated with dignity'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Visual observation during ward round.',
+          },
+          {
+            id: 'q-rm005-005',
+            text: 'Are interactions between staff and residents respectful and caring?',
+            domain: 'Caring',
+            regulations: [
+              regRef(
+                'FS-REG-10',
+                'Dignity and respect',
+                'Respectful care'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Observe staff-resident interactions.',
+          },
+          {
+            id: 'q-rm005-006',
+            text: 'Are residents engaged and appear content?',
+            domain: 'Caring',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Wellbeing and satisfaction'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Observe resident engagement and activity.',
+          },
+          {
+            id: 'q-rm005-007',
+            text: 'Are residents comfortable (seating, temperature, comfort)?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-15',
+                'Premises and equipment',
+                'Environment comfort'
+              ),
+            ],
+            requiresEvidence: false,
+            weight: 3,
+            answerType: 'scale',
+            guidance: 'Assess physical comfort during observation.',
+          },
+        ],
+      },
+    ],
+  },
+];
+
+export default REGISTERED_MANAGER_AUDIT_TEMPLATES;

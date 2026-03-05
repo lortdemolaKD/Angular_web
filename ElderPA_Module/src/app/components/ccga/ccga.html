@@ -1,0 +1,181 @@
+<div class="home-container">
+  <div class="ccga-shell">
+    <div class="ccga-header">
+      <div class="ccga-title">
+        <span class="ccga-icon material-icons">dashboard</span>
+        <span>Compliance Audit Hub</span>
+      </div>
+    </div>
+
+    <div class="ccga-grid">
+
+      <!-- Left column -->
+      <div class="ccga-col">
+
+        <div class="ccga-card">
+          <div class="card-head">
+            <span class="material-icons">insights</span>
+            <span>At a glance</span>
+          </div>
+
+          <div class="glance">
+            <div class="glance-block">
+              <div class="glance-title">Overall completion</div>
+              <div class="glance-metric">{{ allSummary().completed }}/{{ audits().length }}</div>
+              <div class="glance-sub">Outstanding: {{ allSummary().outstanding }}</div>
+            </div>
+
+            <div class="glance-block">
+              <div class="glance-title">Master CLOE avg</div>
+              <div class="glance-metric">{{ masterCLOE().averageScore | number:'1.0-1' }}</div>
+              <div class="glance-sub">Across all scored questions</div>
+            </div>
+
+            <div class="glance-block">
+              <div class="glance-title">Audit types</div>
+              <div class="glance-sub">Baseline: {{ baselineAudits().length }}</div>
+              <div class="glance-sub">Monthly: {{ monthlyAudits().length }}</div>
+              <div class="glance-sub">Provider: {{ providerAudits().length }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ccga-card">
+          <div class="card-head">
+            <span class="material-icons">desktop_windows</span>
+            <span>Yearly Governance Planner</span>
+          </div>
+
+          <div class="panel-body">
+            <app-yearly-governance-planner [locationID]="locationIdSig()"></app-yearly-governance-planner>
+          </div>
+        </div>
+
+        <div class="ccga-row">
+          <div class="ccga-card">
+            <div class="card-head">
+              <span class="material-icons">assignment</span>
+              <span>Baseline audits</span>
+            </div>
+
+            <div class="audit-card">
+              <div class="audit-meta">
+                <div>Total: {{ baselineAudits().length }}</div>
+                <div>Completed: {{ baselineSummary().completed }}</div>
+                <div>Outstanding: {{ baselineSummary().outstanding }}</div>
+              </div>
+
+              <app-smart-chart
+                chartType="radial-bar"
+                [data]="baselineGaugeData()"
+                [options]="baselineGaugeOptions()">
+              </app-smart-chart>
+            </div>
+          </div>
+
+          <div class="ccga-card">
+            <div class="card-head">
+              <span class="material-icons">assignment</span>
+              <span>Monthly-manager audits</span>
+            </div>
+
+            <div class="audit-card">
+              <div class="audit-meta">
+                <div>Total: {{ monthlyAudits().length }}</div>
+                <div>Completed: {{ monthlySummary().completed }}</div>
+                <div>Outstanding: {{ monthlySummary().outstanding }}</div>
+              </div>
+
+              <app-smart-chart
+                chartType="radial-bar"
+                [data]="monthlyGaugeData()"
+                [options]="monthlyGaugeOptions()">
+              </app-smart-chart>
+            </div>
+          </div>
+
+          <div class="ccga-card">
+            <div class="card-head">
+              <span class="material-icons">assignment</span>
+              <span>Providers audits</span>
+            </div>
+
+            <div class="audit-card">
+              <div class="audit-meta">
+                <div>Total: {{ providerAudits().length }}</div>
+                <div>Completed: {{ providerSummary().completed }}</div>
+                <div>Outstanding: {{ providerSummary().outstanding }}</div>
+              </div>
+
+              <app-smart-chart
+                chartType="radial-bar"
+                [data]="providerGaugeData()"
+                [options]="providerGaugeOptions()">
+              </app-smart-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="ccga-col ccga-col-right">
+
+        <div class="ccga-card">
+          <div class="card-head">
+            <span class="material-icons">bolt</span>
+            <span>Quick actions</span>
+          </div>
+
+          <div class="actions">
+            <app-cst-button
+              style="width: 100%;"
+              title="Audit Creator"
+              icon=">"
+              [disabled]="false"
+              [headerColor]="'var(--color-primary-container)'"
+              (headerClick)="moveToAuditCreator()"
+            ></app-cst-button>
+
+
+            <app-cst-button
+              style="width: 100%;"
+              title="Audit Library"
+              icon=">"
+              [disabled]="false"
+              [headerColor]="'var(--color-primary-container)'"
+              (headerClick)="moveTo('CCGA/AuditLib')"
+            ></app-cst-button>
+
+          </div>
+        </div>
+
+        <div class="ccga-card">
+          <div class="card-head">
+            <span class="material-icons">pie_chart</span>
+            <span>Master Audit per CLOE</span>
+          </div>
+
+          <div class="panel-body">
+            <app-smart-chart
+              chartType="radial-bar-custom-angle-270"
+              [data]="cloeRadialData()"
+              [options]="cloeRadialOptions">
+            </app-smart-chart>
+          </div>
+        </div>
+
+        <div class="ccga-card">
+          <div class="card-head">
+            <span class="material-icons">speaker_notes</span>
+            <span>Surveys</span>
+          </div>
+
+          <div class="panel-body muted">
+            <div>0</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

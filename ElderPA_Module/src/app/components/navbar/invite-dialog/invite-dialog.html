@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>Invite user</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" id="invite-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email" placeholder="person@example.com" />
+      @if (inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched) {
+        <mat-error>Enter a valid email</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        <mat-option *ngFor="let r of inviteRoleOptions" [value]="r">{{ r }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    @if (roleRequiresLocation && data.locations?.length) {
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Location</mat-label>
+        <mat-select formControlName="locationId">
+          <mat-option *ngFor="let loc of data.locations" [value]="loc.id">{{ loc.name }}</mat-option>
+        </mat-select>
+        <mat-hint>Required for this role</mat-hint>
+      </mat-form-field>
+    }
+
+    <p class="hint" *ngIf="data.companyName && !roleRequiresLocation">
+      Company: <strong>{{ data.companyName }}</strong>
+      <span *ngIf="data.locationName"> | Location: <strong>{{ data.locationName }}</strong></span>
+    </p>
+    <p class="hint" *ngIf="data.companyName && roleRequiresLocation">
+      Company: <strong>{{ data.companyName }}</strong>
+    </p>
+
+    <p class="error hint" *ngIf="roleRequiresLocation && (!data.locations?.length)">
+      This role requires a location. This company has no locations yet — add one on the Locations page first.
+    </p>
+    <p class="error hint" *ngIf="locationRequiredButMissing && data.locations?.length">
+      Please select a location above (required for this role).
+    </p>
+    <div class="error" *ngIf="inviteError && !locationRequiredButMissing">{{ inviteError }}</div>
+
+    <div class="success" *ngIf="inviteSuccessUrl">
+      <div>Invite link created:</div>
+      <input type="text" [value]="inviteSuccessUrl" readonly class="link-input" />
+      <button type="button" mat-stroked-button (click)="copyLink()">Copy link</button>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+  @if (!inviteSuccessUrl) {
+    <button mat-raised-button color="primary" type="submit" form="invite-form" [disabled]="!inviteForm.valid || locationRequiredButMissing">
+      Create invite
+    </button>
+  } @else {
+    <button mat-raised-button color="primary" (click)="copyLink()">Copy link & close</button>
+  }
+</mat-dialog-actions>

@@ -1,0 +1,179 @@
+<div class="company-page" *ngIf="company as c">
+  <!-- COMPANY SUMMARY -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">{{ c.name }}</div>
+    </div>
+
+    <div class="card-body details-grid">
+      <div><b>Director</b><br />{{ c.director || "—" }}</div>
+      <div><b>CQC</b><br />{{ c.CQC_number || "—" }}</div>
+      <div><b>Address</b><br />{{ c.address || "—" }}</div>
+      <div><b>Locations</b><br />{{ locations.length }}</div>
+    </div>
+
+    <div class="card-body mini-meta">
+      <div><span class="k">Total staff:</span> {{ totalStaff }}</div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div class="col">
+      <!-- HEALTH -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Company health</div>
+        </div>
+
+        <div class="card-body details-grid">
+          <div><b>Active alerts</b><br />{{ activeAlertsCount }}</div>
+          <div><b>Open tasks</b><br />{{ openTasksCount }}</div>
+          <div><b>Overdue</b><br />{{ overdueTasksCount }}</div>
+
+          <div><b>Green</b><br />{{ indicatorCounts.Green }}</div>
+          <div><b>Amber</b><br />{{ indicatorCounts.Amber }}</div>
+          <div><b>Red</b><br />{{ indicatorCounts.Red }}</div>
+        </div>
+
+        <div class="card-body mini-meta">
+          <div><span class="k">Scope:</span> All locations in this company.</div>
+        </div>
+      </div>
+
+      <!-- TOP RISKS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Top risks</div>
+        </div>
+
+        <div class="card-body">
+          <div *ngFor="let r of topRisks; trackBy: trackById" class="risk">
+            <div class="risk-title">
+              <div>{{ r.name }}</div>
+              <div class="badge {{ indicatorLevel(r.status) }}">{{ indicatorLabel(r.status) }}</div>
+            </div>
+
+            <div class="risk-sub">
+              {{ r.locationName }} • {{ r.categoryType }} • Target {{ r.target ?? "—" }} / Now {{ r.current ?? "—" }}
+            </div>
+          </div>
+
+          <div class="hint" *ngIf="topRisks.length === 0">No indicators found.</div>
+        </div>
+
+        <div class="card-body mini-meta">
+          <div><span class="k">Sort:</span> Status then gap vs target.</div>
+        </div>
+      </div>
+
+      <!-- STAFF -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Staff overview</div>
+        </div>
+
+        <div class="card-body staff-grid">
+          <div>
+            <div class="big">{{ totalStaff }}</div>
+            <div class="hint">Accounts in this company.</div>
+          </div>
+
+          <div>
+            <app-smart-chart chartType="pie" [data]="pieChartData" [options]="{ showLegend: true }"></app-smart-chart>
+          </div>
+        </div>
+
+        <div class="card-body mini-meta">
+          <div *ngFor="let r of staffRolesPresent"><span class="k">{{ r.label }}:</span> {{ r.count }}</div>
+          <div *ngIf="staffRolesPresent.length === 0" class="hint">No accounts in this company.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col">
+      <!-- ALERTS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Alerts</div>
+        </div>
+
+        <div class="card-body table-scroll">
+          <table class="simple-table">
+            <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Message</th>
+              <th>Location</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr *ngFor="let a of allAlerts; trackBy: trackById" [class.inactive]="!a.active">
+              <td>{{ a.severity }}</td>
+              <td>{{ a.message }}</td>
+              <td>{{ a.locationName }}</td>
+              <td class="actions">
+                <button type="button" class="mini-btn" (click)="openAddressDialog(a)">Create task</button>
+                <button type="button" class="mini-btn" (click)="pingManager(a)">Ping manager</button>
+                <span class="tag" *ngIf="hasTask(a)">Task exists</span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-body mini-meta">
+          <div><span class="k">Tip:</span> Use “Create task” for High/Critical first.</div>
+        </div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Tasks</div>
+        </div>
+
+        <div class="card-body table-scroll">
+          <table class="simple-table">
+            <thead>
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Due</th>
+              <th>Status</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr *ngFor="let t of allTasks; trackBy: trackById" [class.overdue]="isOverdue(t)">
+              <td>{{ t.category }}</td>
+              <td>{{ t.description }}</td>
+              <td>{{ t.dueDate | date: "yyyy-MM-dd" }}</td>
+              <td>{{ t.status }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-body mini-meta">
+          <div><span class="k">Overdue:</span> Open/InProgress with due date in the past.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="company-page" *ngIf="!company">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">Company</div>
+    </div>
+    <div class="card-body">
+      No company selected.
+    </div>
+  </div>
+</div>

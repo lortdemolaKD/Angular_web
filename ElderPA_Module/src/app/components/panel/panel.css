@@ -1,0 +1,61 @@
+.panel {
+  border-radius: 12px;
+  margin-top: 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  background-color: var(--color-background, #913333);
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  border-radius: 12px 12px 12px 12px;
+  padding: 8px 12px;
+  margin-top: -40px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  margin-bottom: 12px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  width: fit-content;
+  background-color: var(--color-primary, #9a538e);
+  transition: background-color 0.2s ease;
+
+}
+
+.panel-header:hover {
+  filter: brightness(1.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text, #484748);
+}
+
+.panel-body {
+  display: flex;
+  flex-wrap: wrap;       /* allow multiple panels per row */
+  gap: 12px;             /* space between fields */
+  font-size: 16px;       /* normal readable size */
+  padding: 10px;
+
+}
+

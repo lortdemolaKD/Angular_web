@@ -1,0 +1,95 @@
+.month-view {
+  display: flex;
+  flex-direction: column;
+
+  font-family: Arial, sans-serif;
+}
+
+.week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+
+  font-size: 0.85rem;
+}
+.weeks {
+  display: flex;
+  flex-direction: column;
+  flex: 1;               /* use remaining height of .month-view */
+
+  min-height: 340px;         /* important so flex children can shrink properly */
+}
+.outside-month {
+  opacity: 0.3;
+}
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex: 1 1 0;           /* allow equal growth/shrink: each week takes equal height */
+  min-height: 0;         /* prevents children from overflowing/failing to shrink */
+}
+
+.day {
+  border: 1px solid #ddd;
+  min-height: 50px;
+  padding: 0.2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.date {
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+}
+
+.dots-container {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: row; /* Stack vertically */
+  gap: 1px;
+}
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.more-count {
+  font-size: 10px;
+  color: #666;
+  margin-left: 2px;
+}
+
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.event {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.2rem;
+  color: #fff;
+  border-radius: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.day.empty {
+  background-color: #f9f9f9;
+  color: #aaa;
+}

@@ -1,0 +1,252 @@
+<div class="data-table-wrapper" [attr.aria-label]="ariaLabel()" [class.data-table-wrapper--sticky]="stickyHeader()">
+  <div class="data-table-toolbar" role="toolbar">
+    @if (showSearch()) {
+      <div class="data-table-toolbar__search" role="search">
+        <label class="data-table-search-label" for="data-table-search">
+          <span class="data-table-search-label-text">Search</span>
+        </label>
+        <input
+          id="data-table-search"
+          type="search"
+          class="data-table-search"
+          [placeholder]="searchPlaceholder()"
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+          aria-describedby="data-table-search-hint"
+          autocomplete="off" />
+        <span id="data-table-search-hint" class="data-table-search-hint" aria-hidden="true">Search across table content</span>
+      </div>
+    }
+    @if (showColumnVisibility()) {
+      <div class="data-table-toolbar__actions">
+        <button type="button" class="data-table-toolbar-btn" (click)="columnMenuOpen.set(!columnMenuOpen())" aria-haspopup="true" [attr.aria-expanded]="columnMenuOpen()">Columns</button>
+        @if (columnMenuOpen()) {
+          <div class="data-table-dropdown" role="menu">
+            @for (col of baseColumns(); track col.id) {
+              <label class="data-table-dropdown-item">
+                <input type="checkbox" [checked]="isColumnVisible(col.id)" (change)="toggleColumnVisible(col.id)" />
+                {{ col.label }}
+              </label>
+            }
+          </div>
+        }
+      </div>
+    }
+    @if (showSavedViews()) {
+      <div class="data-table-toolbar__actions">
+        <button type="button" class="data-table-toolbar-btn" (click)="savedViewOpen.set(!savedViewOpen())" aria-haspopup="true" [attr.aria-expanded]="savedViewOpen()">View</button>
+        @if (savedViewOpen()) {
+          <div class="data-table-dropdown" role="menu">
+            @for (v of savedViewsList(); track v.id) {
+              <button type="button" class="data-table-dropdown-item" (click)="applyView(v)">{{ v.name }}</button>
+            }
+            <button type="button" class="data-table-dropdown-item data-table-dropdown-item--save" (click)="saveView('View ' + (savedViewsList().length + 1))">Save current view</button>
+          </div>
+        }
+      </div>
+    }
+    @if (showExport()) {
+      <button type="button" class="data-table-toolbar-btn" (click)="exportCSV()">Export CSV</button>
+      <button type="button" class="data-table-toolbar-btn" (click)="exportExcel()">Export Excel</button>
+    }
+  </div>
+  @if (hasActiveFilters()) {
+    <div class="data-table-filters-bar">
+      @for (entry of activeFilterEntries(); track entry[0]) {
+        <span class="data-table-chip">{{ getColumnLabel(entry[0]) }}: {{ entry[1] }}
+          <button type="button" class="data-table-chip-remove" (click)="setFilter(entry[0], null)" aria-label="Remove filter">×</button>
+        </span>
+      }
+      <button type="button" class="data-table-clear-filters" (click)="clearAllFilters()">Clear all</button>
+    </div>
+  }
+  @if (hasSelection()) {
+    <div class="data-table-bulk-bar">
+      <span class="data-table-bulk-bar__count">{{ selectedRowIds().size }} selected</span>
+      <button type="button" class="data-table-toolbar-btn" (click)="clearSelection()">Clear</button>
+      <button type="button" class="data-table-toolbar-btn" (click)="bulkAction.emit({ action: 'delete', rows: selectedRows() })">Delete</button>
+    </div>
+  }
+  <div class="data-table-scroll" role="region" [attr.aria-label]="caption() || 'Data table'" [class.data-table-scroll--hide-mobile]="mobileCardLayout()">
+    <table
+      class="data-table"
+      [class.data-table--compact]="density() === 'compact'"
+      [class.data-table--comfortable]="density() === 'comfortable'">
+      @if (caption()) {
+        <caption class="data-table__caption">{{ caption() }}</caption>
+      }
+      <thead class="data-table__head">
+        <tr class="data-table__head-row">
+          @if (selectionMode() === 'multiple') {
+            <th class="data-table__th data-table__th--frozen data-table__th--select" scope="col">
+              <input type="checkbox" [checked]="allRowsSelected()" (change)="selectAllOnPage()" aria-label="Select all on page" />
+            </th>
+          }
+          @for (col of columns(); track col.id; let colIndex = $index) {
+            <th
+              class="data-table__th"
+              [class.data-table__th--frozen]="colIndex < frozenCount()"
+              [class.data-table__th--sortable]="sortable() && col.sortable !== false"
+              [class.data-table__th--sorted]="sortColumnSignal() === col.id"
+              [attr.scope]="'col'"
+              [attr.abbr]="col.label"
+              [attr.aria-sort]="getSortAriaSort(col.id)"
+              [style.text-align]="getCellAlign(col)"
+              [style.min-width]="col.minWidth ? col.minWidth + 'px' : null"
+              [style.max-width]="col.maxWidth ? col.maxWidth + 'px' : null"
+              [style.width]="getColumnWidth(col)"
+              [attr.title]="col.headerTooltip || null"
+              [draggable]="showColumnReorder()"
+              [attr.data-col-index]="colIndex"
+              (click)="sortable() && col.sortable !== false ? toggleSort(col.id, col) : null"
+              (dragstart)="onHeaderDragStart($event, colIndex)"
+              (dragover)="onHeaderDragover($event)"
+              (drop)="onHeaderDrop($event, colIndex)">
+              <span class="data-table__th-content">
+                {{ col.label }}
+                @if (sortable() && col.sortable !== false) {
+                  <span class="data-table__sort-indicator" aria-hidden="true">{{ getSortIndicator(col.id) }}</span>
+                }
+              </span>
+              @if (showColumnResize()) {
+                <span class="data-table__resize-handle" (mousedown)="$event.preventDefault(); $event.stopPropagation()" title="Resize column"></span>
+              }
+            </th>
+          }
+        </tr>
+        @if (hasFilterableColumns()) {
+          <tr class="data-table__filter-row">
+            @if (selectionMode() === 'multiple') {
+              <td class="data-table__filter-cell"></td>
+            }
+            @for (col of columns(); track col.id; let fi = $index) {
+              <td class="data-table__filter-cell" [class.data-table__th--frozen]="fi < frozenCount()">
+                @if (col.filterable) {
+                  <input type="text" class="data-table-filter-input" [placeholder]="'Filter ' + col.label" [value]="filterValues()[col.id]" (input)="setFilter(col.id, ($any($event.target).value))" (click)="$event.stopPropagation()" />
+                }
+              </td>
+            }
+          </tr>
+        }
+      </thead>
+      <tbody class="data-table__body">
+        @if (loadingSignal()) {
+          <tr class="data-table__loading-row">
+            <td [attr.colspan]="(selectionMode() === 'multiple' ? 1 : 0) + columns().length" class="data-table__loading-cell">
+              <div class="data-table__loading" role="status" aria-live="polite">
+                <span class="data-table__spinner" aria-hidden="true"></span>
+                <span>Loading…</span>
+              </div>
+            </td>
+          </tr>
+        } @else if (showEmptyState()) {
+          <tr class="data-table__empty-row">
+            <td [attr.colspan]="(selectionMode() === 'multiple' ? 1 : 0) + columns().length" class="data-table__empty-cell">
+              <div class="data-table__empty" role="status">
+                <p class="data-table__empty-message">{{ emptyMessage() }}</p>
+                @if (emptyActionLabel()) {
+                  <button type="button" class="data-table__empty-action" (click)="onEmptyAction()">
+                    {{ emptyActionLabel() }}
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @else if (showNoMatchesState()) {
+          <tr class="data-table__empty-row">
+            <td [attr.colspan]="(selectionMode() === 'multiple' ? 1 : 0) + columns().length" class="data-table__empty-cell">
+              <div class="data-table__empty" role="status">
+                <p class="data-table__empty-message">No matches for your search. Try a different term.</p>
+              </div>
+            </td>
+          </tr>
+        } @else {
+          @for (row of rows(); track getRowId(row)) {
+            <tr
+              class="data-table__row"
+              [class.data-table__row--selected]="isSelected(row)"
+              (click)="onRowClick(row)"
+              (keydown.enter)="onRowClick(row)"
+              (keydown.space)="onRowClick(row); $event.preventDefault()"
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Row ' + getRowId(row)">
+              @if (selectionMode() === 'multiple') {
+                <td class="data-table__cell data-table__cell--frozen data-table__cell--select" (click)="toggleSelectRow(row, $event)">
+                  <input type="checkbox" [checked]="isSelected(row)" (change)="toggleSelectRow(row, $event)" (click)="$event.stopPropagation()" aria-label="Select row" />
+                </td>
+              }
+              @for (col of columns(); track col.id; let cellIndex = $index) {
+                <td
+                  class="data-table__cell"
+                  [class.data-table__cell--frozen]="cellIndex < frozenCount()"
+                  [style.text-align]="getCellAlign(col)"
+                  [style.min-width]="col.minWidth ? col.minWidth + 'px' : null"
+                  [style.max-width]="col.maxWidth ? col.maxWidth + 'px' : null"
+                  [style.width]="getColumnWidth(col)">
+                  @if (isEditing(row, col.id)) {
+                    <input type="text" class="data-table__edit-input" [value]="editValue()" (input)="editValue.set($any($event.target).value)" (blur)="commitEdit()" (keydown.enter)="commitEdit()" (keydown.escape)="cancelEdit()" (click)="$event.stopPropagation()" />
+                  } @else {
+                    <span class="data-table__cell-content" [title]="cellTitle(row[col.id])" (dblclick)="col.editable && startEdit(row, col.id); $event.stopPropagation()">
+                      @switch (col.type) {
+                        @case ('badge') {
+                          <span class="data-table-badge" [class.data-table-badge--active]="row[col.id]">{{ col.options?.[row[col.id]] ?? row[col.id] }}</span>
+                        }
+                        @case ('status') {
+                          <span class="data-table-status" [attr.data-status]="row[col.id]">{{ col.options?.[row[col.id]] ?? row[col.id] }}</span>
+                        }
+                        @case ('progress') {
+                          <div class="data-table-progress"><span class="data-table-progress-track"><span class="data-table-progress__bar" [style.width.%]="progressWidth(row, col)"></span></span><span class="data-table-progress__text">{{ row[col.id] }}%</span></div>
+                        }
+                        @case ('avatar') {
+                          <span class="data-table-avatar">{{ (row[col.id] ?? '').toString().slice(0, 2).toUpperCase() }}</span>
+                        }
+                        @default {
+                          {{ row[col.id] }}
+                        }
+                      }
+                    </span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (mobileCardLayout()) {
+    <div class="data-table-cards" role="list">
+      @for (row of rows(); track getRowId(row)) {
+        <div class="data-table-card" role="listitem" (click)="onRowClick(row)">
+          @if (selectionMode() === 'multiple') {
+            <div class="data-table-card__select" (click)="toggleSelectRow(row, $event)">
+              <input type="checkbox" [checked]="isSelected(row)" (change)="toggleSelectRow(row, $event)" (click)="$event.stopPropagation()" />
+            </div>
+          }
+          @for (col of columns(); track col.id) {
+            <div class="data-table-card__row">
+              <span class="data-table-card__label">{{ col.label }}</span>
+              <span class="data-table-card__value">{{ row[col.id] }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  @if (showPagination()) {
+    <footer class="data-table-footer" role="region" aria-label="Pagination">
+      <span class="data-table-footer__count">{{ paginationLabel() }}</span>
+      @if (pageSizeOptions().length) {
+        <span class="data-table-footer__size">
+          <label for="data-table-pagesize" class="data-table-footer__label">Per page</label>
+          <select id="data-table-pagesize" class="data-table-footer__select" (change)="onPageSizeChange($event)" aria-label="Rows per page">
+            @for (size of pageSizeOptions(); track size) {
+              <option [value]="size" [selected]="size === pageSize()">{{ size }}</option>
+            }
+          </select>
+        </span>
+      }
+    </footer>
+  }
+</div>

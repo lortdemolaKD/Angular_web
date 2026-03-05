@@ -1,0 +1,421 @@
+<div class="locations-page">
+  <!-- Top bar: tabs + location dropdown -->
+  <div class="top-bar">
+    <div class="top-tabs">
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab === 'details'"
+        (click)="setTab('details')"
+      >
+        Details
+      </button>
+
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab === 'structure'"
+        (click)="setTab('structure')"
+      >
+        Structure
+      </button>
+
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab === 'metrics'"
+        (click)="setTab('metrics')"
+      >
+        Key metrics
+      </button>
+      <button
+        type="button"
+        class="top-tab"
+        [class.active]="activeTab === 'CCGA'"
+        (click)="setTab('CCGA')"
+        *ngIf="canChangeLocation"
+      >
+        Compliance Audit Hub
+      </button>
+    </div>
+
+    <!-- Location: dropdown for admins; fixed label for care workers (assigned location only) -->
+    <div class="location-picker" *ngIf="locations?.length">
+      <label class="location-label">Location</label>
+
+      <select
+        *ngIf="canChangeLocation"
+        class="location-select"
+        [value]="selectedLocation?.locationID"
+        (change)="onLocationDropdownChange($event)"
+      >
+        <option *ngFor="let loc of locations" [value]="loc.locationID">
+          {{ loc.name }}
+        </option>
+      </select>
+
+      <div *ngIf="!canChangeLocation && selectedLocation" class="location-fixed">
+        {{ selectedLocation.name }}
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-body">
+    <!-- DETAILS TAB -->
+    <ng-container *ngIf="activeTab === 'details'">
+      <div class="grid">
+        <aside class="sidebar">
+          <!-- Capacity cards -->
+          <ng-container *ngIf="selectedLocation?.type === 'CareHome'">
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Overall capacity</div>
+              </div>
+              <div class="card-body">
+                <app-smart-chart
+                  chartType="radial-bar"
+                  [data]="getCapacityGaugeData()"
+                  [options]="getCapacityGaugeOptions()">
+                </app-smart-chart>
+              </div>
+              <div class="card-body mini-meta">
+                <div><span class="k">Free rooms:</span> {{ currentRooms }}</div>
+                <div><span class="k">Total rooms:</span> {{ maxBedCapacity }}</div>
+              </div>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="selectedLocation?.type === 'HomeCare'">
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Overall capacity</div>
+              </div>
+              <div class="card-body">
+                <app-smart-chart
+                  chartType="radial-bar"
+                  [data]="getHomeCareGaugeData()"
+                  [options]="getHomeCareGaugeOptions()">
+                </app-smart-chart>
+              </div>
+              <div class="card-body mini-meta">
+                <div><span class="k">Active cases:</span> {{ totalActiveCases }}</div>
+                <div><span class="k">Max cases:</span> {{ totalMaxCases }}</div>
+              </div>
+            </div>
+          </ng-container>
+        </aside>
+
+        <section class="content">
+          <ng-container *ngIf="!selectedLocation">
+            <div class="placeholder">Select a location.</div>
+          </ng-container>
+
+          <ng-container *ngIf="selectedLocation as loc">
+            <!-- Summary card -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">{{ loc.name }}</div>
+              </div>
+
+              <div class="card-body details-grid">
+                <div><b>Type</b><br />{{ loc.type }}</div>
+                <div><b>Address</b><br />{{ loc.address || "—" }}</div>
+                <div><b>Manager (lookup)</b><br />{{ getManagerName() || "—" }}</div>
+                <div><b>Contact info</b><br />{{ loc.contactInfo || "—" }}</div>
+              </div>
+
+              <div class="card-body mini-meta">
+                <div><span class="k">Location ID:</span> {{ loc.locationID }}</div>
+                <div><span class="k">Company ID:</span> {{ loc.cmpID }}</div>
+                <div><span class="k">Primary manager (data):</span> {{ loc.primaryManager || "—" }}</div>
+              </div>
+            </div>
+
+            <!-- CareHome details -->
+            <ng-container *ngIf="loc.type === 'CareHome'">
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-head">
+                  <div class="card-title">Rooms</div>
+                </div>
+
+                <div class="card-body details-grid">
+                  <div><b>Total rooms</b><br />{{ loc.roomList?.length ?? 0 }}</div>
+                  <div><b>Available rooms</b><br />{{ getCapacity(loc) }}</div>
+                  <div>
+                    <b>Occupied rooms</b><br />
+                    {{ (loc.roomList?.length ?? 0) - getCapacity(loc) }}
+                  </div>
+                </div>
+
+                <div class="card-body mini-meta">
+                  <div><span class="k">Tip:</span> Use Structure tab for room-by-room detail.</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-head">
+                  <div class="card-title">Care home setup</div>
+                </div>
+
+                <div class="card-body details-grid">
+                  <div><b>Areas</b><br />{{ loc.areas?.length ?? 0 }}</div>
+                  <div><b>Wings</b><br />{{ loc.wings?.length ?? 0 }}</div>
+                  <div><b>Room groups</b><br />{{ loc.roomGroups?.length ?? 0 }}</div>
+                  <div><b>Client groups</b><br />{{ loc.clientGroups?.length ?? 0 }}</div>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- HomeCare details -->
+            <ng-container *ngIf="loc.type === 'HomeCare'">
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-head">
+                  <div class="card-title">Home care setup</div>
+                </div>
+
+                <div class="card-body details-grid">
+                  <div><b>Active cases</b><br />{{ loc.homeCareMetrics?.activeCases ?? 0 }}</div>
+                  <div><b>Max cases</b><br />{{ loc.homeCareMetrics?.maxCases ?? 0 }}</div>
+                  <div><b>Billing hours</b><br />{{ loc.homeCareMetrics?.billingHours ?? "—" }}</div>
+                  <div><b>Rate card</b><br />{{ loc.homeCareMetrics?.rateCard ?? "—" }}</div>
+                  <div><b>Capacity overview</b><br />{{ loc.homeCareMetrics?.capacityOverview ?? "—" }}</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 16px;">
+                <div class="card-head">
+                  <div class="card-title">Coverage</div>
+                </div>
+
+                <div class="card-body details-grid">
+                  <div>
+                    <b>Center</b><br />
+                    {{ loc.homeCareMetrics?.coverage?.centerAddress || loc.address || "—" }}
+                  </div>
+                  <div>
+                    <b>Radius</b><br />
+                    {{ loc.homeCareMetrics?.coverage?.radiusMiles ?? "—" }} miles
+                  </div>
+                  <div>
+                    <b>Areas</b><br />
+                    {{ loc.homeCareMetrics?.coverage?.areas?.length ?? 0 }}
+                  </div>
+                </div>
+
+                <div class="card-body mini-meta" *ngIf="(loc.homeCareMetrics?.coverage?.areas?.length ?? 0) > 0">
+                  <div>
+                    <span class="k">Areas list:</span>
+                    {{ (loc.homeCareMetrics?.coverage?.areas || []).join(", ") }}
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Staff -->
+            <div class="card" style="margin-top: 16px;">
+              <div class="card-head">
+                <div class="card-title">Staff</div>
+              </div>
+
+              <div class="card-body details-grid">
+                <div><b>Total staff</b><br />{{ loc.staff?.length ?? 0 }}</div>
+              </div>
+            </div>
+          </ng-container>
+        </section>
+      </div>
+    </ng-container>
+
+    <!-- STRUCTURE TAB -->
+    <ng-container *ngIf="activeTab === 'structure'">
+      <ng-container *ngIf="!selectedLocation">
+        <div class="placeholder">Select a location.</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedLocation as loc">
+        <!-- CareHome structure -->
+        <ng-container *ngIf="loc.type === 'CareHome'">
+          <div class="structure-grid">
+            <!-- Wings selector -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Wings</div>
+              </div>
+
+              <div class="card-body">
+                <ng-container *ngIf="availableWings.length; else noWings">
+                  <app-radial-selector
+                    [items]="availableWings"
+                    [selected]="selectedWing"
+                    [labelFn]="wingLabelFn"
+                    (selectedChange)="onWingSelected($event)"
+                  ></app-radial-selector>
+                </ng-container>
+
+                <ng-template #noWings>
+                  <div class="placeholder">No wings available for this location.</div>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- Rooms table -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  Rooms <span *ngIf="selectedWing">• Wing {{ selectedWing }}</span>
+                </div>
+              </div>
+
+              <div class="card-body table-scroll">
+                <ng-container *ngIf="roomsForSelectedWing.length; else noRooms">
+                  <table class="simple-table">
+                    <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Type</th>
+                      <th>Area</th>
+                      <th>Status</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr
+                      *ngFor="let r of roomsForSelectedWing"
+                      (click)="onRoomClicked(r)"
+                      [class.selected]="selectedRoom?.number === r.number"
+                    >
+                      <td>{{ r.number }}</td>
+                      <td>{{ r.type }}</td>
+                      <td>{{ r.area }}</td>
+                      <td>{{ r.occupiedClientGroup ? "Occupied" : "Free" }}</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </ng-container>
+
+                <ng-template #noRooms>
+                  <div class="placeholder">No rooms found for this wing.</div>
+                </ng-template>
+              </div>
+
+              <div class="card-body mini-meta">
+                <div><span class="k">Tip:</span> Click a room to view details.</div>
+              </div>
+            </div>
+
+            <!-- Room details -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Room details</div>
+                <button
+                  type="button"
+                  class="mini-btn"
+                  (click)="clearSelectedRoom()"
+                  [disabled]="!selectedRoom"
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div class="card-body">
+                <ng-container *ngIf="!selectedRoom">
+                  <div class="placeholder">Click a room to see details.</div>
+                </ng-container>
+
+                <ng-container *ngIf="selectedRoom as room">
+                  <div class="details-grid">
+                    <div><b>Room</b><br />{{ room.number }}</div>
+                    <div><b>Type</b><br />{{ room.type }}</div>
+                    <div><b>Wing</b><br />{{ room.wing || "—" }}</div>
+                    <div><b>Area</b><br />{{ room.area || "—" }}</div>
+                    <div><b>Status</b><br />{{ room.occupiedClientGroup ? "Occupied" : "Free" }}</div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- HomeCare structure (simple cards) -->
+        <!-- HomeCare structure -->
+        <ng-container *ngIf="loc.type === 'HomeCare'">
+          <div class="structure-grid homecare-grid">
+            <!-- Coverage -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Coverage</div>
+              </div>
+
+              <div class="card-body details-grid">
+                <div><b>Base address</b><br />{{ loc.address || "—" }}</div>
+                <div><b>Contact</b><br />{{ loc.contactInfo || "—" }}</div>
+              </div>
+
+              <div class="card-body mini-meta">
+                <div><span class="k">Center:</span> {{ loc.address || "—" }}</div>
+                <div><span class="k">Radius:</span> —</div>
+                <div><span class="k">Areas:</span> —</div>
+              </div>
+            </div>
+
+            <!-- Operations -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Operations</div>
+              </div>
+
+              <div class="card-body details-grid">
+                <div><b>Active cases</b><br />{{ loc.homeCareMetrics?.activeCases ?? 0 }}</div>
+                <div><b>Max cases</b><br />{{ loc.homeCareMetrics?.maxCases ?? 0 }}</div>
+                <div><b>Billing hours</b><br />{{ loc.homeCareMetrics?.billingHours ?? "—" }}</div>
+                <div><b>Rate card</b><br />{{ loc.homeCareMetrics?.rateCard ?? "—" }}</div>
+              </div>
+
+              <div class="card-body mini-meta">
+                <div><span class="k">Capacity:</span> {{ (loc.homeCareMetrics?.activeCases ?? 0) }} / {{ (loc.homeCareMetrics?.maxCases ?? 0) }}</div>
+                <div><span class="k">Overview:</span> {{ loc.homeCareMetrics?.capacityOverview ?? "—" }}</div>
+              </div>
+            </div>
+
+            <!-- Workforce -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Workforce</div>
+              </div>
+
+              <div class="card-body details-grid">
+                <div><b>Total staff</b><br />{{ loc.staff?.length ?? 0 }}</div>
+              </div>
+
+              <div class="card-body mini-meta">
+                <div><span class="k">Tip:</span> Add a staff table here if you want per-role breakdown.</div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+      </ng-container>
+    </ng-container>
+
+    <!-- METRICS TAB -->
+    <ng-container *ngIf="activeTab === 'metrics'">
+      <ng-container *ngIf="!selectedLocation">
+        <div class="placeholder">Select a location.</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedLocation">
+        <app-key-metrics-panel [embedded]="true" [locationId]="selectedLocation?.locationID"></app-key-metrics-panel>
+
+      </ng-container>
+    </ng-container>
+    <ng-container *ngIf="activeTab === 'CCGA'">
+      <ng-container *ngIf="!selectedLocation">
+        <div class="placeholder">Select a location.</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedLocation">
+        <app-ccga [locationId]="selectedLocation?.locationID"></app-ccga>
+      </ng-container>
+    </ng-container>
+  </div>
+</div>

@@ -1,0 +1,1227 @@
+import {
+  AuditTemplate,
+  RegulationRef,
+} from '../../../src/app/components/Types';
+
+// Helper function to create regulation references
+const regRef = (id: string, title: string, description: string): RegulationRef => ({
+  id,
+  title,
+  description,
+});
+
+// ============================================================================
+// PROVIDER AUDITS - Monthly/Yearly audits conducted by Provider/Admin
+// ============================================================================
+
+export const PROVIDER_AUDIT_TEMPLATES: AuditTemplate[] = [
+  // 1. NHS Capacity Tracker
+  {
+    id: 'template-provider-001',
+    name: 'NHS Capacity Tracker Audit',
+    auditType: 'provider',
+    frequency: 'Weekly',
+    responsibleRoles: ['Admin', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov001-001',
+        title: 'Capacity Reporting',
+        description: 'Verification of accurate bed capacity reporting to NHS systems.',
+        questions: [
+          {
+            id: 'q-prov001-001',
+            text: 'Is bed capacity data accurately reported to NHS Capacity Tracker?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Accurate information provision'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Verify NHS Capacity Tracker submissions against actual bed status.',
+          },
+          {
+            id: 'q-prov001-002',
+            text: 'Are capacity reports submitted on schedule (weekly)?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Timeliness of reporting'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check submission dates and compliance with reporting schedule.',
+          },
+          {
+            id: 'q-prov001-003',
+            text: 'Are staffing levels accurately reported in capacity submissions?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Accurate staffing information'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Cross-check staffing data in NHS reports against actual rosters.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov001-002',
+        title: 'Bed Management & Occupancy',
+        description: 'Assessment of bed management and occupancy control.',
+        questions: [
+          {
+            id: 'q-prov001-004',
+            text: 'Are beds allocated and managed according to care requirements?',
+            domain: 'Effective',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Appropriate care provision'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review bed allocation decisions and resident placement.',
+          },
+          {
+            id: 'q-prov001-005',
+            text: 'Are occupancy records maintained and available for audit?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Record keeping'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check occupancy records and bed status logs.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 2. CQC Liaison
+  {
+    id: 'template-provider-002',
+    name: 'CQC Liaison Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Registered Manager', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov002-001',
+        title: 'CQC Communication & Compliance',
+        description: 'Verification of CQC liaison and compliance with regulatory requirements.',
+        questions: [
+          {
+            id: 'q-prov002-001',
+            text: 'Is there a designated CQC liaison contact?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Regulatory liaison'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Verify CQC liaison appointment and contact details.',
+          },
+          {
+            id: 'q-prov002-002',
+            text: 'Are all CQC communications responded to promptly?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Responsiveness'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check CQC correspondence and response logs.',
+          },
+          {
+            id: 'q-prov002-003',
+            text: 'Are CQC action plans being implemented and tracked?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Continuous improvement'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review CQC action plans and progress tracking.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov002-002',
+        title: 'Inspection Readiness',
+        description: 'Assessment of preparedness for CQC inspections.',
+        questions: [
+          {
+            id: 'q-prov002-004',
+            text: 'Are all records and documentation organized and accessible?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Record management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'scale',
+            guidance: 'Verify document management system and accessibility.',
+          },
+          {
+            id: 'q-prov002-005',
+            text: 'Have staff been briefed on expected CQC inspection standards?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Staff awareness'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check for evidence of CQC briefing sessions with staff.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 3. Weekly Reports
+  {
+    id: 'template-provider-003',
+    name: 'Weekly Reports Audit',
+    auditType: 'provider',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager', 'Admin'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov003-001',
+        title: 'Report Generation & Submission',
+        description: 'Verification of weekly reporting processes and timeliness.',
+        questions: [
+          {
+            id: 'q-prov003-001',
+            text: 'Are weekly reports generated and submitted on schedule?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Reporting requirements'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check weekly report submission logs and dates.',
+          },
+          {
+            id: 'q-prov003-002',
+            text: 'Do weekly reports include all required information (incidents, staffing, etc.)?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Complete reporting'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review contents of weekly reports for completeness.',
+          },
+          {
+            id: 'q-prov003-003',
+            text: 'Are significant issues highlighted and escalated in reports?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Issue escalation'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check reports for incident summaries and escalations.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov003-002',
+        title: 'Report Quality & Accuracy',
+        description: 'Assessment of data accuracy and reporting quality.',
+        questions: [
+          {
+            id: 'q-prov003-004',
+            text: 'Are report figures accurate and verifiable?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Accurate information'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Cross-check reported figures against source records.',
+          },
+          {
+            id: 'q-prov003-005',
+            text: 'Is there consistent data entry and formatting in reports?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Report consistency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Review multiple weeks of reports for consistency.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 4. Revenue Report & Financial Management
+  {
+    id: 'template-provider-004',
+    name: 'Revenue Report & Financial Management Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Admin', 'Finance Manager', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov004-001',
+        title: 'Revenue Reporting & Reconciliation',
+        description: 'Verification of monthly revenue reporting and financial reconciliation.',
+        questions: [
+          {
+            id: 'q-prov004-001',
+            text: 'Are monthly revenue reports generated and reconciled?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check monthly revenue statements and reconciliation documents.',
+          },
+          {
+            id: 'q-prov004-002',
+            text: 'Are invoicing and billing procedures accurate and timely?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial procedures'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review billing system and sample invoices.',
+          },
+          {
+            id: 'q-prov004-003',
+            text: 'Are fee enhancements (room type, care level) correctly applied?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Billing accuracy'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Cross-check fee schedules with resident care levels and billing.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov004-002',
+        title: 'Resident Fees & Collections',
+        description: 'Assessment of resident fee management and payment collection.',
+        questions: [
+          {
+            id: 'q-prov004-004',
+            text: 'Are resident fee policies clearly communicated to residents/families?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Transparent arrangements'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check fee agreements and resident communications.',
+          },
+          {
+            id: 'q-prov004-005',
+            text: 'Are outstanding payments tracked and followed up appropriately?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Debt management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review payment ledger and collection records.',
+          },
+          {
+            id: 'q-prov004-006',
+            text: 'Are resident personal finance accounts maintained securely?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial safeguards'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Verify security of resident money and financial records.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov004-003',
+        title: 'Financial Controls & Compliance',
+        description: 'Assessment of financial controls and regulatory compliance.',
+        questions: [
+          {
+            id: 'q-prov004-007',
+            text: 'Are transactions approved and authorized appropriately?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial controls'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check authorization procedures and approval trails.',
+          },
+          {
+            id: 'q-prov004-008',
+            text: 'Is there audit trail for all financial transactions?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Record keeping'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Verify audit trail in financial system.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 5. Management Targets & Performance
+  {
+    id: 'template-provider-005',
+    name: 'Management Targets & Performance Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Provider', 'Registered Manager'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov005-001',
+        title: 'Performance Targets & KPIs',
+        description: 'Assessment of organizational performance against management targets.',
+        questions: [
+          {
+            id: 'q-prov005-001',
+            text: 'Are clear performance targets established for key metrics?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Performance management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review strategic plans and target documentation.',
+          },
+          {
+            id: 'q-prov005-002',
+            text: 'Is performance against targets monitored monthly?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Monitoring and review'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check monthly performance review reports.',
+          },
+          {
+            id: 'q-prov005-003',
+            text: 'Are performance variances analyzed and action plans created?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Problem-solving'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review variance analysis and corrective action plans.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov005-002',
+        title: 'Occupancy & Bed Management',
+        description: 'Monitoring of occupancy rates and bed utilization.',
+        questions: [
+          {
+            id: 'q-prov005-004',
+            text: 'Is occupancy rate tracked against target?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Performance monitoring'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review occupancy reports and trending.',
+          },
+          {
+            id: 'q-prov005-005',
+            text: 'Are bed turnaround times monitored?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Operational efficiency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check bed turnaround records.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov005-003',
+        title: 'Staffing Performance',
+        description: 'Monitoring of staffing levels and performance metrics.',
+        questions: [
+          {
+            id: 'q-prov005-006',
+            text: 'Are staffing levels maintained according to plan?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Sufficient numbers of staff'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Compare actual staffing to establishment.',
+          },
+          {
+            id: 'q-prov005-007',
+            text: 'Is staff absence monitored and managed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Consistent staffing'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review absence reports and management protocols.',
+          },
+          {
+            id: 'q-prov005-008',
+            text: 'Is staff turnover tracked and addressed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff retention'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check staff turnover metrics and exit interviews.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 6. Budget Control & Ordering
+  {
+    id: 'template-provider-006',
+    name: 'Budget Control & Ordering Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Admin', 'Finance Manager', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov006-001',
+        title: 'Budget Planning & Control',
+        description: 'Assessment of budget planning and expenditure control processes.',
+        questions: [
+          {
+            id: 'q-prov006-001',
+            text: 'Is an annual budget established and approved?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial planning'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Verify annual budget documentation.',
+          },
+          {
+            id: 'q-prov006-002',
+            text: 'Is monthly expenditure tracked against budget?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Cost control'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check monthly variance reports.',
+          },
+          {
+            id: 'q-prov006-003',
+            text: 'Are budget variations investigated and explained?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Financial accountability'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review variance analysis and explanations.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov006-002',
+        title: 'Procurement & Ordering',
+        description: 'Verification of procurement procedures and ordering controls.',
+        questions: [
+          {
+            id: 'q-prov006-004',
+            text: 'Are procurement procedures documented and followed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Procurement policy'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check procurement policy and sample orders.',
+          },
+          {
+            id: 'q-prov006-005',
+            text: 'Are competitive quotes obtained for significant purchases?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Value for money'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review quote records for major purchases.',
+          },
+          {
+            id: 'q-prov006-006',
+            text: 'Are purchase orders raised for all orders?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Documentation'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check purchase order system.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov006-003',
+        title: 'Stock Management & Ordering',
+        description: 'Assessment of inventory management and supply ordering.',
+        questions: [
+          {
+            id: 'q-prov006-007',
+            text: 'Are stock levels monitored to prevent shortages or overstocking?',
+            domain: 'Effective',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Resource management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Review stock levels and ordering patterns.',
+          },
+          {
+            id: 'q-prov006-008',
+            text: 'Are regular inventory checks conducted?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Asset management'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check inventory check records and reconciliation.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 7. Policies & Procedures
+  {
+    id: 'template-provider-007',
+    name: 'Policies & Procedures Audit',
+    auditType: 'provider',
+    frequency: 'Quarterly',
+    responsibleRoles: ['Registered Manager', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov007-001',
+        title: 'Policy Development & Implementation',
+        description: 'Verification of current policies and implementation across organization.',
+        questions: [
+          {
+            id: 'q-prov007-001',
+            text: 'Are all required policies in place and current?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Policies required'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review policy register and compliance checklist.',
+          },
+          {
+            id: 'q-prov007-002',
+            text: 'Are policies reviewed and updated according to schedule?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Policy review'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check policy review dates and version control.',
+          },
+          {
+            id: 'q-prov007-003',
+            text: 'Are staff trained on relevant policies?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Staff training'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check staff acknowledgment of policies.',
+          },
+          {
+            id: 'q-prov007-004',
+            text: 'Are policies accessible to all staff?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Information availability'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Check policy storage and accessibility.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov007-002',
+        title: 'Key Policies Review',
+        description: 'Assessment of critical policy areas.',
+        questions: [
+          {
+            id: 'q-prov007-005',
+            text: 'Are safeguarding and protection policies robust and implemented?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-13',
+                'Safeguarding',
+                'Protection procedures'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review safeguarding policy and evidence of implementation.',
+          },
+          {
+            id: 'q-prov007-006',
+            text: 'Are Health & Safety policies current and followed?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-15',
+                'Premises and equipment',
+                'Health & Safety'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check H&S policy and compliance evidence.',
+          },
+          {
+            id: 'q-prov007-007',
+            text: 'Is whistleblowing policy in place and accessible?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Transparency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Verify whistleblowing policy and staff awareness.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 8. Recruitment & Staff Files
+  {
+    id: 'template-provider-008',
+    name: 'Recruitment & Staff Files Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Admin', 'HR Manager', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov008-001',
+        title: 'Recruitment Procedures',
+        description: 'Assessment of recruitment processes and pre-employment checks.',
+        questions: [
+          {
+            id: 'q-prov008-001',
+            text: 'Are recruitment procedures documented and followed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'Recruitment procedures'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Review recruitment policy and sample applications.',
+          },
+          {
+            id: 'q-prov008-002',
+            text: 'Are all required pre-employment checks completed (DBS, references)?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'DBS and references'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Check DBS certificates and reference letters in staff files.',
+          },
+          {
+            id: 'q-prov008-003',
+            text: 'Are identity documents verified and copied?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'Identity verification'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check identity verification documents in files.',
+          },
+          {
+            id: 'q-prov008-004',
+            text: 'Are right-to-work checks completed?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'Work authorization'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Verify right-to-work documentation.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov008-002',
+        title: 'Staff File Management',
+        description: 'Verification of complete and secure staff file maintenance.',
+        questions: [
+          {
+            id: 'q-prov008-005',
+            text: 'Do all staff have complete personal files with required documentation?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'Record keeping'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'boolean',
+            guidance: 'Sample check 5-10 staff files for completeness.',
+          },
+          {
+            id: 'q-prov008-006',
+            text: 'Are employment contracts signed and on file?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-19',
+                'Fit and proper persons employed',
+                'Contracts'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check contract files.',
+          },
+          {
+            id: 'q-prov008-007',
+            text: 'Are training and qualification certificates kept up-to-date in files?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-18',
+                'Staffing',
+                'Training records'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check training records in staff files.',
+          },
+          {
+            id: 'q-prov008-008',
+            text: 'Are staff files kept securely and confidentially?',
+            domain: 'WellLed',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Confidentiality'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Verify secure storage and access controls.',
+          },
+        ],
+      },
+    ],
+  },
+
+  // 9. Marketing & Advertisements
+  {
+    id: 'template-provider-009',
+    name: 'Marketing & Advertisements Audit',
+    auditType: 'provider',
+    frequency: 'Monthly',
+    responsibleRoles: ['Admin', 'Provider'],
+    version: '1.0',
+    createdAt: '2025-01-01T09:00:00Z',
+    sections: [
+      {
+        id: 'section-prov009-001',
+        title: 'Marketing Materials & Content',
+        description: 'Assessment of marketing materials for accuracy and compliance.',
+        questions: [
+          {
+            id: 'q-prov009-001',
+            text: 'Are marketing materials accurate and truthful?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Transparency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 5,
+            answerType: 'scale',
+            guidance: 'Review marketing claims against actual services provided.',
+          },
+          {
+            id: 'q-prov009-002',
+            text: 'Do marketing materials avoid misleading claims?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Honest representation'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check for CQC rating and compliance claims.',
+          },
+          {
+            id: 'q-prov009-003',
+            text: 'Do photographs/videos have resident consent?',
+            domain: 'Safe',
+            regulations: [
+              regRef(
+                'FS-REG-10',
+                'Dignity and respect',
+                'Respect for privacy'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Verify consent records for use of resident images.',
+          },
+        ],
+      },
+      {
+        id: 'section-prov009-002',
+        title: 'Advertising Channels & Reach',
+        description: 'Assessment of advertising effectiveness and appropriateness.',
+        questions: [
+          {
+            id: 'q-prov009-004',
+            text: 'Are advertisements placed in appropriate channels?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-9',
+                'Person-centered care',
+                'Access to information'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 3,
+            answerType: 'boolean',
+            guidance: 'Review advertising channels and placement decisions.',
+          },
+          {
+            id: 'q-prov009-005',
+            text: 'Is CQC rating prominently displayed in advertisements?',
+            domain: 'Responsive',
+            regulations: [
+              regRef(
+                'FS-REG-17',
+                'Good governance',
+                'Transparency'
+              ),
+            ],
+            requiresEvidence: true,
+            weight: 4,
+            answerType: 'boolean',
+            guidance: 'Check that current CQC rating is displayed.',
+          },
+        ],
+      },
+    ],
+  },
+];
+
+export default PROVIDER_AUDIT_TEMPLATES;

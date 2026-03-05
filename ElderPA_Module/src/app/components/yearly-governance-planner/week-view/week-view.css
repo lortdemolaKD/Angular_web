@@ -1,0 +1,67 @@
+.planner-container {
+
+  height: 360px;      /* FIXED height is key */
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  /*overflow: hidden;   /* prevent children from escaping */
+}
+
+.week-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;       /* fill container */
+}
+
+.week-header {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  border-bottom: 1px solid #ccc;
+  height: 30px;        /* fixed height header */
+  flex: 0 0 auto;      /* prevents flex growth */
+  font-weight: bold;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.hour-rows-container {
+  flex: 1 1 auto;      /* fills remaining space */
+  min-height: 0;        /* required in flexbox to allow scroll */
+  overflow-y: auto;     /* SCROLLABLE */
+}
+
+.hour-rows {
+  display: grid;
+  grid-auto-rows: 60px;  /* fixed row height for each hour */
+}
+
+.hour-row {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.hour-label {
+  padding-right: 0.2rem;
+  text-align: right;
+  border-right: 1px solid #ccc;
+}
+
+.day-column {
+  border-right: 1px solid #eee;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.event {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.2rem;
+  color: #fff;
+  border-radius: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,77 @@
+.evidence-list{
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.evidence-item{
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+}
+
+.evidence-top{
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.evidence-title{
+  font-weight: 600;
+}
+
+.evidence-meta{
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.muted{
+  opacity: 0.75;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Copy the same tokens used in company.css so everything matches */
+.badge{
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.03);
+}
+
+.actions{
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.mini-btn{
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.9);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag{
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.placeholder{
+  padding: 16px;
+  border: 1px dashed rgba(0,0,0,0.25);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.75);
+}

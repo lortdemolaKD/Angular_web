@@ -1,0 +1,52 @@
+css
+.planner-container {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  background: #fdfdfd;
+  font-family: Arial, sans-serif;
+
+  /* key for widgets */
+  min-height: 0;
+  overflow: hidden;
+}
+
+.controls {
+  padding: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: end;
+  flex: 0 0 auto;
+}
+
+.dateName {
+  position: static;      /* instead of absolute */
+  padding: 0 10px 10px;
+  font-weight: bold;
+  flex: 0 0 auto;
+}
+
+/* Make the view area consume remaining height; allow horizontal scroll so right side isn't cut */
+.view-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  max-width: 100%;
+}
+.controls button { margin-right: 0.5rem; }
+
+.month-view, .week-view, .day-view { display: grid; }
+
+.week-header { display: grid; grid-template-columns: repeat(7, 1fr); }
+.day-header { padding: 0.5rem; font-weight: bold; }
+
+.week, .hour-rows { display: grid; grid-template-columns: repeat(7, 1fr); }
+.day { border: 1px solid #ddd; min-height: 60px; position: relative; }
+.date { font-size: 0.75rem; padding: 0.2rem; }
+.event { padding: 0.2rem; margin: 0.1rem 0; font-size: 0.75rem; color: #fff; border-radius: 3px; }

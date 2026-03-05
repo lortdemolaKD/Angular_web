@@ -1,0 +1,42 @@
+<div class="user-account-panel" (click)="$event.stopPropagation()">
+  <div class="user-account-panel__header">
+    <h3 class="user-account-panel__title">Account</h3>
+    <button type="button" class="user-account-panel__close" (click)="onClose()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="user-account-panel__avatar-wrap">
+    <div class="user-account-panel__avatar" *ngIf="displayAvatar" [style.backgroundImage]="'url(' + displayAvatar + ')'"></div>
+    <div class="user-account-panel__avatar user-account-panel__avatar--initials" *ngIf="!displayAvatar">
+      {{ getInitials() }}
+    </div>
+    <label class="user-account-panel__avatar-upload" [class.user-account-panel__avatar-upload--disabled]="uploadInProgress">
+      <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden [disabled]="uploadInProgress" />
+      <span class="user-account-panel__avatar-upload-label">{{ uploadInProgress ? 'Uploading…' : 'Change photo' }}</span>
+    </label>
+    <button type="button" class="user-account-panel__avatar-remove" *ngIf="displayAvatar" (click)="removePhoto()" [disabled]="uploadInProgress">
+      Remove photo
+    </button>
+    <p class="user-account-panel__error" *ngIf="uploadError">{{ uploadError }}</p>
+  </div>
+
+  <div class="user-account-panel__data" *ngIf="user">
+    <div class="user-account-panel__row">
+      <span class="user-account-panel__label">Name</span>
+      <span class="user-account-panel__value">{{ user.name }}</span>
+    </div>
+    <div class="user-account-panel__row">
+      <span class="user-account-panel__label">Role</span>
+      <span class="user-account-panel__value">{{ user.role }}</span>
+    </div>
+    <div class="user-account-panel__row" *ngIf="companyName">
+      <span class="user-account-panel__label">Company</span>
+      <span class="user-account-panel__value">{{ companyName }}</span>
+    </div>
+    <div class="user-account-panel__row" *ngIf="locationName">
+      <span class="user-account-panel__label">Location</span>
+      <span class="user-account-panel__value">{{ locationName }}</span>
+    </div>
+  </div>
+</div>

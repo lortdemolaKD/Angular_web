@@ -1,0 +1,24 @@
+<div class="chart-test-page">
+  <header class="chart-test-page__header">
+    <h1>Smart Chart – Test Page</h1>
+    <p class="chart-test-page__subtitle">
+      All chart types and options. Verify each chart renders and behaves correctly.
+    </p>
+    <a routerLink="/" class="chart-test-page__back">← Back to Home</a>
+  </header>
+
+  <div class="chart-test-page__grid">
+    @for (chartType of chartTypes; track chartType) {
+      <section class="chart-test-page__section">
+        <h2 class="chart-test-page__title">{{ formatLabel(chartType) }}</h2>
+        <div class="chart-test-page__chart">
+          <app-smart-chart
+            [chartType]="chartType"
+            [data]="getData(chartType)"
+            [options]="getOptions(chartType)"
+          />
+        </div>
+      </section>
+    }
+  </div>
+</div>

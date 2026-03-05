@@ -1,0 +1,282 @@
+<div class="home-container">
+  <app-panel  title="test" icon=""  headerColor="var(--color-accent2)" heightIN ="80vh" widthIN ="80vw">
+<mat-horizontal-stepper linear #stepper>
+
+  <!-- Step 1: Director -->
+  <!-- Step 2: Companies -->
+  <mat-step [stepControl]="directorForm">
+    <form [formGroup]="directorForm">
+      <ng-template matStepLabel>Companies</ng-template>
+      <div formArrayName="companies">
+        <div *ngFor="let company of companies.controls; let i = index" [formGroupName]="i">
+          <mat-form-field appearance="fill">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="name">
+          </mat-form-field>
+          <button mat-icon-button color="warn" (click)="removeCompany(i)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <button mat-raised-button color="accent" (click)="addCompany()">Add Company</button>
+      <div>
+        <button mat-raised-button color="primary" (click)="stepper.next()">Next</button>
+      </div>
+    </form>
+  </mat-step>
+  <!-- Step 3: Service Types -->
+  <mat-step [stepControl]="directorForm">
+    <form [formGroup]="directorForm">
+      <ng-template matStepLabel>Service Types</ng-template>
+
+      <div formArrayName="companies">
+        <div *ngFor="let company of companies.controls; let ci = index" [formGroupName]="ci">
+          <h3>{{ company.value.name }}</h3>
+
+          <div formArrayName="serviceTypes">
+            <div *ngFor="let st of serviceTypes(ci).controls; let si = index" [formGroupName]="si">
+              <mat-form-field appearance="fill">
+                <mat-label>Service Type Name</mat-label>
+                <input matInput formControlName="name">
+              </mat-form-field>
+              <button mat-icon-button color="warn" (click)="removeServiceType(ci, si)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <button mat-raised-button color="accent" (click)="addServiceType(ci)">Add Service Type</button>
+        </div>
+      </div>
+
+      <div>
+        <button mat-raised-button (click)="stepper.previous()">Back</button>
+        <button mat-raised-button color="primary" (click)="stepper.next()">Next</button>
+      </div>
+    </form>
+  </mat-step>
+  <!-- Step 4: Locations -->
+  <mat-step [stepControl]="directorForm">
+    <form [formGroup]="directorForm">
+      <ng-template matStepLabel>Locations</ng-template>
+
+      <div formArrayName="companies">
+        <div *ngFor="let company of companies.controls; let ci = index" [formGroupName]="ci">
+
+          <h3>{{ company.value.name }}</h3>
+
+          <div formArrayName="serviceTypes">
+            <div *ngFor="let st of serviceTypes(ci).controls; let si = index" [formGroupName]="si">
+              <h4>{{ st.value.name }}</h4>
+
+              <div formArrayName="locations">
+                <div *ngFor="let loc of locations(ci, si).controls; let li = index" [formGroupName]="li">
+
+                  <mat-form-field appearance="fill">
+                    <mat-label>Location Name</mat-label>
+                    <input matInput formControlName="name">
+                  </mat-form-field>
+
+                  <mat-form-field appearance="fill">
+                    <mat-label>Type</mat-label>
+                    <mat-select formControlName="type">
+                      <mat-option *ngFor="let type of locationTypes" [value]="type">{{ type }}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <button mat-icon-button color="warn" (click)="removeLocation(ci, si, li)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+
+                  <!-- Conditional Care Home Setup -->
+                  <div *ngIf="loc.value.type === 'Care Home'">
+
+                    <h5>Areas / Units</h5>
+                    <div *ngFor="let a of areas(ci, si, li).controls; let ai = index">
+                      <input [formControl]="areaControl(ci, si, li, ai)">
+                      <button (click)="removeArea(ci, si, li, ai)">Remove</button>
+                    </div>
+                    <button mat-button (click)="addArea(ci, si, li)">Add Area</button>
+
+                    <!-- Wings -->
+                    <h5>Wings</h5>
+                    <div *ngFor="let w of wings(ci, si, li).controls; let wi = index">
+                      <input [formControl]="wingControl(ci, si, li, wi)">
+                      <button (click)="removeWing(ci, si, li, wi)">Remove</button>
+                    </div>
+                    <button mat-button (click)="addWing(ci, si, li)">Add Wing</button>
+
+                    <!-- Rooms -->
+                    <h5>Rooms</h5>
+                    <div formArrayName="rooms">
+                    <div *ngFor="let r of rooms(ci, si, li).controls; let ri = index" [formGroupName]="ri">
+                      <mat-form-field appearance="fill">
+                        <mat-label>Room Number</mat-label>
+                        <input matInput formControlName="number">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="fill">
+                        <mat-label>Room Type</mat-label>
+                        <mat-select formControlName="type">
+                          <mat-option *ngFor="let rt of roomTypes" [value]="rt">{{ rt }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="fill">
+                        <mat-label>Assign Area</mat-label>
+                        <mat-select formControlName="area">
+                          <mat-option [value]="null">None</mat-option>
+                          <mat-option *ngFor="let a of areas(ci, si, li).controls" [value]="a.value">{{ a.value }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="fill">
+                        <mat-label>Assign Wing</mat-label>
+                        <mat-select formControlName="wing">
+                          <mat-option [value]="null">None</mat-option>
+                          <mat-option *ngFor="let w of wings(ci, si, li).controls" [value]="w.value">{{ w.value }}</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <!-- Facilities -->
+                      <div formArrayName="facilities">
+                        <div *ngFor="let f of facilities(ci, si, li, ri).controls; let fi = index">
+                          <input [formControl]="facilityControl(ci, si, li, ri,fi)">
+                          <button (click)="removeFacility(ci, si, li, ri, fi)">Remove</button>
+                        </div>
+                        <button mat-button (click)="addFacility(ci, si, li, ri)">Add Facility</button>
+                      </div>
+
+                      <button mat-button color="warn" (click)="removeRoom(ci, si, li, ri)">Remove Room</button>
+                    </div>
+                    <button mat-raised-button color="accent" (click)="addRoom(ci, si, li)">Add Room</button>
+                    </div>
+                    <!-- Room Groups -->
+                    <h5>Room Groups</h5>
+                    <div formArrayName="roomGroups">
+                      <div *ngFor="let rg of roomGroups(ci, si, li).controls; let rgi = index" [formGroupName]="rgi">
+                        <mat-form-field appearance="fill">
+                          <mat-label>Room Group Name</mat-label>
+                          <input matInput formControlName="name">
+                        </mat-form-field>
+                        <button mat-button color="warn" (click)="removeRoomGroup(ci, si, li, rgi)">Remove</button>
+
+                        <!-- Fee Rules -->
+                        <div formArrayName="feeRules">
+                          <div *ngFor="let fr of feeRules(ci, si, li, rgi).controls; let fri = index" [formGroupName]="fri">
+
+                            <mat-form-field appearance="fill">
+                              <mat-label>Care Band</mat-label>
+                              <mat-select formControlName="careBand">
+                                <mat-option value="CB1">CB1</mat-option>
+                                <mat-option value="CB2">CB2</mat-option>
+                                <mat-option value="CB2D">CB2D</mat-option>
+                                <mat-option value="CB3">CB3</mat-option>
+                                <mat-option value="CB3D">CB3D</mat-option>
+                              </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="fill">
+                              <mat-label>Dependency</mat-label>
+                              <mat-select formControlName="dependency">
+                                <mat-option value="Low">Low</mat-option>
+                                <mat-option value="Medium">Medium</mat-option>
+                                <mat-option value="High">High / DUP / Bed Bound</mat-option>
+                              </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="fill">
+                              <mat-label>Rate (£)</mat-label>
+                              <input matInput type="number" formControlName="rate">
+                            </mat-form-field>
+
+                            <!-- Enhancements -->
+                            <div formArrayName="enhancements">
+                              <div *ngFor="let enh of enhancements(ci, si, li, rgi, fri).controls; let ei = index" [formGroupName]="ei">
+                                <mat-form-field appearance="fill">
+                                  <mat-label>Enhancement Type</mat-label>
+                                  <input matInput formControlName="type">
+                                </mat-form-field>
+                                <mat-form-field appearance="fill">
+                                  <mat-label>Value (£)</mat-label>
+                                  <input matInput type="number" formControlName="value">
+                                </mat-form-field>
+                                <button mat-button color="warn" (click)="removeEnhancement(ci, si, li, rgi, fri, ei)">Remove</button>
+                              </div>
+                              <button mat-button (click)="addEnhancement(ci, si, li, rgi, fri)">Add Enhancement</button>
+                            </div>
+
+                            <button mat-button color="warn" (click)="removeFeeRule(ci, si, li, rgi, fri)">Remove Fee Rule</button>
+                          </div>
+                          <button mat-button (click)="addFeeRule(ci, si, li, rgi)">Add Fee Rule</button>
+                        </div>
+
+
+                      </div>
+                      <button mat-raised-button color="accent" (click)="addRoomGroup(ci, si, li)">Add Room Group</button>
+                    </div>
+                    <h5>Client Groups</h5>
+                    <div formArrayName="clientGroups">
+                      <div *ngFor="let cg of clientGroups(ci, si, li).controls; let cgi = index" [formGroupName]="cgi">
+                        <mat-form-field appearance="fill">
+                          <mat-label>Client Group Name</mat-label>
+                          <input matInput formControlName="name">
+                        </mat-form-field>
+
+                        <!-- Enhancements per Client Group -->
+                        <div formArrayName="enhancements">
+                          <div *ngFor="let enh of enhancementsClientGroup(ci, si, li, cgi).controls; let ei = index" [formGroupName]="ei">
+                            <mat-form-field appearance="fill">
+                              <mat-label>Enhancement Type</mat-label>
+                              <input matInput formControlName="type">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="fill">
+                              <mat-label>Value (£)</mat-label>
+                              <input matInput type="number" formControlName="value">
+                            </mat-form-field>
+
+                            <button mat-button color="warn" (click)="removeEnhancementClientGroup(ci, si, li, cgi, ei)">
+                              Remove
+                            </button>
+                          </div>
+                          <button mat-button (click)="addEnhancementClientGroup(ci, si, li, cgi)">
+                            Add Enhancement
+                          </button>
+                        </div>
+
+                        <button mat-button color="warn" (click)="removeClientGroup(ci, si, li, cgi)">Remove Client Group</button>
+                      </div>
+                      <button mat-raised-button color="accent" (click)="addClientGroup(ci, si, li)">Add Client Group</button>
+                    </div>
+
+
+                  </div> <!-- End CareHome conditional -->
+                </div>
+              </div>
+              <!-- End locations -->
+
+              <button mat-raised-button color="accent" (click)="addLocation(ci, si)">Add Location</button>
+            </div>
+          </div> <!-- End serviceTypes -->
+        </div>
+      </div> <!-- End companies -->
+
+      <div>
+        <button mat-raised-button (click)="stepper.previous()">Back</button>
+        <button mat-raised-button color="primary" (click)="stepper.next()">Next</button>
+      </div>
+
+    </form>
+  </mat-step>
+  <mat-step>
+    <ng-template matStepLabel>Finish</ng-template>
+    <p>All data is ready. Click to download JSON:</p>
+    <button mat-raised-button color="primary" (click)="submitToDb()">Save</button>
+    <div>
+      <button mat-raised-button (click)="stepper.previous()">Back</button>
+    </div>
+  </mat-step>
+
+</mat-horizontal-stepper>
+  </app-panel>
+</div>

@@ -1,0 +1,43 @@
+<div class="chart-container">
+  <div class="card table-wrapper">
+    <div class="toolbar" *ngIf="canCreateTask()">
+      <button class="btn" (click)="showCreator.set(!showCreator())">
+        {{ showCreator() ? 'Close' : 'New task' }}
+      </button>
+    </div>
+
+    <app-task-creator
+      *ngIf="showCreator()"
+      (taskCreated)="handleTaskCreated($event)"
+      (cancelled)="showCreator.set(false)">
+    </app-task-creator>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+        <tr>
+          <th>Status</th>
+          <th>Category</th>
+          <th>Assigned to</th>
+          <th>Due date</th>
+          <th>Location</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr *ngFor="let t of tasks()">
+          <td>{{ t.status }}</td>
+          <td>{{ t.category }}</td>
+          <td>{{ t.assignedTo }}</td>
+          <td>{{ t.dueDate | date:'yyyy-MM-dd' }}</td>
+          <td><strong>{{ t.locationName }}</strong></td>
+        </tr>
+
+        <tr *ngIf="tasks().length === 0">
+          <td colspan="5" class="no-alerts">No tasks found.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

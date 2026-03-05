@@ -1,0 +1,162 @@
+groupedData: ChartDatum[] = [
+  { label: '2023', series: 'A', value: 30 },
+  { label: '2023', series: 'B', value: 45 },
+  { label: '2024', series: 'A', value: 50 },
+  { label: '2024', series: 'B', value: 35 }
+];
+
+areaBarData: ChartDatum[] = [
+  { label: 'Mon', value: 20 },
+  { label: 'Tue', value: 60 },
+  { label: 'Wed', value: 40 },
+  { label: 'Thu', value: 80 },
+  { label: 'Fri', value: 50 }
+];
+
+rangeAreaData: ChartDatum[] = [
+  { label: 'Day 1', value: 10, value2: 40 },
+  { label: 'Day 2', value: 20, value2: 60 },
+  { label: 'Day 3', value: 15, value2: 55 }
+];
+
+mixedData: ChartDatum[] = [
+  { label: 'Jan', value: 30, lineValue: 25 },
+  { label: 'Feb', value: 45, lineValue: 50 },
+  { label: 'Mar', value: 20, lineValue: 30 }
+];
+
+timelineData: ChartDatum[] = [
+  { label: 'Task A', start: 0, end: 3 },
+  { label: 'Task B', start: 1, end: 5 },
+  { label: 'Task C', start: 4, end: 7 }
+];
+
+
+
+
+groupedData: ChartDatum[] = [
+  { label: '2023', series: 'A', value: 30 },
+  { label: '2023', series: 'B', value: 45 },
+  { label: '2024', series: 'A', value: 50 },
+  { label: '2024', series: 'B', value: 35 }
+];
+
+areaBarData: ChartDatum[] = [
+  { label: 'Mon', value: 20 },
+  { label: 'Tue', value: 60 },
+  { label: 'Wed', value: 40 },
+  { label: 'Thu', value: 80 },
+  { label: 'Fri', value: 50 }
+];
+
+rangeAreaData: ChartDatum[] = [
+  { label: 'Day 1', value: 10, value2: 40 },
+  { label: 'Day 2', value: 20, value2: 60 },
+  { label: 'Day 3', value: 15, value2: 55 }
+];
+
+mixedData: ChartDatum[] = [
+  { label: 'Jan', value: 30, lineValue: 25 },
+  { label: 'Feb', value: 45, lineValue: 50 },
+  { label: 'Mar', value: 20, lineValue: 30 }
+];
+
+timelineData: ChartDatum[] = [
+  { label: 'Task A', start: 0, end: 3 },
+  { label: 'Task B', start: 1, end: 5 },
+  { label: 'Task C', start: 4, end: 7 }
+];
+funnelData: ChartDatum[] = [
+  { label: 'Visits', value: 1000 },
+  { label: 'Signups', value: 400 },
+  { label: 'Trials', value: 200 },
+  { label: 'Customers', value: 80 }
+];
+
+waterfallData: ChartDatum[] = [
+  { label: 'Start', value: 100 },
+  { label: 'Cost A', value: -20 },
+  { label: 'Cost B', value: -10 },
+  { label: 'Revenue', value: 50 }
+];
+
+slopeData: ChartDatum[] = [
+  { label: 'A', value: 20, value2: 40 },
+  { label: 'B', value: 50, value2: 30 },
+  { label: 'C', value: 30, value2: 60 }
+];
+
+radialBarData: ChartDatum[] = [
+  { label: 'A', value: 30 },
+  { label: 'B', value: 20 },
+  { label: 'C', value: 50 }
+];
+
+pieData: ChartDatum[] = [
+  { label: 'X', value: 25 },
+  { label: 'Y', value: 35 },
+  { label: 'Z', value: 40 }
+];
+scatterData: ChartDatum[] = [
+  { x: 1, y: 2 },
+  { x: 3, y: 5 },
+  { x: 5, y: 3 },
+  { x: 7, y: 8 }
+];
+
+bubbleData: ChartDatum[] = [
+  { x: 2, y: 3, r: 2 },
+  { x: 4, y: 6, r: 4 },
+  { x: 6, y: 4, r: 1 }
+];
+
+boxplotData: ChartDatum[] = [
+  { label: 'A', min: 1, q1: 3, median: 5, q3: 8, max: 10 },
+  { label: 'B', min: 2, q1: 4, median: 6, q3: 9, max: 12 },
+  { label: 'C', min: 0, q1: 2, median: 4, q3: 7, max: 9 }
+];
+
+treemapData: ChartDatum[] = [
+  { label: 'A', value: 30 },
+  { label: 'B', value: 20 },
+  { label: 'C', value: 15 },
+  { label: 'D', value: 25 },
+  { label: 'E', value: 10 }
+];
+
+candlestickData: ChartDatum[] = [
+  { label: 'Mon', open: 100, high: 110, low: 95, close: 105 },
+  { label: 'Tue', open: 105, high: 115, low: 102, close: 108 },
+  { label: 'Wed', open: 108, high: 109, low: 98, close: 102 }
+];
+brokenScaleData: ChartDatum[] = [
+  { label: 'A', value: -80 },
+  { label: 'B', value: -20 },
+  { label: 'C', value: 50 },
+  { label: 'D', value: 90 }
+];
+
+bar3DData: ChartDatum[] = [
+  { label: 'A', value: 30 },
+  { label: 'B', value: 60 },
+  { label: 'C', value: 45 }
+];
+
+slopeGroupedData: ChartDatum[] = [
+  { label: '2023', series: 'Sales', value: 20, value2: 40 },
+  { label: '2023', series: 'Cost', value: 50, value2: 30 },
+  { label: '2024', series: 'Sales', value: 30, value2: 60 },
+  { label: '2024', series: 'Cost', value: 40, value2: 25 }
+];
+
+mixedOverlayData: ChartDatum[] = [
+  { label: 'Jan', value: 30, value2: 25 },
+  { label: 'Feb', value: 45, value2: 50 },
+  { label: 'Mar', value: 20, value2: 30 }
+];
+
+gradientBarData: ChartDatum[] = [
+  { label: 'A', value: 30 },
+  { label: 'B', value: 60 },
+  { label: 'C', value: 45 }
+];

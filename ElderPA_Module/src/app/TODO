@@ -1,0 +1,71 @@
+automatic mail  if delay o ofer taret after
+we have
+
+home :
+
+ care home -
+ location based view
+ company  or service structure
+ a metrics
+that screan shot  on google
+ home care :
+ targe
+
+company :
+primary care multiple company  switch beetween
+
+
+
+
+services:
+
+
+
+
+ Inquaries
+ num for menager
+admins company
+menagers locations smoetimes
+yearly govetnace planer two
+one for locations
+second for company
+
+bonus:
+menager
++
+servicec person
+locatiuon bonus each month
+shares of bonus
+metrics total  month bonus biling husrs
+meet some target example: roomm per month
+cost
+
+
+
+
+
+UK company registration types range from simple structures like Sole Traders and Partnerships to more formal entities like Limited Companies, which include Private (Ltd) and Public (PLC) options, and specialized forms like Limited Liability Partnerships (LLPs), and social enterprises such as Community Interest Companies (CIC), each affecting liability, ownership, and tax. The most common choices are Sole Trader, Partnership, and Private Limited Company (Ltd) for small businesses, with PLCs for larger firms seeking public investmen
+
+
+
+
+
+
+
+
+
+
+
+Company 1—N Locations (via LocationType.cmpID).
+
+
+Location 1—N PerformanceSets (by time period).
+
+
+Location 1—N AuditInstances.
+
+
+AuditInstance 1—N AuditQuestionInstances; each question 1—N AuditEvidence.
+
+
+User 1—1 DashboardLayout (or 1—N if you support multiple dashboards).

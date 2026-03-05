@@ -1,0 +1,75 @@
+/* Desktop: sidebar collapses to 72px, expands on hover */
+.layout {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  height: 100vh;
+  width: 100%;
+  transition: grid-template-columns 0.25s ease;
+}
+/* Expand sidebar column when navbar is hovered (app-navbar gets .navbar--expanded) */
+.layout:has(> .navbar > app-navbar.navbar--expanded) {
+  grid-template-columns: 280px 1fr;
+}
+.layout-N {
+  display: grid;
+  grid-template-columns: 100%;
+  height: 100vh;
+  width: 100%;
+}
+/* Sidebar */
+.navbar {
+  height: 100%;
+  overflow: visible;
+  background-color: var(--color-background);
+  min-width: 0;
+}
+
+/* Content: remaining 4/5 */
+.content {
+
+
+  height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+.content-N {
+
+
+  height: 100%;
+  overflow-y: auto;
+
+  box-sizing: border-box;
+}
+/* Good global safety */
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    display: block;
+    height: 100vh;
+  }
+
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 2000;
+  }
+
+  .content {
+    width: 100%;
+    padding-top: 56px; /* reserve space for topbar */
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+}
+
+
+
+

@@ -1,0 +1,256 @@
+// ============================================================================
+// AUDIT TEMPLATES INDEX - Central export of all audit templates
+// ============================================================================
+// This file combines all audit templates (Baseline, Registered Manager, and Provider)
+// for easy importing and integration into the application.
+
+import { BASELINE_AUDIT_TEMPLATES } from '../../../server/src/scripts/mock-audit-templates';
+import { REGISTERED_MANAGER_AUDIT_TEMPLATES } from '../../../server/src/scripts/mock-rm-audit-templates.txt';
+import { PROVIDER_AUDIT_TEMPLATES } from '../../../server/src/scripts/mock-provider-audit-templates.txt';
+import { AuditTemplate } from './Types';
+
+/**
+ * COMPLETE AUDIT TEMPLATES COLLECTION
+ * Combines all three audit categories used in care home compliance audits
+ */
+export const ALL_AUDIT_TEMPLATES: AuditTemplate[] = [
+  ...BASELINE_AUDIT_TEMPLATES,
+  ...REGISTERED_MANAGER_AUDIT_TEMPLATES,
+  ...PROVIDER_AUDIT_TEMPLATES,
+];
+
+/**
+ * Organized audit templates by category
+ */
+export const AUDIT_TEMPLATES_BY_CATEGORY = {
+  baseline: BASELINE_AUDIT_TEMPLATES,
+  registeredManager: REGISTERED_MANAGER_AUDIT_TEMPLATES,
+  provider: PROVIDER_AUDIT_TEMPLATES,
+};
+
+/**
+ * AUDIT TYPE DESCRIPTIONS
+ */
+export const AUDIT_TYPE_INFO = {
+  baseline: {
+    name: 'Baseline Audits',
+    description:
+      'Daily/Weekly operational audits conducted by Deputy Manager & Head of Care',
+    frequency: 'Daily to Monthly',
+    responsibleRoles: ['Deputy Manager', 'Head of Care'],
+    purpose:
+      'Verify day-to-day compliance with care standards and operational procedures',
+    templates: [
+      'Weights & Intakes',
+      'Kitchen & Food Hygiene',
+      'Medication Management',
+      'Clinical & MDT Review',
+      'Resident Review',
+      'Accidents & Incidents',
+      'Care Plans & Reviews',
+      'IPC & Housekeeping',
+      'Health & Safety',
+    ],
+  },
+  registeredManager: {
+    name: 'Registered Manager Audits',
+    description: 'Weekly strategic audits conducted by the Registered Manager',
+    frequency: 'Weekly',
+    responsibleRoles: ['Registered Manager'],
+    purpose:
+      'Ensure governance, safeguarding, and compliance with regulatory requirements',
+    templates: [
+      'DOLs, Safeguarding & CQC Notifications',
+      'COVID, PPE & Hand Hygiene',
+      'Staff Training & Supervisions',
+      'Emails, Appointments & Letters',
+      'Spot Checks & Ward Rounds',
+    ],
+  },
+  provider: {
+    name: 'Provider Audits',
+    description:
+      'Monthly/Yearly strategic audits conducted by Provider/Admin/Finance',
+    frequency: 'Weekly to Yearly',
+    responsibleRoles: ['Provider', 'Admin', 'Finance Manager'],
+    purpose:
+      'Monitor organizational performance, finances, and strategic compliance',
+    templates: [
+      'NHS Capacity Tracker',
+      'CQC Liaison',
+      'Weekly Reports',
+      'Revenue Report & Financial Management',
+      'Management Targets & Performance',
+      'Budget Control & Ordering',
+      'Policies & Procedures',
+      'Recruitment & Staff Files',
+      'Marketing & Advertisements',
+    ],
+  },
+};
+
+/**
+ * Get templates by specific criteria
+ */
+export function getAuditTemplatesByType(type: 'baseline' | 'registeredManager' | 'provider'): AuditTemplate[] {
+  return AUDIT_TEMPLATES_BY_CATEGORY[type];
+}
+
+export function getAuditTemplateById(id: string): AuditTemplate | undefined {
+  return ALL_AUDIT_TEMPLATES.find((template) => template._id === id);
+}
+
+export function getAuditTemplatesByResponsibility(role: string): AuditTemplate[] {
+  return ALL_AUDIT_TEMPLATES.filter((template) =>
+    template.responsibleRoles?.includes(role)
+  );
+}
+
+export function getAuditTemplatesByFrequency(frequency: string): AuditTemplate[] {
+  return ALL_AUDIT_TEMPLATES.filter(
+    (template) => template.frequency?.toLowerCase() === frequency.toLowerCase()
+  );
+}
+
+/**
+ * AUDIT STATISTICS
+ */
+export const AUDIT_STATISTICS = {
+  totalTemplates: ALL_AUDIT_TEMPLATES.length,
+  baselineCount: BASELINE_AUDIT_TEMPLATES.length,
+  registeredManagerCount: REGISTERED_MANAGER_AUDIT_TEMPLATES.length,
+  providerCount: PROVIDER_AUDIT_TEMPLATES.length,
+  totalQuestions: ALL_AUDIT_TEMPLATES.reduce(
+    (sum, template) =>
+      sum +
+      (template.sections?.reduce(
+        (sectionSum, section) => sectionSum + (section.questions?.length || 0),
+        0
+      ) || 0),
+    0
+  ),
+};
+
+/**
+ * AUDIT MAPPING TO CQC KEY LINES OF ENQUIRY (KLOE)
+ * Aligns each audit with CQC inspection framework domains
+ */
+export const AUDIT_TO_CQC_MAPPING = {
+  'Safe': [
+    'template-baseline-001', // Weights & Intakes
+    'template-baseline-003', // Medication Management
+    'template-baseline-004', // Clinical & MDT
+    'template-baseline-006', // Accidents & Incidents
+    'template-baseline-009', // Health & Safety
+    'template-rm-001', // DOLs & Safeguarding
+    'template-rm-002', // COVID, PPE & Hand Hygiene
+  ],
+  'Effective': [
+    'template-baseline-004', // Clinical & MDT
+    'template-baseline-005', // Resident Review
+    'template-baseline-007', // Care Plans & Reviews
+    'template-rm-005', // Spot Checks & Ward Rounds
+  ],
+  'Caring': [
+    'template-baseline-001', // Weights & Intakes
+    'template-baseline-002', // Kitchen & Food Hygiene
+    'template-baseline-005', // Resident Review
+    'template-baseline-007', // Care Plans & Reviews
+    'template-baseline-008', // IPC & Housekeeping
+    'template-rm-005', // Spot Checks & Ward Rounds
+  ],
+  'Responsive': [
+    'template-baseline-005', // Resident Review
+    'template-provider-003', // Weekly Reports
+    'template-provider-004', // Revenue Report
+    'template-provider-009', // Marketing & Advertisements
+  ],
+  'WellLed': [
+    'template-baseline-001', // Weights & Intakes
+    'template-baseline-003', // Medication Management
+    'template-baseline-006', // Accidents & Incidents
+    'template-baseline-009', // Health & Safety
+    'template-rm-001', // DOLs & Safeguarding
+    'template-rm-002', // COVID, PPE & Hand Hygiene
+    'template-rm-003', // Staff Training & Supervisions
+    'template-rm-004', // Emails, Appointments & Letters
+    'template-rm-005', // Spot Checks & Ward Rounds
+    'template-provider-001', // NHS Capacity Tracker
+    'template-provider-002', // CQC Liaison
+    'template-provider-003', // Weekly Reports
+    'template-provider-004', // Revenue Report
+    'template-provider-005', // Management Targets
+    'template-provider-006', // Budget Control
+    'template-provider-007', // Policies & Procedures
+    'template-provider-008', // Recruitment & Staff Files
+    'template-provider-009', // Marketing & Advertisements
+  ],
+};
+
+/**
+ * AUDIT SCHEDULE - Recommended audit cadence
+ */
+export const AUDIT_SCHEDULE = {
+  daily: [
+    'Kitchen & Food Hygiene',
+    'Accidents & Incidents',
+  ],
+  weekly: [
+    'Medication Management',
+    'Clinical & MDT Review',
+    'Care Plans & Reviews',
+    'IPC & Housekeeping',
+    'DOLs, Safeguarding & CQC Notifications',
+    'COVID, PPE & Hand Hygiene',
+    'Staff Training & Supervisions',
+    'Spot Checks & Ward Rounds',
+    'NHS Capacity Tracker',
+    'Weekly Reports',
+  ],
+  monthly: [
+    'Weights & Intakes',
+    'Resident Review',
+    'Health & Safety',
+    'CQC Liaison',
+    'Revenue Report & Financial Management',
+    'Management Targets & Performance',
+    'Budget Control & Ordering',
+    'Recruitment & Staff Files',
+    'Marketing & Advertisements',
+  ],
+  quarterly: [
+    'Policies & Procedures',
+  ],
+};
+
+/**
+ * AUDIT ROLES & RESPONSIBILITIES
+ */
+export const AUDIT_ROLES = {
+  'Deputy Manager': {
+    role: 'Deputy Manager (DM)',
+    description: 'Conducts baseline operational audits',
+    templates: BASELINE_AUDIT_TEMPLATES.filter((t) =>
+      t.responsibleRoles?.includes('Deputy Manager')
+    ),
+  },
+  'Head of Care': {
+    role: 'Head of Care (HOC)',
+    description: 'Conducts baseline clinical and care audits',
+    templates: BASELINE_AUDIT_TEMPLATES.filter((t) =>
+      t.responsibleRoles?.includes('Head of Care')
+    ),
+  },
+  'Registered Manager': {
+    role: 'Registered Manager (RM)',
+    description: 'Conducts strategic governance and safeguarding audits',
+    templates: REGISTERED_MANAGER_AUDIT_TEMPLATES,
+  },
+  'Provider': {
+    role: 'Provider/Admin',
+    description: 'Conducts provider-level strategic audits',
+    templates: PROVIDER_AUDIT_TEMPLATES,
+  },
+};
+
+export default ALL_AUDIT_TEMPLATES;

@@ -1,0 +1,3 @@
+<button type="button" class="theme-switcher__btn" (click)="cycleTheme()" [attr.aria-label]="'Theme: ' + currentMode() + '. Switch to ' + nextMode()" [title]="'Theme: ' + currentMode() + ' (next: ' + nextMode() + ')'">
+  <mat-icon class="theme-switcher__icon">{{ themeIcon() }}</mat-icon>
+</button>

@@ -1,0 +1,331 @@
+<div class="form-renderer-container">
+
+  <!-- Progress Bar (optional) -->
+  <div class="form-progress" *ngIf="showProgress && !readonly">
+    <div class="progress-info">
+      <span class="progress-label">Form Completion</span>
+      <span class="progress-value">{{ completionPercentage() }}%</span>
+    </div>
+    <mat-progress-bar
+      mode="determinate"
+      [value]="completionPercentage()"
+      color="primary">
+    </mat-progress-bar>
+  </div>
+
+  <!-- Template Header -->
+  <div class="form-header">
+    <h1>{{ template.name }}</h1>
+    <p *ngIf="template.description" class="form-description">{{ template.description }}</p>
+    <mat-divider></mat-divider>
+  </div>
+
+  <!-- Form Content -->
+  <form [formGroup]="auditForm" (ngSubmit)="onSubmit()" class="form-content">
+
+    <!-- Render sections -->
+    <div *ngFor="let section of fieldSections(); let sectionIndex = index; trackBy: trackSection"  class="form-section">
+
+      <!-- Section Header -->
+      <mat-card class="section-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>{{ sectionIndex === 0 ? 'description' : 'folder' }}</mat-icon>
+            {{ section.title }}
+          </mat-card-title>
+          <mat-card-subtitle>
+            <span class="section-progress">{{ getSectionCompletion(section.fields) }}% complete</span>
+            <span class="section-error" *ngIf="sectionHasErrors(section.fields)">
+              <mat-icon>error</mat-icon>
+              Has errors
+            </span>
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+
+          <!-- Render fields in section -->
+          <div *ngFor="let field of section.fields;trackBy: trackField" class="field-container">
+
+            <!-- Text Field -->
+            <mat-form-field
+              *ngIf="field.type === 'text'"
+              appearance="outline"
+              class="full-width">
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                [formControlName]="field.id"
+                [placeholder]="field.placeholder || ''">
+              <mat-icon matSuffix *ngIf="field.required" matTooltip="Required">star</mat-icon>
+              <mat-error *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </mat-error>
+              <mat-hint *ngIf="field.helpText">{{ field.helpText }}</mat-hint>
+            </mat-form-field>
+
+            <!-- Textarea Field -->
+            <mat-form-field
+              *ngIf="field.type === 'textarea'"
+              appearance="outline"
+              class="full-width">
+              <mat-label>{{ field.label }}</mat-label>
+              <textarea
+                matInput
+                [formControlName]="field.id"
+                [placeholder]="field.placeholder || ''"
+                rows="4">
+              </textarea>
+              <mat-icon matSuffix *ngIf="field.required" matTooltip="Required">star</mat-icon>
+              <mat-error *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </mat-error>
+              <mat-hint *ngIf="field.helpText">{{ field.helpText }}</mat-hint>
+            </mat-form-field>
+
+            <!-- Number Field -->
+            <mat-form-field
+              *ngIf="field.type === 'number'"
+              appearance="outline"
+              class="full-width">
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                type="number"
+                [formControlName]="field.id"
+                [placeholder]="field.placeholder || ''">
+              <mat-icon matSuffix *ngIf="field.required" matTooltip="Required">star</mat-icon>
+              <mat-error *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </mat-error>
+              <mat-hint *ngIf="field.helpText">{{ field.helpText }}</mat-hint>
+            </mat-form-field>
+
+            <!-- Date Field -->
+            <mat-form-field
+              *ngIf="field.type === 'date'"
+              appearance="outline"
+              class="full-width">
+              <mat-label>{{ field.label }}</mat-label>
+              <input
+                matInput
+                type="date"
+                [formControlName]="field.id">
+              <mat-icon matSuffix *ngIf="field.required" matTooltip="Required">star</mat-icon>
+              <mat-error *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </mat-error>
+              <mat-hint *ngIf="field.helpText">{{ field.helpText }}</mat-hint>
+            </mat-form-field>
+
+            <!-- Checkbox Field -->
+            <div *ngIf="field.type === 'checkbox'" class="checkbox-field">
+              <label class="field-label">
+                {{ field.label }}
+                <mat-icon *ngIf="field.required" class="required-icon" matTooltip="Required">star</mat-icon>
+              </label>
+
+              <!-- Multiple checkboxes -->
+              <div *ngIf="field.options && field.options.length > 0" [formArrayName]="field.id" class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let option of field.options; let i = index; trackBy: trackOption"
+                  [formControlName]="i">
+                  {{ option }}
+                </mat-checkbox>
+              </div>
+
+              <!-- Single checkbox -->
+              <mat-checkbox *ngIf="!field.options || field.options.length === 0" [formControlName]="field.id">
+                {{ field.label }}
+              </mat-checkbox>
+
+              <div class="field-error" *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </div>
+              <div class="field-hint" *ngIf="field.helpText">{{ field.helpText }}</div>
+            </div>
+
+            <!-- Radio Field -->
+            <div *ngIf="field.type === 'radio'" class="radio-field">
+              <label class="field-label">
+                {{ field.label }}
+                <mat-icon *ngIf="field.required" class="required-icon" matTooltip="Required">star</mat-icon>
+              </label>
+              <mat-radio-group [formControlName]="field.id" class="radio-group">
+                <mat-radio-button *ngFor="let option of field.options" [value]="option">
+                  {{ option }}
+                </mat-radio-button>
+              </mat-radio-group>
+              <div class="field-error" *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </div>
+              <div class="field-hint" *ngIf="field.helpText">{{ field.helpText }}</div>
+            </div>
+
+            <!-- Select Field -->
+            <mat-form-field
+              *ngIf="field.type === 'select'"
+              appearance="outline"
+              class="full-width">
+              <mat-label>{{ field.label }}</mat-label>
+              <mat-select [formControlName]="field.id">
+                <mat-option *ngFor="let option of field.options" [value]="option">
+                  {{ option }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix *ngIf="field.required" matTooltip="Required">star</mat-icon>
+              <mat-error *ngIf="isFieldInvalid(field.id)">
+                {{ getFieldErrorMessage(field) }}
+              </mat-error>
+              <mat-hint *ngIf="field.helpText">{{ field.helpText }}</mat-hint>
+            </mat-form-field>
+
+            <!-- Table Field -->
+            <div *ngIf="field.type === 'table'" class="table-field">
+              <label class="field-label">
+                {{ field.label }}
+                <mat-icon *ngIf="field.required" class="required-icon" matTooltip="Required">star</mat-icon>
+              </label>
+
+              <div class="table-container">
+                <table mat-table [dataSource]="getDataSource(field.id)" class="data-table">
+
+                  <!-- Dynamic Columns -->
+                  <ng-container *ngFor="let header of field.tableConfig?.headers; let colIndex = index" [matColumnDef]="header">
+                    <th mat-header-cell *matHeaderCellDef>{{ header }}</th>
+                    <td mat-cell *matCellDef="let row; let rowIndex = index">
+
+                      <!-- Text/Number/Date input -->
+                      <input
+                        *ngIf="getColumnType(field, colIndex) === 'text' || getColumnType(field, colIndex) === 'number' || getColumnType(field, colIndex) === 'date'"
+                        [type]="getColumnType(field, colIndex)"
+                        [formControl]="$any(getTableRowGroup(field.id, rowIndex).get(header))"
+                        class="table-input">
+
+                      <!-- Checkbox -->
+                      <mat-checkbox
+                        *ngIf="getColumnType(field, colIndex) === 'checkbox'"
+                        [formControl]="$any(getTableRowGroup(field.id, rowIndex).get(header))">
+                      </mat-checkbox>
+
+                      <!-- Select -->
+                      <mat-select
+                        *ngIf="getColumnType(field, colIndex) === 'select'"
+                        [formControl]="$any(getTableRowGroup(field.id, rowIndex).get(header))"
+                        class="table-select">
+                        <mat-option *ngFor="let opt of getTableColOptions(field.tableConfig, colIndex)" [value]="opt">
+                          {{ opt }}
+                        </mat-option>
+                      </mat-select>
+
+                    </td>
+                  </ng-container>
+
+                  <!-- Actions Column -->
+                  <ng-container matColumnDef="actions" *ngIf="!readonly">
+                    <th mat-header-cell *matHeaderCellDef>Actions</th>
+                    <td mat-cell *matCellDef="let row; let rowIndex = index">
+                      <button
+                        mat-icon-button
+                        (click)="removeTableRow(field, rowIndex)"
+                        matTooltip="Remove row"
+                        type="button">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="getTableColumns(field)"></tr>
+                  <tr mat-row *matRowDef="let row; columns: getTableColumns(field);"></tr>
+                </table>
+
+                <button
+                  *ngIf="!readonly"
+                  mat-stroked-button
+                  (click)="addTableRow(field)"
+                  class="add-row-btn"
+                  type="button">
+                  <mat-icon>add</mat-icon>
+                  Add Row
+                </button>
+              </div>
+
+              <div class="field-hint" *ngIf="field.helpText">{{ field.helpText }}</div>
+            </div>
+
+            <!-- Question Field (Audit) -->
+            <!-- Question Field (Audit) - ✅ Updated with metadata -->
+            <div *ngIf="field.type === 'question'" class="question-field" [formGroupName]="field.id">
+              <label class="field-label">
+                {{ field.label }}
+                <mat-icon *ngIf="field.required" class="required-icon" matTooltip="Required">*</mat-icon>
+              </label>
+
+              <!-- ✅ Question Header with Metadata -->
+              <div class="question-header">
+                <div class="question-meta">
+                  <span class="domain-badge">{{ field.metadata?.domain || 'WellLed' }}</span>
+                  <span class="regulation-tag">{{ field.metadata?.regulationId || 'REG-001' }}</span>
+                </div>
+              </div>
+
+              <!-- Score: only show for scored audits (e.g. Manager/Monthly); baseline/provider are evidence-only -->
+              <mat-form-field *ngIf="(field.metadata?.scoreMax ?? 5) > 0" appearance="outline" class="score-field">
+                <mat-label>Score</mat-label>
+                <input matInput type="number"
+                       formControlName="score"
+                       [min]="0"
+                       [max]="field.metadata?.scoreMax || 5"
+                       step="1">
+                <mat-hint>0 to {{ field.metadata?.scoreMax || 5 }}</mat-hint>
+                <mat-icon matSuffix>assessment</mat-icon>
+              </mat-form-field>
+
+              <!-- Evidence -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Evidence</mat-label>
+                <textarea matInput formControlName="evidence" rows="3"></textarea>
+              </mat-form-field>
+
+              <!-- Action Required -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Action Required</mat-label>
+                <textarea matInput formControlName="actionRequired" rows="2"></textarea>
+              </mat-form-field>
+
+              <div class="field-hint" *ngIf="field.helpText">
+                {{ field.helpText }}
+              </div>
+            </div>
+
+
+          </div>
+
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions" *ngIf="!readonly">
+      <button mat-stroked-button type="button" (click)="onReset()">
+        <mat-icon>refresh</mat-icon>
+        Reset
+      </button>
+      <button mat-stroked-button type="button" (click)="onSaveDraft()">
+        <mat-icon>save</mat-icon>
+        Save Draft
+      </button>
+      <button mat-stroked-button type="button" (click)="exportToPdf()" color="accent">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Export PDF
+      </button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!auditForm.valid">
+        <mat-icon>send</mat-icon>
+        Submit
+      </button>
+    </div>
+
+  </form>
+
+</div>

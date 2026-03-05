@@ -1,0 +1,22 @@
+<section class="page">
+  <div class="page-head">
+    <h2>Evidence Library</h2>
+
+    <app-cst-button
+      title="Return"
+      headerColor="var(--color-primary-container)"
+      (headerClick)="moveTo('locations')">
+    </app-cst-button>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">All Evidence</div>
+    </div>
+
+    <div class="card-body" style="display:flex; flex-direction:column; gap:10px;">
+      <h4>Total Evidence Items: {{ allEvidence().length }}</h4>
+      <app-evidence-list [evidence]="allEvidence"></app-evidence-list>
+    </div>
+  </section>
+</section>

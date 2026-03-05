@@ -1,0 +1,32 @@
+.dialog-subtitle {
+  margin: -8px 0 12px 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #666);
+}
+
+.invite-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.invite-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.invite-row mat-form-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.invite-row mat-form-field:first-child {
+  flex: 1.2;
+}
+
+.invite-row button {
+  flex-shrink: 0;
+  margin-top: 4px;
+}

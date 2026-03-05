@@ -1,0 +1,14 @@
+<div class="chart-container">
+  <div class="card">
+    <app-smart-chart
+      *ngIf="totalCount() > 0; else empty"
+      chartType="pie-donut"
+      [data]="pieData()"
+      [options]="{ showLegend: true }">
+    </app-smart-chart>
+
+    <ng-template #empty>
+      <div class="empty">No audits</div>
+    </ng-template>
+  </div>
+</div>

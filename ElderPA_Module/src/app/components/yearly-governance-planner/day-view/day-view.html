@@ -1,0 +1,14 @@
+<div class="day-view">
+  <div class="hour-row" *ngFor="let hour of hours">
+    <div class="hour-label">{{ hour }}:00</div>
+    <div class="events">
+      <ng-container *ngFor="let event of dayEvents">
+        <div class="event"
+             *ngIf="moment(event.start).hour() === hour"
+             [style.background]="event.color?.primary">
+          {{ event.title }}
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+
+<div class="task-creator-modal">
+  <h3 class="tc-title">Create New Task</h3>
+
+  <div class="tc-grid">
+    <label>Description</label>
+    <textarea [(ngModel)]="task.description"></textarea>
+
+    <label>Category</label>
+    <input [(ngModel)]="task.category" />
+
+    <label>Assign to</label>
+    <input [(ngModel)]="task.assignedTo" placeholder="Personnel name or role" />
+
+    <label>Link to alert</label>
+    <select [(ngModel)]="task.alertId">
+      <option [ngValue]="undefined">Select…</option>
+      <option *ngFor="let opt of alertIndicatorOptions" [value]="opt.alertId">
+        {{ opt.indicatorId }} — {{ opt.message }}
+      </option>
+    </select>
+
+    <label>Due date</label>
+    <input type="date" [(ngModel)]="task.dueDate" />
+  </div>
+
+  <div class="tc-actions">
+    <button type="button" (click)="createTask()">Create Task</button>
+    <button type="button" (click)="cancel()">Cancel</button>
+  </div>
+</div>

@@ -1,0 +1,39 @@
+// 1. ALL @use statements must be at the top
+@use '@angular/material' as mat;
+
+// 2. Theming configuration
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+  @include mat.elevation-classes();
+}
+
+// 3. Custom elevation loops or other mixins
+// In your custom-theme.scss
+@for $i from 0 through 24 {
+  // Adding .mat-mdc-card (or other component classes)
+  // increases specificity so it actually works.
+  .mat-mdc-card.mat-elevation-z#{$i},
+  .mat-elevation-z#{$i} {
+    @include mat.elevation($i);
+  }
+}
+.cdk-drop-list-dragging{
+  opacity: 0.5;
+  border-left: 5px solid #000000;
+  padding-left: 5px;
+}
+// 4. General styles
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+}

@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Invite users to this location</h2>
+<p class="dialog-subtitle" *ngIf="data.locationName">{{ data.locationName }}</p>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <div formArrayName="rows" class="invite-rows">
+      <div *ngFor="let row of rows.controls; let i = index" [formGroupName]="i" class="invite-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="user@example.com" />
+          <mat-error *ngIf="rows.at(i).get('email')?.invalid && rows.at(i).get('email')?.touched">Valid email required</mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Account type</mat-label>
+          <mat-select formControlName="role">
+            <mat-option *ngFor="let r of roleOptions" [value]="r">{{ r }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-icon-button type="button" (click)="removeRow(i)" [disabled]="rows.length === 1" matTooltip="Remove row">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    <button mat-stroked-button type="button" (click)="addRow()">
+      <mat-icon>add</mat-icon> Add another
+    </button>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="done()">Done</button>
+</mat-dialog-actions>

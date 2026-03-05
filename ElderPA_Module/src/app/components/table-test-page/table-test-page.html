@@ -1,0 +1,37 @@
+<div class="table-test-page">
+  <header class="table-test-page__header">
+    <h1>Data Table – Test Page</h1>
+    <p class="table-test-page__subtitle">
+      Flexible table / columns: layout, density, search, pagination, empty and loading states.
+    </p>
+    <a routerLink="/" class="table-test-page__back">← Back to Home</a>
+  </header>
+
+  @if (selectedRow(); as row) {
+    <aside class="table-test-page__sidebar">
+      <h3 class="table-test-page__sidebar-title">Selected row</h3>
+      <pre class="table-test-page__sidebar-json">{{ row | json }}</pre>
+    </aside>
+  }
+
+  <div class="table-test-page__grid">
+    @for (ex of examples; track ex.id) {
+      <section class="table-test-page__section">
+        <h2 class="table-test-page__title">{{ ex.title }}</h2>
+        <p class="table-test-page__description">{{ ex.description }}</p>
+        <div class="table-test-page__table">
+          <app-dynamic-flex-table
+            [config]="ex.config"
+            [data]="dataFor(ex)"
+            [loading]="loadingFor(ex.id)"
+            (rowClicked)="onRowClicked($event)"
+            (emptyAction)="onEmptyAction()"
+            (selectionChange)="onSelectionChange($event)"
+            (bulkAction)="onBulkAction($event)"
+            (cellEdit)="onCellEdit($event)"
+          />
+        </div>
+      </section>
+    }
+  </div>
+</div>

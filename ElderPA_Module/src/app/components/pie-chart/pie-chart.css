@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Custom tooltip content when tooltipDetails is provided (e.g. staff names per role) */
+:host ::ng-deep .apex-tooltip-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+:host ::ng-deep .apex-tooltip-names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+:host ::ng-deep .apex-tooltip-name {
+  display: block;
+  font-weight: normal;
+}

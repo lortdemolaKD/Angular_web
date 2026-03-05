@@ -1,0 +1,172 @@
+<div class="gantt-root" role="application" aria-label="Gantt chart">
+  <div class="gantt-toolbar">
+    <div class="gantt-scale-presets">
+      <span class="gantt-scale-presets-label">View:</span>
+      <button type="button" class="gantt-scale-preset-btn" [class.active]="scalePreset() === 'day'" (click)="setScalePreset('day')" title="One day, hours">Day</button>
+      <button type="button" class="gantt-scale-preset-btn" [class.active]="scalePreset() === 'week'" (click)="setScalePreset('week')" title="One week, days">Week</button>
+      <button type="button" class="gantt-scale-preset-btn" [class.active]="scalePreset() === 'month'" (click)="setScalePreset('month')" title="One month, days">Month</button>
+      <button type="button" class="gantt-scale-preset-btn" [class.active]="scalePreset() === 'year'" (click)="setScalePreset('year')" title="One year, weeks">Year</button>
+    </div>
+    <div class="gantt-zoom">
+      <button type="button" (click)="zoomOut()" aria-label="Zoom out">−</button>
+      <span class="gantt-zoom-label">{{ scalePreset() ?? scaleUnit() }}</span>
+      <button type="button" (click)="zoomIn()" aria-label="Zoom in">+</button>
+      <button type="button" (click)="fitToProject()" aria-label="Fit to project">Fit</button>
+    </div>
+  </div>
+
+  <div class="gantt-body">
+    <div class="gantt-task-list-panel" [style.width.px]="taskListWidth()" role="rowheader">
+      <div class="gantt-task-list-header" [style.height.px]="rowHeight()">
+        <span class="gantt-col-name">{{ isResourceView() ? 'Worker / Task' : 'Task' }}</span>
+        <span class="gantt-col-dates">Start – End</span>
+      </div>
+      <div class="gantt-task-list-rows">
+        @for (row of displayRows(); track trackDisplayRow($index, row)) {
+          @if (row.type === 'header') {
+            <div class="gantt-task-row gantt-task-row--header" [style.height.px]="rowHeight()" [class.gantt-task-row--overload]="row.hasOverload">
+              <span class="gantt-col-name gantt-resource-name">
+                {{ row.resourceName }}
+                @if (row.taskCount > 0) {
+                  <span class="gantt-resource-meta">({{ row.taskCount }})</span>
+                }
+                @if (row.hasOverload) {
+                  <span class="gantt-overload-badge" title="Overload: more tasks than capacity">!</span>
+                }
+              </span>
+              <span class="gantt-col-dates"></span>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="gantt-task-row"
+              [style.height.px]="rowHeight()"
+              (click)="onTaskClick(row.task)"
+              [attr.aria-label]="row.task.name + ', ' + row.task.start + ' to ' + row.task.end"
+            >
+              <span class="gantt-col-name" [class.summary]="row.task.type === 'summary'">{{ row.task.name }}</span>
+              <span class="gantt-col-dates">{{ row.task.start | date:'shortDate' }} – {{ row.task.end | date:'shortDate' }}</span>
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="gantt-timeline-wrapper" role="grid">
+      <div class="gantt-timeline-header" [style.height.px]="rowHeight()">
+        <div class="gantt-timeline-ruler" [style.width.%]="100 * zoomLevel()">
+          @for (tick of timeTicks(); track tick.date.getTime()) {
+            <div
+              class="gantt-tick"
+              [style.left.%]="tickPercent(tick)"
+            >
+              {{ tick.label }}
+            </div>
+          }
+        </div>
+      </div>
+      <div class="gantt-timeline-body">
+        <div
+          class="gantt-timeline-inner"
+          [style.width.%]="100 * zoomLevel()"
+          [style.min-height.px]="displayRows().length * rowHeight()"
+          (contextmenu)="onTimelineContextMenu($event)"
+        >
+          <div class="gantt-timeline-ruler gantt-timeline-ruler-body">
+            @for (tick of timeTicks(); track tick.date.getTime()) {
+              <div
+                class="gantt-tick-line"
+                [style.left.%]="tickPercent(tick)"
+              ></div>
+            }
+          </div>
+          <div class="gantt-row-center-lines" aria-hidden="true">
+            @for (row of displayRows(); track trackDisplayRow($index, row)) {
+              <div
+                class="gantt-row-center-line"
+                [style.top.px]="$index * rowHeight() + (rowHeight() - 1) / 2"
+              ></div>
+            }
+          </div>
+          @if (showToday()) {
+            <div
+              class="gantt-today-line"
+              [style.left.%]="todayPercent()"
+              role="presentation"
+              aria-hidden="true"
+            ></div>
+          }
+          <svg
+            *ngIf="showDeps() && depPaths().length"
+            class="gantt-deps-svg"
+            [attr.viewBox]="depSvgViewBox()"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <marker id="gantt-arrow" markerWidth="0.5" markerHeight="0.5" refX="0.5" refY="0.25" orient="auto">
+                <polygon points="0 0, 0.5 0.25, 0 0.5" fill="var(--gantt-dep-color, #666)" />
+              </marker>
+            </defs>
+            @for (path of depPaths(); track trackByDepId($index, path)) {
+              <path
+                [attr.d]="'M ' + path.fromCenter + ' ' + path.fromRow + ' L ' + path.toCenter + ' ' + path.toRow"
+                class="gantt-dep-line"
+                vector-effect="non-scaling-stroke"
+              />
+            }
+          </svg>
+          <div class="gantt-bars-layer">
+            @for (layout of barLayouts(); track trackByTaskId($index, layout.task)) {
+              <div
+                class="gantt-bar-wrap"
+                [style.top.px]="getBarWrapTop(layout)"
+                [style.height.px]="getBarWrapHeight(layout)"
+              >
+                <div
+                  class="gantt-bar"
+                  [class.gantt-bar--laned]="(layout.laneCount ?? 0) > 1"
+                  [class.milestone]="layout.isMilestone"
+                  [class.late]="layout.isLate"
+                  [class.complete]="layout.progressPercent >= 100"
+                  [class.overlap]="layout.hasOverlap"
+                  [class.status-in-progress]="layout.task.status === 'in-progress'"
+                  [class.status-at-risk]="layout.task.status === 'at-risk'"
+                  [class.gantt-bar--movable]="!layout.isMilestone && isResourceView()"
+                  [style.left.%]="layout.xPercent"
+                  [style.width.%]="layout.widthPercent"
+                  [attr.title]="getBarTitle(layout)"
+                  (mousedown)="onBarMouseDown($event, layout)"
+                  (contextmenu)="onBarContextMenu($event, layout)"
+                  (click)="onTaskClick(layout.task)"
+                >
+                  @if (!layout.isMilestone && isResourceView()) {
+                    <span class="gantt-bar-resize gantt-bar-resize--left" (mousedown)="onResizeMouseDown($event, layout, 'left')" title="Resize start"></span>
+                    <span class="gantt-bar-resize gantt-bar-resize--right" (mousedown)="onResizeMouseDown($event, layout, 'right')" title="Resize end"></span>
+                  }
+                  @if (!layout.isMilestone && showProgress() && layout.progressPercent > 0) {
+                    <div class="gantt-bar-progress" [style.width.%]="layout.progressPercent"></div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (contextMenu(); as menu) {
+            <div class="gantt-context-backdrop" (click)="closeContextMenu()" role="presentation"></div>
+            <div class="gantt-context-menu" [style.left.px]="menu.x" [style.top.px]="menu.y" (click)="$event.stopPropagation()">
+              @if (menu.type === 'task') {
+                <button type="button" class="gantt-context-menu__item" (click)="setTaskStatus(menu.task, 'complete')">Mark complete</button>
+                <button type="button" class="gantt-context-menu__item" (click)="setTaskStatus(menu.task, 'in-progress')">In progress</button>
+                <button type="button" class="gantt-context-menu__item" (click)="setTaskStatus(menu.task, 'not-started')">Not started</button>
+                <button type="button" class="gantt-context-menu__item gantt-context-menu__item--danger" (click)="deleteTask(menu.task)">Delete task</button>
+              }
+              @if (menu.type === 'create') {
+                <button type="button" class="gantt-context-menu__item" (click)="onCreateTaskFromMenu()">Create new task</button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
