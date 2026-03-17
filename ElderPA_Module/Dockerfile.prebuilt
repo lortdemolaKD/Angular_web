@@ -1,0 +1,18 @@
+# Use this when you already have "dist" built locally (npm run build).
+# Build on EC2: put dist/ in this directory, then:
+#   docker build -f Dockerfile.prebuilt -t elderpa_module-app .
+
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev
+
+# Pre-built Angular output (from your PC: npm run build, then copy dist/ here)
+COPY dist ./dist
+
+ENV NODE_ENV=production
+EXPOSE 4000
+
+CMD ["node", "dist/ElderPA_Module/server/server.mjs"]
