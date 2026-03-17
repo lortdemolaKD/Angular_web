@@ -58,6 +58,8 @@ export class WidgetCom implements OnInit{
   indicator = signal<Indicator>(this.tempInd);
   viewType = signal<'month' | 'week' | 'day'>('month');
   data = input.required<Widget>();
+  /** When true, widget can be dragged and settings button is shown. When false (view mode), widget is locked and settings hidden. */
+  editMode = input<boolean>(false);
   locations = input<LocationType[]>();
   companies = input<CompanyType[]>();
   showOptions = signal(false)
@@ -165,7 +167,7 @@ export class WidgetCom implements OnInit{
       }
     }
 
-    // Multiple indicators or no history: one bar per indicator
+    // Multiple indicators ("All indicators"): one bar per indicator – each indicator shows its own current value
     const series = indicators.map((i) => i.current ?? 0);
     const labels = indicators.map((i) => i.name ?? '');
     const targets = indicators.map((i) => i.target ?? 0);
@@ -174,6 +176,27 @@ export class WidgetCom implements OnInit{
       if (this.isIndicatorBreach(ind, ind.current ?? 0)) markerIndices.push(idx);
     });
     return { series, labels, targets, markerIndices };
+  }
+
+  /** Current value for this location KPI/KFI/KCI widget: single indicator's current when one selected; when "All indicators", gauge shows first indicator's current (or 0). */
+  private getLocationMetricCurrent(): number {
+    const locId = this.data().locationId;
+    const metricType = this.data().metricType;
+    const singleId = this.data().selectedIndicatorId;
+    if (!locId || (metricType !== 'KPI' && metricType !== 'KFI' && metricType !== 'KCI')) return 0;
+    const locs = this.locations() ?? [];
+    const loc = locs.find((l) => (l.locationID ?? l.id) === locId);
+    if (!loc?.performance?.categories?.length) return 0;
+    let indicators = loc.performance.categories
+      .filter((c) => c.type === metricType)
+      .flatMap((c) => c.indicators ?? []);
+    if (singleId != null && singleId !== '') {
+      indicators = indicators.filter((i) => i.id === singleId);
+    } else if (this.data().selectedIndicatorIds?.length) {
+      indicators = indicators.filter((i) => this.data().selectedIndicatorIds!.includes(i.id));
+    }
+    const ind = indicators[0];
+    return ind != null ? (ind.current ?? 0) : 0;
   }
 
   /** Parse history date: YYYY-MM-DD, YYYY-MM, or month name (jan/feb/...) → same year as now. */
@@ -346,22 +369,25 @@ export class WidgetCom implements OnInit{
     }
 
     if (declaredInputs.includes('current')) {
-      // Determine value based on metric type
-      switch (this.data().metricType) {
-        case 'KPI':
-          inputs['current'] = this.calculateKPI();
-          break;
-        case 'KFI':
-          inputs['current'] = this.calculateKFI();
-          break;
-        case 'KCI':
-          inputs['current'] = this.calculateKCI();
-          break;
-        case 'SAT':
-          inputs['current'] = this.calculateKCI();
-          break;
-        default:
-          inputs['current'] = 0;
+      const w = this.data();
+      const isLocationMetric = w.locationId && (w.metricType === 'KPI' || w.metricType === 'KFI' || w.metricType === 'KCI');
+      if (isLocationMetric) {
+        inputs['current'] = this.getLocationMetricCurrent();
+      } else {
+        switch (w.metricType) {
+          case 'KPI':
+            inputs['current'] = this.calculateKPI();
+            break;
+          case 'KFI':
+            inputs['current'] = this.calculateKFI();
+            break;
+          case 'KCI':
+          case 'SAT':
+            inputs['current'] = this.calculateKCI();
+            break;
+          default:
+            inputs['current'] = 0;
+        }
       }
     }
     if (declaredInputs.includes('user')) inputs["user"] = this.user;

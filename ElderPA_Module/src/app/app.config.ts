@@ -3,14 +3,22 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
+import { apiBaseUrlInterceptor } from './Services/api-base-url.interceptor';
 import { authInterceptor } from './Services/auth.interceptor';
-import { AuthService } from './Services/Auth.service';
+import { ApiConfigService } from './Services/api-config.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
-
+    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, authInterceptor])),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (): (() => Promise<void>) => {
+        const apiConfig = inject(ApiConfigService);
+        return () => apiConfig.load();
+      },
+      multi: true,
+    },
   ],
 };

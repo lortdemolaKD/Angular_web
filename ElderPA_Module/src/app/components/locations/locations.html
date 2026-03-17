@@ -7,6 +7,7 @@
         class="top-tab"
         [class.active]="activeTab === 'details'"
         (click)="setTab('details')"
+        disabled
       >
         Details
       </button>
@@ -16,6 +17,7 @@
         class="top-tab"
         [class.active]="activeTab === 'structure'"
         (click)="setTab('structure')"
+        disabled
       >
         Structure
       </button>

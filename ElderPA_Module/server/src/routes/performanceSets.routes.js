@@ -283,15 +283,18 @@ router.post("/:id/recalculate-from-audits", requireAuth, requireAdmin, async (re
   const fromPeriod = yearMonthFromPeriod(set.period);
   const queryYear = req.query.year ? parseInt(req.query.year, 10) : (fromPeriod?.year ?? now.getFullYear());
   const queryMonth = req.query.month ? parseInt(req.query.month, 10) : (fromPeriod?.month ?? now.getMonth() + 1);
-  debug.periodUsed = { year: queryYear, month: queryMonth, fromPeriod: !!fromPeriod };
+  const fullYear = req.query.fullYear === "true" || req.query.fullYear === "1";
+  debug.periodUsed = { year: queryYear, month: queryMonth, fromPeriod: !!fromPeriod, fullYear };
 
-  const getDateRange = (resetPeriod) => {
+  const getDateRange = (resetPeriod, year, month) => {
+    const y = year ?? queryYear;
+    const m = month ?? queryMonth;
     if (resetPeriod === "yearly") {
-      return { start: `${queryYear}-01-01`, end: `${queryYear}-12-31` };
+      return { start: `${y}-01-01`, end: `${y}-12-31` };
     }
-    const m = String(queryMonth).padStart(2, "0");
-    const lastDay = new Date(queryYear, queryMonth, 0).getDate();
-    return { start: `${queryYear}-${m}-01`, end: `${queryYear}-${m}-${String(lastDay).padStart(2, "0")}` };
+    const mStr = String(m).padStart(2, "0");
+    const lastDay = new Date(y, m, 0).getDate();
+    return { start: `${y}-${mStr}-01`, end: `${y}-${mStr}-${String(lastDay).padStart(2, "0")}` };
   };
 
   /** Month name/label to 1-based month number (for table row labels like jan, feb, or numeric 1–12). */
@@ -360,7 +363,8 @@ router.post("/:id/recalculate-from-audits", requireAuth, requireAdmin, async (re
         continue;
       }
       debug.auditIndicators += 1;
-      const { start, end } = getDateRange(ind.resetPeriod || "monthly");
+      const resetPeriod = ind.resetPeriod || "monthly";
+      const useFullYear = fullYear && (resetPeriod === "monthly" || resetPeriod === "yearly");
 
       let templateIds = [];
       let templatesMatched = [];
@@ -382,7 +386,7 @@ router.post("/:id/recalculate-from-audits", requireAuth, requireAdmin, async (re
           name: ind.name,
           fieldId: ind.auditFieldId,
           key: ind.auditTemplateKey,
-          dateRange: { start, end },
+          dateRange: { start: null, end: null },
           templatesMatched: [],
           templateIds: [],
           templatesFound: 0,
@@ -397,83 +401,165 @@ router.post("/:id/recalculate-from-audits", requireAuth, requireAdmin, async (re
         continue;
       }
 
-      const audits = await AuditInstance.find({
-        locationId: new mongoose.Types.ObjectId(locationId),
-        date: { $gte: start, $lte: end },
-        templateId: { $in: templateIds },
-      }).lean();
+      const agg = ind.aggregation || "sum";
+      let newCurrent = ind.current;
+      let newHistory = ind.history ?? [];
+      const target = ind.target ?? 0;
 
-      const values = [];
-      const auditSummary = [];
-      const tableHistoryByMonth = new Map(); // YYYY-MM -> { value, auditDate } so we merge all audits by month (last audit wins per month)
-      let weeklyHistory = []; // one bar per audit for weekly-summary (e.g. Delivered hours per week)
-      for (const audit of audits) {
-        let foundInAudit = 0;
-        let valueFromThisAudit = null;
-        const auditYear = audit.date ? parseInt(String(audit.date).slice(0, 4), 10) : queryYear;
-        for (const q of audit.questions || []) {
-          const val = extractValueFromQuestion(q, ind.auditFieldId);
-          if (val !== null) {
-            values.push(val);
-            if (valueFromThisAudit === null) valueFromThisAudit = val;
-            foundInAudit += 1;
-          }
-          if (ind.auditFieldId === "mhl-table") {
-            const rowHistory = extractTableHistoryFromQuestion(q, ind.auditFieldId, auditYear);
-            if (rowHistory?.length) {
-              for (const { date: monthKey, value } of rowHistory) {
-                tableHistoryByMonth.set(monthKey, { value, auditDate: audit.date });
+      if (useFullYear) {
+        // Monthly Hours Log: one audit per location with full-year table (mhl-table). Use table rows for history, not "audit per month".
+        const isMhlTable = ind.auditFieldId === "mhl-table" || (ind.auditTemplateKey && String(ind.auditTemplateKey).toLowerCase().includes("monthly-hours"));
+        if (isMhlTable) {
+          const yearStart = `${queryYear}-01-01`;
+          const yearEnd = `${queryYear}-12-31`;
+          const audits = await AuditInstance.find({
+            locationId: new mongoose.Types.ObjectId(locationId),
+            date: { $gte: yearStart, $lte: yearEnd },
+            templateId: { $in: templateIds },
+          }).lean();
+          const tableHistoryByMonth = new Map();
+          for (const audit of audits) {
+            const auditYear = audit.date ? parseInt(String(audit.date).slice(0, 4), 10) : queryYear;
+            for (const q of audit.questions || []) {
+              const rowHistory = extractTableHistoryFromQuestion(q, ind.auditFieldId || "mhl-table", auditYear);
+              if (rowHistory?.length) {
+                for (const { date: monthKey, value } of rowHistory) {
+                  tableHistoryByMonth.set(monthKey, value);
+                }
+                break; // one table per audit
               }
             }
           }
+          newHistory = Array.from(tableHistoryByMonth.entries())
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([date, value]) => ({ date, value }));
+          const currentMonthKey = `${queryYear}-${String(queryMonth).padStart(2, "0")}`;
+          newCurrent = tableHistoryByMonth.get(currentMonthKey) ?? newHistory[newHistory.length - 1]?.value ?? ind.current;
+        } else {
+          // Build 12-month history in one go so charts show full year (one audit per month)
+          const historyByMonth = [];
+          for (let m = 1; m <= 12; m++) {
+            const { start, end } = getDateRange(resetPeriod, queryYear, m);
+            const audits = await AuditInstance.find({
+              locationId: new mongoose.Types.ObjectId(locationId),
+              date: { $gte: start, $lte: end },
+              templateId: { $in: templateIds },
+            }).lean();
+            const values = [];
+            const tableHistoryByMonth = new Map();
+            let weeklyHistory = [];
+            for (const audit of audits) {
+              const auditYear = audit.date ? parseInt(String(audit.date).slice(0, 4), 10) : queryYear;
+              for (const q of audit.questions || []) {
+                const val = extractValueFromQuestion(q, ind.auditFieldId);
+                if (val !== null) values.push(val);
+                if (ind.auditFieldId === "mhl-table") {
+                  const rowHistory = extractTableHistoryFromQuestion(q, ind.auditFieldId, auditYear);
+                  if (rowHistory?.length) {
+                    for (const { date: monthKey, value } of rowHistory) {
+                      tableHistoryByMonth.set(monthKey, { value, auditDate: audit.date });
+                    }
+                  }
+                }
+              }
+              const valueFromThisAudit = values.length > 0 ? values[values.length - 1] : null;
+              if (valueFromThisAudit !== null && ind.auditTemplateKey === "weekly-summary" && audit.date) {
+                weeklyHistory.push({ date: String(audit.date).slice(0, 10), value: valueFromThisAudit });
+              }
+            }
+            let monthVal = 0;
+            if (values.length > 0) {
+              if (agg === "sum") monthVal = values.reduce((a, b) => a + b, 0);
+              else if (agg === "average") monthVal = values.reduce((a, b) => a + b, 0) / values.length;
+              else if (agg === "count") monthVal = values.length;
+            }
+            historyByMonth.push({ date: `${queryYear}-${String(m).padStart(2, "0")}`, value: monthVal });
+          }
+          const currentMonthKey = `${queryYear}-${String(queryMonth).padStart(2, "0")}`;
+          newCurrent = historyByMonth.find((h) => h.date === currentMonthKey)?.value ?? ind.current;
+          newHistory = historyByMonth;
         }
-        if (valueFromThisAudit !== null && ind.auditTemplateKey === "weekly-summary" && audit.date) {
-          weeklyHistory.push({ date: String(audit.date).slice(0, 10), value: valueFromThisAudit });
+      } else {
+        const { start, end } = getDateRange(resetPeriod, queryYear, queryMonth);
+        const audits = await AuditInstance.find({
+          locationId: new mongoose.Types.ObjectId(locationId),
+          date: { $gte: start, $lte: end },
+          templateId: { $in: templateIds },
+        }).lean();
+
+        const values = [];
+        const auditSummary = [];
+        const tableHistoryByMonth = new Map();
+        let weeklyHistory = [];
+        for (const audit of audits) {
+          let foundInAudit = 0;
+          let valueFromThisAudit = null;
+          const auditYear = audit.date ? parseInt(String(audit.date).slice(0, 4), 10) : queryYear;
+          for (const q of audit.questions || []) {
+            const val = extractValueFromQuestion(q, ind.auditFieldId);
+            if (val !== null) {
+              values.push(val);
+              if (valueFromThisAudit === null) valueFromThisAudit = val;
+              foundInAudit += 1;
+            }
+            if (ind.auditFieldId === "mhl-table") {
+              const rowHistory = extractTableHistoryFromQuestion(q, ind.auditFieldId, auditYear);
+              if (rowHistory?.length) {
+                for (const { date: monthKey, value } of rowHistory) {
+                  tableHistoryByMonth.set(monthKey, { value, auditDate: audit.date });
+                }
+              }
+            }
+          }
+          if (valueFromThisAudit !== null && ind.auditTemplateKey === "weekly-summary" && audit.date) {
+            weeklyHistory.push({ date: String(audit.date).slice(0, 10), value: valueFromThisAudit });
+          }
+          auditSummary.push({ auditId: String(audit._id), date: audit.date, title: audit.title, valuesFromThisAudit: foundInAudit });
         }
-        auditSummary.push({ auditId: String(audit._id), date: audit.date, title: audit.title, valuesFromThisAudit: foundInAudit });
-      }
-      const tableHistory = Array.from(tableHistoryByMonth.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, { value }]) => ({ date, value }));
+        const tableHistory = Array.from(tableHistoryByMonth.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([date, { value }]) => ({ date, value }));
 
-      let newCurrent = ind.current;
-      const agg = ind.aggregation || "sum";
-      if (values.length > 0) {
-        if (agg === "sum") newCurrent = values.reduce((a, b) => a + b, 0);
-        else if (agg === "average") newCurrent = values.reduce((a, b) => a + b, 0) / values.length;
-        else if (agg === "count") newCurrent = values.length;
+        if (values.length > 0) {
+          if (agg === "sum") newCurrent = values.reduce((a, b) => a + b, 0);
+          else if (agg === "average") newCurrent = values.reduce((a, b) => a + b, 0) / values.length;
+          else if (agg === "count") newCurrent = values.length;
+        }
+        if (weeklyHistory.length > 0) {
+          newHistory = weeklyHistory.sort((a, b) => a.date.localeCompare(b.date));
+        } else if (tableHistory.length > 0) {
+          newHistory = tableHistory;
+        }
       }
 
-      const target = ind.target ?? 0;
       let status = ind.status || "Green";
       if (ind.unit && /GBP|cost|spend/i.test(ind.unit)) {
         status = newCurrent > target ? "Red" : newCurrent > target * 0.9 ? "Amber" : "Green";
       } else {
-        // For hours/counts etc: below target = breach. Red when < 90% of target, Amber when < target, Green when >= target
         status = target <= 0 ? "Green" : newCurrent < target * 0.9 ? "Red" : newCurrent < target ? "Amber" : "Green";
       }
 
-      // Chart history: weekly-summary → one bar per audit (per week); mhl-table → one bar per month; else keep existing
-      let newHistory = ind.history ?? [];
-      if (weeklyHistory.length > 0) {
-        newHistory = weeklyHistory.sort((a, b) => a.date.localeCompare(b.date));
-      } else if (tableHistory.length > 0) {
-        newHistory = tableHistory;
-      }
-
-      // If no audits in range, add hint: any audits for this template at this location?
+      // If no audits in range (single-month path), add hint
       let hint;
-      if (audits.length === 0) {
-        const anyAudits = await AuditInstance.find({
+      if (!useFullYear) {
+        const { start, end } = getDateRange(resetPeriod, queryYear, queryMonth);
+        const auditsSingle = await AuditInstance.find({
           locationId: new mongoose.Types.ObjectId(locationId),
+          date: { $gte: start, $lte: end },
           templateId: { $in: templateIds },
-        })
-          .select({ _id: 1, date: 1, title: 1 })
-          .limit(5)
-          .lean();
-        hint = anyAudits.length
-          ? `No audits in ${start}–${end}. Found ${anyAudits.length} audit(s) for this template: ${anyAudits.map((a) => a.date).join(", ")}. Use recalc period override to include them.`
-          : `No audits for this template at this location. Create an audit with the matching template.`;
+        }).lean();
+        if (auditsSingle.length === 0) {
+          const anyAudits = await AuditInstance.find({
+            locationId: new mongoose.Types.ObjectId(locationId),
+            templateId: { $in: templateIds },
+          })
+            .select({ _id: 1, date: 1, title: 1 })
+            .limit(5)
+            .lean();
+          hint = anyAudits.length
+            ? `No audits in ${start}–${end}. Found ${anyAudits.length} audit(s) for this template. Use "Recalculate full year" or period override.`
+            : `No audits for this template at this location. Create an audit with the matching template (key: ${ind.auditTemplateKey}).`;
+        }
       }
 
       const inBreach = status === "Red" || status === "Amber";
@@ -482,14 +568,10 @@ router.post("/:id/recalculate-from-audits", requireAuth, requireAdmin, async (re
         name: ind.name,
         fieldId: ind.auditFieldId,
         key: ind.auditTemplateKey,
-        dateRange: { start, end },
+        dateRange: useFullYear ? { fullYear: queryYear } : getDateRange(resetPeriod, queryYear, queryMonth),
         templatesMatched,
         templateIds: templateIds.map((tid) => String(tid)),
         templatesFound: templateIds.length,
-        audits: audits.length,
-        auditSummary,
-        values: values.slice(0, 20),
-        valuesCount: values.length,
         aggregation: agg,
         newCurrent,
         status,

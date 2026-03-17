@@ -1,10 +1,13 @@
 <div class="container mat-elevation-z3"
       cdkDrag
+      [cdkDragDisabled]="!editMode()"
       cdkDragPreviewContainer="parent">
  @if (data().contentKey !== 'bar') {
    <h3 class="label"> {{data().label}}</h3>
  }
-  <button mat-icon-button class="settings-button" (click)="showOptions.set(true)"><mat-icon>settings</mat-icon></button>
+  @if (editMode()) {
+    <button mat-icon-button class="settings-button" (click)="showOptions.set(true)" aria-label="Widget settings"><mat-icon>settings</mat-icon></button>
+  }
   <div class="widget-body">
     <ng-container [ngComponentOutlet]="data().content ?? null"
                   [ngComponentOutletInputs]="outletInputs()"/>

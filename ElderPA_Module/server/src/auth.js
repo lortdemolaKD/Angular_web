@@ -89,15 +89,21 @@ let transporter;
 const __filenameAuth = fileURLToPath(import.meta.url);
 const __dirnameAuth = path.dirname(__filenameAuth);
 
-(async () => {
+(function initEmail() {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!user || !pass) {
+    console.warn("Invite emails disabled: set EMAIL_USER and EMAIL_PASS in server/.env to send invitation emails. Invite links will still be created and shown in the UI.");
+    return;
+  }
   try {
-    await nodemailer.createTestAccount(); // optional; ok to remove in production
     transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      auth: { user, pass },
     });
+    console.log("Invite email transport ready (Gmail).");
   } catch (err) {
-    console.error("Failed to init email transport:", err);
+    console.error("Failed to init email transport:", err.message || err);
   }
 })();
 
@@ -205,13 +211,20 @@ authRouter.post(
       const baseUrl = process.env.FRONTEND_URL || "http://localhost:4200";
       inviteLink = `${baseUrl}/login?token=${token}`;
 
-      // If email transport is not configured, still return the link
+      const payload = (emailSent, message, emailError = null) =>
+        res.json({ message, link: inviteLink, emailSent, emailError });
+
       if (!transporter) {
-        return res.json({
-          message: "Invitation created (email not configured). Copy the link below.",
-          link: inviteLink,
-        });
+        return payload(
+          false,
+          "Invitation created. Email is not configured (set EMAIL_USER and EMAIL_PASS in server/.env). Copy the link below and share it with the invitee."
+        );
       }
+
+      const logoPath = path.join(__dirnameAuth, "../LOGO.png");
+      const attachments = fs.existsSync(logoPath)
+        ? [{ filename: "LOGO.png", path: logoPath, cid: "unique-logo-id" }]
+        : [];
 
       const mailOptions = {
         from: `"Sentinel Insights Team" <${process.env.EMAIL_USER}>`,
@@ -227,23 +240,19 @@ authRouter.post(
   <p>If the button doesn't work, copy this link: ${inviteLink}</p>
 </body>
 </html>`,
-        attachments: [
-          {
-            filename: "LOGO.png",
-            path: path.join(__dirnameAuth, "../LOGO.png"),
-            cid: "unique-logo-id",
-          },
-        ],
+        attachments,
       };
 
       await transporter.sendMail(mailOptions);
-      return res.json({ message: "Invitation sent successfully!", link: inviteLink });
+      return payload(true, "Invitation sent successfully! The invitee should receive an email shortly.");
     } catch (error) {
-      console.error("Invite Error:", error);
+      const errMsg = error?.message || String(error);
+      console.error("Invite email send failed:", errMsg);
       return res.status(200).json({
-        message: "Invite created but email failed. Copy the link below.",
+        message: "Invitation created but the email could not be sent. Copy the link below and share it with the invitee.",
         link: inviteLink,
-        error: error.message,
+        emailSent: false,
+        emailError: errMsg,
       });
     }
   }
@@ -337,20 +346,29 @@ authRouter.post("/register-invite", async (req, res) => {
   }
 });
 
+/** Escape special regex chars so email can be used safely in RegExp */
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * PUBLIC: Login
  * Body: { email, password }
  */
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body ?? {};
+  const emailNorm = (email ?? "").toString().trim();
+  if (!emailNorm) return res.status(400).json({ message: "Email is required" });
+  if (password === undefined || password === null) return res.status(400).json({ message: "Password is required" });
 
+  // Case-insensitive email lookup (external DB may store mixed-case)
   const account = await Account.findOne({
-    email: (email ?? "").toLowerCase().trim(),
+    email: { $regex: new RegExp(`^${escapeRegex(emailNorm)}$`, "i") },
   });
 
   if (!account) return res.status(401).json({ message: "Invalid credentials" });
 
-  const ok = await bcrypt.compare(password ?? "", account.passwordHash);
+  const ok = await bcrypt.compare(String(password), account.passwordHash);
   if (!ok) return res.status(401).json({ message: "Invalid credentials" });
 
   const token = signToken(account);

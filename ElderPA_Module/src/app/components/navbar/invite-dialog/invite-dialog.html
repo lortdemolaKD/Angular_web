@@ -44,7 +44,13 @@
     <div class="error" *ngIf="inviteError && !locationRequiredButMissing">{{ inviteError }}</div>
 
     <div class="success" *ngIf="inviteSuccessUrl">
-      <div>Invite link created:</div>
+      <p class="invite-message" *ngIf="inviteMessage">{{ inviteMessage }}</p>
+      <p class="invite-warning" *ngIf="inviteEmailSent === false">
+        <strong>Email was not sent.</strong>
+        <span *ngIf="inviteEmailError"> {{ inviteEmailError }}</span>
+        Share the link below with the invitee instead.
+      </p>
+      <div>Invite link:</div>
       <input type="text" [value]="inviteSuccessUrl" readonly class="link-input" />
       <button type="button" mat-stroked-button (click)="copyLink()">Copy link</button>
     </div>

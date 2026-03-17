@@ -19,6 +19,20 @@
   margin: 1rem 0;
 }
 
+.invite-message {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9375rem;
+}
+
+.invite-warning {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--color-add-primary, #c62828) 12%, transparent);
+  border-left: 3px solid var(--color-add-primary, #c62828);
+  font-size: 0.875rem;
+  border-radius: 0 4px 4px 0;
+}
+
 .link-input {
   width: 100%;
   padding: 0.5rem;

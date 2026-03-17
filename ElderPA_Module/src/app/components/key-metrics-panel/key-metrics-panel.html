@@ -25,15 +25,19 @@
             Period: {{ p }}
           </div>
           <div class="page-subtitle data-source-hint" *ngIf="hasAuditSourcedIndicators()">
-            Some indicators are calculated from custom (basic) audits. Use «Refresh from audits» to update.
+            Some indicators are calculated from custom (basic) audits. Use the refresh button to update.
           </div>
           <div class="page-subtitle data-source-hint" *ngIf="selectedSet && !hasAuditSourcedIndicators()">
             Use «Update from template» to load the latest indicator set (including audit-linked metrics).
           </div>
-          <!-- Optional period override for recalculate (e.g. 2026-04 to include April audits) -->
+          <!-- Optional period override and full-year recalc for audit-sourced indicators -->
           <div class="recalc-override" *ngIf="selectedSet && hasAuditSourcedIndicators()">
             <label>Recalc period (optional):</label>
             <input type="text" [(ngModel)]="recalcPeriodOverride" placeholder="e.g. 2026-04" />
+            <label class="recalc-full-year">
+              <input type="checkbox" [(ngModel)]="recalcFullYear" />
+              Recalculate full year (fills all 12 months for charts)
+            </label>
           </div>
         </div>
 
@@ -48,11 +52,13 @@
           </button>
           <button
             type="button"
-            class="btn-refresh"
+            class="btn-refresh-icon"
             *ngIf="selectedSet && locationId && hasAuditSourcedIndicators()"
             [disabled]="recalculating"
-            (click)="recalculateFromAudits()">
-            {{ recalculating ? 'Updating…' : 'Refresh from audits' }}
+            (click)="recalculateFromAudits()"
+            [title]="recalculating ? 'Updating…' : 'Refresh from audits'"
+            aria-label="Refresh from audits">
+            <mat-icon>{{ recalculating ? 'hourglass_empty' : 'refresh' }}</mat-icon>
           </button>
           <!-- Removed internal location selector:
                location selection happens in parent Locations page via [locationId] -->

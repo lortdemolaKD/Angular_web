@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, inject, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, Inject, OnInit, PLATFORM_ID, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WidgetCom } from '../widgetCOM/widgetCom';
@@ -69,6 +69,13 @@ const emptyPerformance = (): PerformanceSet => ({
 })
 export class Dashboard implements AfterViewInit, OnInit {
   protected readonly store = inject(DashboardService);
+
+  /** When false (default): view mode – widgets cannot be moved and settings are hidden. Button shows gear. When true: edit mode – widgets draggable and settings available. Button shows eye. */
+  editMode = signal(false);
+
+  toggleEditMode(): void {
+    this.editMode.update((v) => !v);
+  }
 
   @ViewChild('dashboard', { read: ElementRef }) dashboard!: ElementRef;
 
@@ -163,21 +170,32 @@ export class Dashboard implements AfterViewInit, OnInit {
       const locationId = loc.locationID ?? loc.id ?? '';
       const params = new HttpParams().set('locationId', locationId);
       return this.http.get<PerformanceSet[]>(`/api/performanceSets`, { params }).pipe(
-        catchError(() => of([])),
+        catchError((err) => {
+          console.warn('[Dashboard] Failed to load performance set for location', locationId, err?.status ?? err);
+          return of([]);
+        }),
         map((sets) => (Array.isArray(sets) && sets.length ? sets[0] : null)),
-        map((set): LocationType => ({
-          ...loc,
-          performance: set
-            ? {
-                id: set.id,
-                period: set.period ?? '',
-                createdAt: set.createdAt ?? new Date(0).toISOString(),
-                categories: set.categories ?? [],
-                alerts: set.alerts ?? [],
-                tasks: set.tasks ?? [],
-              }
-            : emptyPerformance(),
-        }))
+        map((set): LocationType => {
+          const hasKpi = (set?.categories ?? []).some((c) => c.type === 'KPI');
+          if (!set && locationId) {
+            console.warn('[Dashboard] No performance set for location', locationId, '- KPIs will be empty. Create/sync a set for this location.');
+          } else if (set && !hasKpi) {
+            console.warn('[Dashboard] Performance set for location', locationId, 'has no KPI category - sync from template or check seed.');
+          }
+          return {
+            ...loc,
+            performance: set
+              ? {
+                  id: set.id,
+                  period: set.period ?? '',
+                  createdAt: set.createdAt ?? new Date(0).toISOString(),
+                  categories: set.categories ?? [],
+                  alerts: set.alerts ?? [],
+                  tasks: set.tasks ?? [],
+                }
+              : emptyPerformance(),
+          };
+        })
       );
     });
     return forkJoin(calls).pipe(map((hydrated) => hydrated as LocationType[]));

@@ -1,12 +1,22 @@
 <div class="header">
   <div class="dashboard-header">
-    <h2>Welcome, {{ user?.name }}</h2>
+    <h2>Main dashboard with widgets</h2>
     <p class="role-badge">{{ roleLabel }}</p>
   </div>
-  <button type="button" class="add-widgets-btn" [mat-menu-trigger-for]="widgetMenu" aria-label="Add widgets">
-    <mat-icon aria-hidden="true">add_circle</mat-icon>
-    <span>Add widgets</span>
-  </button>
+  <div class="header-actions">
+    <button type="button" class="add-widgets-btn" [mat-menu-trigger-for]="widgetMenu" aria-label="Add widgets">
+      <mat-icon aria-hidden="true">add_circle</mat-icon>
+      <span>Add widgets</span>
+    </button>
+    <button
+      type="button"
+      class="edit-mode-toggle"
+      (click)="toggleEditMode()"
+      [attr.aria-label]="editMode() ? 'Exit edit mode (widgets locked)' : 'Edit mode (move and configure widgets)'"
+      [title]="editMode() ? 'Exit edit mode' : 'Edit mode'">
+      <mat-icon aria-hidden="true">{{ editMode() ? 'visibility' : 'settings' }}</mat-icon>
+    </button>
+  </div>
   <mat-menu #widgetMenu="matMenu" class="add-widgets-menu">
     @for (widget of store.widgetsToAdd(); track widget.id) {
       <button mat-menu-item (click)="store.addWidget(widget)">{{ widget.label }}</button>
@@ -20,6 +30,7 @@
     <app-widget
       cdkDropList
       [data]="w"
+      [editMode]="editMode()"
       [locations]="LocElements"
       [isAdmin]="isOrgAdmin"
       [user]="user"

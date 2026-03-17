@@ -5,13 +5,12 @@ import authenticate from '../middleware/authenticate.js'; // Adjust path to your
 const router = express.Router();
 
 // GET /api/audits?companyId=...&locationId=...&templateId=...
+// Filter by companyId so audit library only shows audits for locations in the selected company.
 router.get("/", async (req, res) => {
   try {
-  //  console.log('POST /api/audits req=', req.query);
     const { companyId, locationId, templateId } = req.query;
     const q = {};
-    // company overview page
-    //if (companyId) q.companyId = companyId;
+    if (companyId) q.companyId = companyId;
     if (locationId) q.locationId = locationId;
     if (templateId) q.templateId = templateId;
 

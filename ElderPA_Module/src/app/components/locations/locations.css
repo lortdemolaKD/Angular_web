@@ -54,6 +54,11 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.top-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .location-picker {
   display: flex;
   align-items: center;

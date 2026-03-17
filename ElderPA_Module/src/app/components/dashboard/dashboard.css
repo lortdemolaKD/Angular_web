@@ -23,6 +23,43 @@
   gap: 0.75rem;
 }
 
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--color-on-primary, #fff);
+  background: var(--color-primary, #6750a4);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-mode-toggle:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.edit-mode-toggle:focus-visible {
+  outline: 2px solid var(--color-primary, #6750a4);
+  outline-offset: 2px;
+}
+
+.edit-mode-toggle mat-icon {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 /* Add widgets button – theme-aware, matches app primary actions */
 .add-widgets-btn {
   display: inline-flex;

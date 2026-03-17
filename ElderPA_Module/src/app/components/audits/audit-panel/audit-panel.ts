@@ -1,4 +1,5 @@
-import { Component, computed, effect, signal, inject } from '@angular/core';
+import { Component, computed, effect, signal, inject, OnDestroy } from '@angular/core';
+import { skip } from 'rxjs';
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuditDataService } from '../../../Services/audit-data.service';
@@ -10,9 +11,11 @@ import { QuestionList } from '../question-list/question-list';
 import { EvidenceList } from '../evidence-list/evidence-list';
 import { CSTButton } from '../../cst-button/cst-button';
 
-import {AuthService} from '../../../Services/Auth.service';
-import {FormRendererComponent} from '../../flexible-template-system/modes/form-mode/form-renderer.component';
-import {DbLocation, LocationService} from '../../../Services/location.service';
+import { AuthService } from '../../../Services/Auth.service';
+import { CompanyService } from '../../../Services/Company.service';
+import { LocalStorageService } from '../../../Services/LocalStorage.service';
+import { FormRendererComponent } from '../../flexible-template-system/modes/form-mode/form-renderer.component';
+import { LocationService } from '../../../Services/location.service';
 import {AuditResponse, CustomAuditTemplate} from '../../flexible-template-system/shared/models/template.models';
 import {AuditService} from '../../../Services/audit.service';
 import {AuditTemplateService} from '../../../Services/audit-template.service';
@@ -24,11 +27,13 @@ import {AuditTemplateService} from '../../../Services/audit-template.service';
   templateUrl: './audit-panel.html',
   styleUrl: './audit-panel.css'
 })
-export class AuditPanel {
+export class AuditPanel implements OnDestroy {
   readonly #auditService = inject(AuditDataService);
   readonly #router = inject(Router);
   readonly #scoringService = inject(ScoringService);
   readonly #authService = inject(AuthService);
+  readonly #companyService = inject(CompanyService);
+  readonly #ls = inject(LocalStorageService);
 
   readonly audits = signal<AuditInstance[]>([]);
   readonly selectedAudit = signal<AuditInstance | null>(null);
@@ -97,8 +102,16 @@ export class AuditPanel {
   readonly locations = signal<LocationType[]>([]);
   readonly #locationService = inject(LocationService);
 
+  private companyChangeSub?: { unsubscribe: () => void };
+
   constructor() {
     this.#loadAudits();
+    // When admin switches company in navbar, reload audits for the new company
+    this.companyChangeSub = this.#companyService.currentCompany$
+      .pipe(skip(1))
+      .subscribe(() => {
+        if (this.#authService.isAdmin()) this.#loadAudits();
+      });
     effect(() => {
       this.isAdmin.set(this.#authService.isAdmin()); // e.g., ['SystemAdmin', 'OrgAdmin'].includes(role)
     });
@@ -173,10 +186,15 @@ export class AuditPanel {
         .subscribe((items) => this.#setAuditsFromResponse(items ?? []));
       return;
     }
-    // Always load from API on init/reload (getAllAudits() only returns cache, empty after refresh)
+    // Admin: scope to current company so audit library only shows audits for that company's locations
+    const companyId = this.#companyService.getCurrentCompany()?._id ?? this.#ls.getID('companyID') ?? null;
     this.#auditService
-      .loadForContextObservable(null, null, null)
+      .loadForContextObservable(companyId, null, null)
       .subscribe((items) => this.#setAuditsFromResponse(items ?? []));
+  }
+
+  ngOnDestroy() {
+    this.companyChangeSub?.unsubscribe();
   }
 
   #setAuditsFromResponse(list: AuditInstance[]) {

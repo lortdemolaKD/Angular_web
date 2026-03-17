@@ -61,6 +61,12 @@ export class InviteDialogComponent {
   inviteRoleOptions = INVITE_ROLE_OPTIONS;
   inviteError = '';
   inviteSuccessUrl = '';
+  /** Message from API (e.g. "Invitation sent successfully!" or "Email not configured...") */
+  inviteMessage = '';
+  /** True if the API reports that the email was sent */
+  inviteEmailSent: boolean | null = null;
+  /** If email failed to send, the error from the server */
+  inviteEmailError = '';
 
 
   get roleRequiresLocation(): boolean {
@@ -101,12 +107,18 @@ export class InviteDialogComponent {
       return;
     }
     this.inviteError = '';
+    this.inviteMessage = '';
+    this.inviteEmailSent = null;
+    this.inviteEmailError = '';
     const { email, role } = this.inviteForm.getRawValue();
     this.authService
       .sendInvite(email, role, this.data.companyId, this.effectiveLocationId)
       .subscribe({
-        next: (res: { link?: string }) => {
+        next: (res: { link?: string; message?: string; emailSent?: boolean; emailError?: string }) => {
           this.inviteSuccessUrl = res?.link ?? '';
+          this.inviteMessage = res?.message ?? '';
+          this.inviteEmailSent = res?.emailSent ?? null;
+          this.inviteEmailError = res?.emailError ?? '';
         },
         error: (err) => {
           this.inviteError = err?.error?.message || 'Failed to create invite';

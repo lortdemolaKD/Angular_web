@@ -63,8 +63,10 @@
 .target-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .target-row .target-input { width: 80px; padding: 2px 6px; }
 .target-row .target-unit { margin-left: 2px; }
-.recalc-override { margin-top: 6px; font-size: 12px; }
-.recalc-override input { margin-left: 6px; padding: 2px 6px; width: 100px; }
+.recalc-override { margin-top: 6px; font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.recalc-override input[type="text"] { margin-left: 6px; padding: 2px 6px; width: 100px; }
+.recalc-full-year { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.recalc-full-year input { margin: 0; }
 .data-summary-debug {
   padding: 8px 12px;
   background: var(--color-bg-secondary, #f9f9f9);
@@ -87,6 +89,33 @@
   border-radius: 10px;
   border: 1px solid var(--color-on-surface, rgba(0,0,0,0.12));
   background: var(--color-surface, rgba(255,255,255,0.85));
+}
+
+/* Subtle refresh-from-audits icon button (two arrows) */
+.btn-refresh-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.12));
+  border-radius: 8px;
+  background: var(--color-surface, rgba(255,255,255,0.9));
+  color: var(--color-on-surface, rgba(0,0,0,0.7));
+  cursor: pointer;
+}
+.btn-refresh-icon:hover:not(:disabled) {
+  background: var(--color-bg-secondary, #f0f0f0);
+}
+.btn-refresh-icon:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-refresh-icon mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Shared card look */

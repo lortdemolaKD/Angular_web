@@ -13,7 +13,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
 
-  if (!req.url.startsWith('/api')) return next(req);
+  // Include token for same-origin /api or for absolute API URLs (when using separate API service)
+  const isApiRequest = req.url.startsWith('/api') || req.url.includes('/api');
+  if (!isApiRequest) return next(req);
 
   const token = localStorage.getItem('token');
   if (!token) return next(req);

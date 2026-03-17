@@ -14,6 +14,7 @@ import {
   ChartData,
 } from '../Types';
 
+import { MatIconModule } from '@angular/material/icon';
 import { DynamicFlexTable } from '../dynamic-flex-table/dynamic-flex-table';
 import { Panel } from '../panel/panel';
 import { SmartChartComponent, type ChartDatum, type ChartOptions } from '../../NEW for implemnet/smart-chart/smart-chart';
@@ -42,6 +43,7 @@ interface RecalcDebug {
     FormsModule,
     NgFor,
     NgIf,
+    MatIconModule,
     DynamicFlexTable,
     Panel,
     SmartChartComponent,
@@ -76,6 +78,8 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
   lastRecalcDebug: RecalcDebug | null = null;
   /** Optional period override for recalculate (e.g. "2026-04" to use April 2026) */
   recalcPeriodOverride = '';
+  /** When true, recalculate-from-audits runs for all 12 months so charts show full year. */
+  recalcFullYear = true;
 
   // One selected indicator per category: chartState[categoryId] = { series, categories, targets, markers, selectedIndicator }
   chartState: Record<string, any> = {};
@@ -101,6 +105,24 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
   /** Only admins and Registered Managers can create or assign tasks. */
   get canAssignTasks(): boolean {
     return this.authService.isAdmin();
+  }
+
+  /** Full Key Metrics state as JSON for debugging (company page). */
+  get keyMetricsDataJson(): string {
+    const state = {
+      locationId: this.locationId,
+      loading: this.loading,
+      loadError: this.loadError,
+      selectedSet: this.selectedSet,
+      performanceIndicators: this.performanceIndicators(),
+      financesIndicators: this.financesIndicators(),
+      controlIndicators: this.controlIndicators(),
+      performanceIndex: this.performanceIndex,
+      financesIndex: this.financesIndex,
+      controlIndex: this.controlIndex,
+      lastRecalcDebug: this.lastRecalcDebug,
+    };
+    return JSON.stringify(state, null, 2);
   }
 
   ngOnInit(): void {
@@ -863,6 +885,9 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
       const [y, m] = this.recalcPeriodOverride.trim().split('-');
       if (y) params = params.set('year', y);
       if (m) params = params.set('month', m);
+    }
+    if (this.recalcFullYear) {
+      params = params.set('fullYear', 'true');
     }
     this.http
       .post<PerformanceSet>(`/api/performanceSets/${set.id}/recalculate-from-audits`, {}, { params })
