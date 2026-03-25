@@ -11,6 +11,7 @@ import { UserType } from '../Types';
 import { AuthService } from '../../Services/Auth.service';
 import { Panel } from '../panel/panel';
 import { SetupService } from '../../Services/setup.service';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 @Component({
   selector: 'app-form-tests',
@@ -40,7 +41,8 @@ export class FormTests implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private setupService: SetupService
+    private setupService: SetupService,
+    private walkthrough: WalkthroughRegistryService
   ) {
     this.directorForm = this.fb.group({
       name: this.authService.getCurrentUser()?.name || '',
@@ -49,6 +51,29 @@ export class FormTests implements OnInit {
   }
 
   ngOnInit(): void {
+    this.walkthrough.register('/setupcompany', [
+      {
+        targetId: 'formTests.addCompanyButton',
+        title: 'Add Company',
+        description: 'Start by adding the first company record.',
+      },
+      {
+        targetId: 'formTests.addServiceTypeButton',
+        title: 'Add Service Type',
+        description: 'Add service types (e.g., Care Home / Home Care) for the company.',
+      },
+      {
+        targetId: 'formTests.addLocationButton',
+        title: 'Add Location',
+        description: 'Add company locations and configure them.',
+      },
+      {
+        targetId: 'formTests.saveButton',
+        title: 'Save',
+        description: 'Save your wizard configuration (downloads JSON / submits per implementation).',
+      },
+    ]);
+
     const user = this.authService.getCurrentUser();
     if (!user) return;
     this.user = user;

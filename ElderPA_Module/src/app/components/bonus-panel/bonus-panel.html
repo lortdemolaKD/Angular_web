@@ -1,10 +1,14 @@
 <div class="container">
   <div class="top-row">
-    <h2 class="page-title">Finances</h2>
+    <h2 class="page-title" data-walkthrough-id="bonus.pageTitle">Finances</h2>
 
     <div class="location-select" *ngIf="canChangeLocation()">
       <label>Location</label>
-      <select [value]="selectedLocationId()" (change)="onLocationChange($event)">
+      <select
+        [value]="selectedLocationId()"
+        data-walkthrough-id="bonus.locationSelect"
+        (change)="onLocationChange($event)"
+      >
         <option *ngFor="let loc of locationOptions" [value]="loc.locationID">
           {{ loc.name }}
         </option>
@@ -16,7 +20,7 @@
 
   <div class="content">
     <!-- Petty cash -->
-    <section class="card petty">
+    <section class="card petty" data-walkthrough-id="bonus.pettyCashTitle">
       <div class="card-header">
         <h3>Petty cash</h3>
         <div class="pill pill-open">Always available</div>
@@ -51,7 +55,9 @@
                  [max]="pettyBalance()"
                  (input)="onPettyAmountInput(pettyAmount.value)">
 
-          <button class="btn"
+            <button
+              class="btn"
+              data-walkthrough-id="bonus.spendPettyCashButton"
                   (click)="addPettySpendItem(pettyLabel.value, pettyAmount.value); pettyAmount.value=''; pettyLabel.value='';"
                   [disabled]="pettyBalance() <= 0 || pettySpendPreview() <= 0">
             Spend
@@ -83,17 +89,18 @@
         </div>
 
         <p class="hint">
-          Petty cash entries cannot be revoked here. Contact administration for corrections.
+          Petty cash allowance and line items are loaded from the petty-cash audit for this location.
+          New spending entries are appended to that audit table.
         </p>
       </div>
 
       <ng-template #pettyReadonly>
-        <p class="hint">Managers can log petty cash spending items here.</p>
+        <p class="hint">Registered managers and senior care workers can log petty cash spending items here.</p>
       </ng-template>
     </section>
 
     <!-- Bonus pot -->
-    <section class="card bonus">
+    <section class="card bonus" data-walkthrough-id="bonus.bonusPotTitle">
       <div class="card-header">
         <h3>Bonus pot</h3>
         <div class="pill"
@@ -138,6 +145,36 @@
               </div>
             </div>
           </div>
+
+          <div class="monthly-history calc-breakdown">
+            <h4>Monthly deposit calculations</h4>
+            <div class="table-scroll table-scroll-rows-5">
+              <table class="table small">
+                <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Key factor</th>
+                  <th>High alerts</th>
+                  <th>Alert factor</th>
+                  <th>Productivity</th>
+                  <th>Prod factor</th>
+                  <th>Final £</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let b of monthlyDepositBreakdowns()">
+                  <td>M{{ b.month }}</td>
+                  <td>{{ b.keyMetricsFactor | number:'1.2-2' }}</td>
+                  <td>{{ b.highActiveAlerts }}</td>
+                  <td>{{ b.alertPenaltyFactor | number:'1.2-2' }}</td>
+                  <td>{{ b.productivityScore | number:'1.0-1' }}</td>
+                  <td>{{ b.productivityFactor | number:'1.2-2' }}</td>
+                  <td>£{{ b.finalDeposit | number:'1.0-0' }}</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- Right: bonus lines table (uses TS computed lines()) -->
@@ -148,8 +185,7 @@
               <tr>
                 <th>Role</th>
                 <th>Base %</th>
-                <th>Financial</th>
-                <th>Stakeholder</th>
+                <th>Productivity</th>
                 <th>Auto %</th>
                 <th>Manual +/- %</th>
                 <th>Final %</th>
@@ -160,8 +196,7 @@
               <tr *ngFor="let l of lines()">
                 <td>{{ l.role }}</td>
                 <td>{{ l.basePercent | number:'1.0-1' }}</td>
-                <td>{{ l.financialScore | number:'1.0-1' }}</td>
-                <td>{{ l.stakeholderScore | number:'1.0-1' }}</td>
+                <td>{{ l.productivityScore | number:'1.0-1' }}</td>
                 <td class="strong">{{ l.autoBonusPercent | number:'1.0-1' }}</td>
 
                 <td>
@@ -179,8 +214,34 @@
               </tr>
 
               <tr class="total-row">
-                <td colspan="6" class="strong">Total</td>
+                <td colspan="5" class="strong">Total</td>
                 <td class="strong">{{ totalFinalPercent() | number:'1.0-1' }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-scroll table-scroll-rows-5 worker-table">
+            <table class="table small">
+              <thead>
+              <tr>
+                <th>Worker name</th>
+                <th>Worker role</th>
+                <th>Hours worked</th>
+                <th>Target hours</th>
+                <th>Productivity</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr *ngFor="let w of workerProductivityRows()">
+                <td>{{ w.workerName }}</td>
+                <td>{{ w.workerRole }}</td>
+                <td>{{ w.hoursWorked | number:'1.0-0' }}</td>
+                <td>{{ w.targetHours | number:'1.0-0' }}</td>
+                <td>{{ w.productivity | number:'1.0-1' }}</td>
+              </tr>
+              <tr *ngIf="workerProductivityRows().length === 0">
+                <td colspan="5" class="empty">No worker rows found for this month.</td>
               </tr>
               </tbody>
             </table>
@@ -207,6 +268,7 @@
 
           <button
             class="btn"
+            data-walkthrough-id="bonus.spendBonusPotButton"
             (click)="addBonusSpendItem(bonusLabel.value, bonusAmount.value); bonusAmount.value=''; bonusLabel.value='';"
             [disabled]="bonusBalance() <= 0 || bonusSpendPreview() <= 0"
           >
@@ -234,7 +296,7 @@
 
               <td *ngIf="canSpendBonus() && isBonusSpendWindowOpen()">
 
-              <button class="btn-danger" (click)="removeBonusSpendItem(s.id)">
+              <button class="btn-danger" data-walkthrough-id="bonus.removeBonusSpendButton" (click)="removeBonusSpendItem(s.id)">
                   Remove
                 </button>
               </td>

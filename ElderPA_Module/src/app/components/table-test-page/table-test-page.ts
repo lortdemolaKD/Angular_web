@@ -7,6 +7,7 @@ import {
   DynamicTableConfig,
   DataTableColumnDef,
 } from '../Types';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 type ExampleId =
   | 'basic'
@@ -46,6 +47,26 @@ interface TableExample {
 })
 export class TableTestPage {
   readonly selectedRow = signal<DynamicRow | null>(null);
+
+  constructor(private walkthrough: WalkthroughRegistryService) {
+    this.walkthrough.register('/table-test', [
+      {
+        targetId: 'tableTest.pageTitle',
+        title: 'Table Test Page',
+        description: 'This page tests the dynamic table component in different configurations.',
+      },
+      {
+        targetId: 'tableTest.examplesGrid',
+        title: 'Examples',
+        description: 'Scroll through each example section to see different table behaviors.',
+      },
+      {
+        targetId: 'tableTest.backLink',
+        title: 'Back to Home',
+        description: 'Return to the main dashboard.',
+      },
+    ]);
+  }
 
   readonly basicData: DynamicRow[] = [
     { id: 1, name: 'Alice', role: 'Admin', status: 'Active' },

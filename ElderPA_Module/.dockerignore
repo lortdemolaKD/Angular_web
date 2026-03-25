@@ -2,8 +2,7 @@
 node_modules
 .npm
 
-# Build output (we build inside Docker)
-dist
+# Angular cache
 .angular
 
 # Git and IDE
@@ -18,26 +17,22 @@ dist
 # Logs and temp
 *.log
 npm-debug.log*
-.npm
 tmp
 temp
 
 # Test and coverage
 coverage
 .nyc_output
-*.spec.ts
-*.test.ts
 e2e
 
-# Docs and misc (optional)
-*.md
-!README.md
+# Env (secrets)
 .env
 .env.*
-!.env.example
+server/.env
 
 # Docker
-Dockerfile*
 .dockerignore
-docker-compose*
-.docker
+
+# Notes:
+# - We DO NOT ignore dist/ because the EC2 prebuilt flow needs it (Dockerfile.prebuilt).
+# - If you only ever build inside Docker (Dockerfile), you can add dist/ back to speed up contexts.

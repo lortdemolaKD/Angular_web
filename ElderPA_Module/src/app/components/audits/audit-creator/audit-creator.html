@@ -1,11 +1,12 @@
 <section class="page">
   <div class="page-head">
-    <h2>Audit Creator</h2>
+    <h2 data-walkthrough-id="auditCreator.pageTitle">Audit Creator</h2>
     <div class="top-tabs">
 
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="auditCreator.tabDaily"
         [class.active]="activeTab() === 'daily'"
         (click)="setTab('daily')"
       >
@@ -14,6 +15,7 @@
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="auditCreator.tabAdvanced"
         [class.active]="activeTab() === 'advanced'"
         (click)="setTab('advanced')"
       >
@@ -23,6 +25,7 @@
     <app-cst-button
       title="Return"
       headerColor="var(--color-primary-container)"
+      data-walkthrough-id="auditCreator.returnButton"
       (headerClick)="moveTo('locations')">
     </app-cst-button>
   </div>
@@ -61,7 +64,7 @@
       <ng-container *ngIf="activeTab() === 'daily'" class="audit-creator__grid"><!-- Custom Template Builder/Form Section -->
         <div class="card">
           <div class="card-head">
-            <div class="card-title">Daily (custom) audit</div>
+            <div class="card-title" data-walkthrough-id="auditCreator.dailyAuditCardTitle">Daily (custom) audit</div>
           </div>
           <div class="card-body">
             <label class="field">
@@ -76,6 +79,15 @@
                 </option>
               </select>
             </label>
+            <div class="select-audit-actions">
+              <button
+                class="mini-btn"
+                [disabled]="!selectedAudit()"
+                (click)="deleteSelectedAudit()"
+              >
+                Delete selected audit
+              </button>
+            </div>
             <label class="field">
               <span class="field__label">Template</span>
               <select
@@ -113,7 +125,7 @@
       <!-- Select audit -->
       <div class="card">
         <div class="card-head">
-          <div class="card-title">Select audit</div>
+          <div class="card-title" data-walkthrough-id="auditCreator.advancedSelectAuditCardTitle">Select audit</div>
         </div>
         <div class="card-body">
 
@@ -133,7 +145,20 @@
           </label>
           <div class="select-audit-grid">
             <div class="select-audit-actions">
-              <button class="mini-btn primary" (click)="createNewAudit()">Create empty audit</button>
+              <button
+                class="mini-btn primary"
+                data-walkthrough-id="auditCreator.createEmptyAuditButton"
+                (click)="createNewAudit()"
+              >
+                Create empty audit
+              </button>
+              <button
+                class="mini-btn"
+                [disabled]="!selectedAudit()"
+                (click)="deleteSelectedAudit()"
+              >
+                Delete selected audit
+              </button>
             </div>
 
             <label class="field">
@@ -189,6 +214,7 @@
               <button
                 class="mini-btn primary"
                 [disabled]="!selectedNormalTemplateId()"
+                data-walkthrough-id="auditCreator.generateFromTemplateButton"
                 (click)="createAuditFromTemplate(selectedNormalTemplateId())"
               >
                 Generate from template
@@ -416,10 +442,17 @@
       <div class="footer-actions">
         <button
           class="mini-btn primary"
+          data-walkthrough-id="auditCreator.saveAuditButton"
           (click)="saveAudit()">
           Save audit
         </button>
-        <button class="mini-btn" (click)="cancel()">Cancel</button>
+        <button
+          class="mini-btn"
+          [disabled]="!selectedAudit()"
+          (click)="deleteSelectedAudit()">
+          Delete selected audit
+        </button>
+        <button class="mini-btn" data-walkthrough-id="auditCreator.cancelButton" (click)="cancel()">Cancel</button>
       </div>
 
     </div>

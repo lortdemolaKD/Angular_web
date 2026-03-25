@@ -20,6 +20,9 @@ type DashboardMeResponse = {
 export class DashboardService {
   private readonly API_BASE = '/api/dashboard';
 
+  /** Default dashboard seed when DB has no widgets yet. */
+  private readonly DEFAULT_WIDGET_IDS = [5, 3, 7] as const; // Companies, Alerts, Governance
+
   // State: Raw data from DB
   private _rawWidgets = signal<Widget[]>([]);
   private isLoaded = signal(false);
@@ -49,6 +52,24 @@ export class DashboardService {
       content: WIDGET_COMPONENTS[w.contentKey] ?? null,
     }));
   });
+
+  private seedDefaultWidgetsIfEmpty() {
+    // Only seed when DB didn't return any widgets.
+    if (this._rawWidgets().length > 0) return;
+
+    const byId = new Map<number, Widget>(this.widgets().map((w) => [w.id, w]));
+    const next: Widget[] = [];
+
+    for (const id of this.DEFAULT_WIDGET_IDS) {
+      const w = byId.get(id);
+      if (w) next.push({ ...w });
+    }
+
+    // Avoid writing an empty dashboard if defaults were not found for some reason.
+    if (next.length) {
+      this._rawWidgets.set(next);
+    }
+  }
 
   // UI helper
   widgetsToAdd = computed(() => {
@@ -86,7 +107,11 @@ export class DashboardService {
           }
         }),
         catchError(() => of(null)),
-        finalize(() => this.isLoaded.set(true))
+        finalize(() => {
+          // First-time users (or DB issues) can return no widgets → seed the default dashboard.
+          this.seedDefaultWidgetsIfEmpty();
+          this.isLoaded.set(true);
+        })
       )
       .subscribe();
   }

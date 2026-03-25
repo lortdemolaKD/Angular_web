@@ -5,7 +5,7 @@
     <ng-template matStepLabel>Organisation Setup</ng-template>
 
     <div formGroupName="company" class="step-content">
-      <h2>Step 1 — Organisation Setup</h2>
+      <h2 data-walkthrough-id="setupCompany.step1Title">Step 1 — Organisation Setup</h2>
 
       <mat-form-field appearance="outline">
         <mat-label>Organisation name</mat-label>
@@ -54,7 +54,14 @@
       </mat-form-field>
 
       <div class="step-actions">
-        <button mat-flat-button color="primary" matStepperNext>Next</button>
+        <button
+          mat-flat-button
+          color="primary"
+          matStepperNext
+          data-walkthrough-id="setupCompany.nextStep1Button"
+        >
+          Next
+        </button>
       </div>
     </div>
   </mat-step>
@@ -63,10 +70,10 @@
   <mat-step [stepControl]="servicesArr">
     <ng-template matStepLabel>Service Type Setup</ng-template>
     <div class="step-content">
-      <h2>Step 2 — Company Service Type Setup (per location)</h2>
+      <h2 data-walkthrough-id="setupCompany.step2Title">Step 2 — Company Service Type Setup (per location)</h2>
       <p class="hint">Select one or more service types. Each can have multiple company locations.</p>
 
-      <div class="service-buttons">
+      <div class="service-buttons" data-walkthrough-id="setupCompany.serviceButtons">
         <button mat-stroked-button (click)="addService('CareHome')">+ Care Home</button>
         <button mat-stroked-button (click)="addService('HomeCare')">+ Home Care</button>
         <button mat-stroked-button (click)="addService('LiveInCare')">+ Live-in Care</button>
@@ -153,7 +160,7 @@
   <mat-step>
     <ng-template matStepLabel>Care Home Setup Pack</ng-template>
     <div class="step-content">
-      <h2>Step 4 — Care Home Setup Pack</h2>
+      <h2 data-walkthrough-id="setupCompany.step4Title">Step 4 — Care Home Setup Pack</h2>
       <ng-container *ngIf="hasCareHomeService(); else noCareHome">
         <p class="hint">Configure care home–specific details for locations where Service Type = Care Home.</p>
         <div class="care-home-pack">
@@ -189,7 +196,7 @@
   <mat-step>
     <ng-template matStepLabel>Finish</ng-template>
     <div class="step-content">
-      <h2>Ready to launch</h2>
+      <h2 data-walkthrough-id="setupCompany.readyToLaunchTitle">Ready to launch</h2>
       <ul>
         <li><strong>{{ companyName }}</strong></li>
         <li *ngFor="let s of servicesPreview">
@@ -198,7 +205,15 @@
       </ul>
       <div class="actions">
         <button mat-button matStepperPrevious type="button">Back</button>
-        <button mat-flat-button color="accent" (click)="submit()" type="button">Create Organisation</button>
+        <button
+          mat-flat-button
+          color="accent"
+          (click)="submit()"
+          type="button"
+          data-walkthrough-id="setupCompany.createOrganisationButton"
+        >
+          Create Organisation
+        </button>
       </div>
     </div>
   </mat-step>

@@ -20,15 +20,31 @@
   <div class="login-page__form-wrap">
     <div class="login-page__form-inner">
       <div class="login-page__tabs" *ngIf="!isInvite">
-        <button type="button" class="login-page__tab" [class.login-page__tab--active]="mode === 'login'" (click)="setMode('login')">Sign In</button>
-        <button type="button" class="login-page__tab" [class.login-page__tab--active]="mode === 'register'" (click)="setMode('register')">Create Account</button>
+        <button
+          type="button"
+          class="login-page__tab"
+          data-walkthrough-id="login.tabSignIn"
+          [class.login-page__tab--active]="mode === 'login'"
+          (click)="setMode('login')"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          class="login-page__tab"
+          data-walkthrough-id="login.tabCreateAccount"
+          [class.login-page__tab--active]="mode === 'register'"
+          (click)="setMode('register')"
+        >
+          Create Account
+        </button>
       </div>
 
       <div *ngIf="isInvite && inviteData" class="login-page__invite-info">
         You are joining <strong>{{ inviteData.companyName }}</strong> as <strong>{{ inviteData.role }}</strong>.
       </div>
 
-      <h2 class="login-page__welcome">
+      <h2 class="login-page__welcome" data-walkthrough-id="login.welcome">
         {{ isInvite ? 'Complete your account' : (mode === 'register' ? 'Create account' : 'Welcome back') }}
       </h2>
       <p class="login-page__subtitle">
@@ -50,7 +66,13 @@
           <label>Password <span class="login-page__required">*</span></label>
           <div class="login-page__password-wrap">
             <input [type]="passwordVisible ? 'text' : 'password'" formControlName="password" placeholder="Enter your password" />
-            <button type="button" class="login-page__password-toggle" (click)="passwordVisible = !passwordVisible" aria-label="Toggle password visibility">
+            <button
+              type="button"
+              class="login-page__password-toggle"
+              data-walkthrough-id="login.passwordToggle"
+              (click)="passwordVisible = !passwordVisible"
+              aria-label="Toggle password visibility"
+            >
               <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
           </div>
@@ -61,7 +83,9 @@
             <input type="checkbox" formControlName="rememberMe" />
             <span>Remember me</span>
           </label>
-          <a href="#" class="login-page__forgot" (click)="onForgotPassword($event)">Forgot password?</a>
+          <a href="#" class="login-page__forgot" data-walkthrough-id="login.forgotPassword" (click)="onForgotPassword($event)">
+            Forgot password?
+          </a>
         </div>
 
         <ng-container *ngIf="isRegister">
@@ -109,7 +133,7 @@
           <button type="button" class="login-page__link-btn" (click)="goToLogin()">Go to Login</button> to sign in with your existing account.
         </div>
 
-        <button type="submit" class="login-page__submit" [disabled]="form.invalid">
+        <button type="submit" class="login-page__submit" data-walkthrough-id="login.submit" [disabled]="form.invalid">
           {{ isInvite ? 'Complete Setup' : (isRegister ? 'Create Account' : 'Sign In') }}
         </button>
       </form>

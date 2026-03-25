@@ -1,0 +1,162 @@
+.walkthrough-highlight {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+  position: relative;
+  z-index: 6002; /* Must be above the dimmer layer */
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.walkthrough-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 5999;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  /* Cut a hole (mask) over the active highlighted target (rounded rect via SVG mask). */
+  -webkit-mask: url(#walkthroughMask);
+  mask: url(#walkthroughMask);
+}
+
+.walkthrough-dim[data-theme="light"],
+[data-theme="light"] .walkthrough-dim {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.walkthrough-dim[data-theme="dark"],
+[data-theme="dark"] .walkthrough-dim {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.walkthrough-fab {
+  position: fixed;
+  z-index: 6000;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 50%, var(--color-surface));
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.walkthrough-fab:hover {
+  filter: brightness(1.03);
+}
+
+@media (max-width: 768px) {
+  .walkthrough-fab {
+    top: auto;
+    bottom: 16px;
+    left: 16px;
+    right: auto;
+  }
+}
+
+.walkthrough-panel {
+  position: fixed;
+  z-index: 6001;
+  top: 64px;
+  right: 16px;
+  width: min(360px, calc(100vw - 32px));
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-surface));
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional desktop placement hint used by some walkthrough steps. */
+.walkthrough-panel--left {
+  right: auto;
+  left: 16px;
+}
+
+@media (max-width: 768px) {
+  .walkthrough-panel {
+    top: auto;
+    bottom: 74px;
+    left: 16px;
+    right: auto;
+  }
+}
+
+.walkthrough-panel__head {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  gap: 8px;
+}
+
+.walkthrough-panel__progress {
+  font-size: 12px;
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.walkthrough-panel__spacer {
+  flex: 1;
+}
+
+.walkthrough-panel__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 18%, var(--color-surface));
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.walkthrough-panel__body {
+  padding: 12px;
+}
+
+.walkthrough-panel__title {
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.walkthrough-panel__desc {
+  font-size: 13px;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+.walkthrough-panel__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 14px;
+}
+
+.walkthrough-panel__btn {
+  border: 1px solid color-mix(in srgb, var(--color-text) 18%, var(--color-surface));
+  background: transparent;
+  color: var(--color-text);
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.walkthrough-panel__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.walkthrough-panel__btn--primary {
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-surface));
+}
+

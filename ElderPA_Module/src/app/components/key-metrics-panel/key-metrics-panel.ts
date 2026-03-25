@@ -21,6 +21,7 @@ import { SmartChartComponent, type ChartDatum, type ChartOptions } from '../../N
 import { CSTButton } from '../cst-button/cst-button';
 import { TaskCreator } from '../task-creator/task-creator';
 import { AuthService } from '../../Services/Auth.service';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 interface MarkerConfig {
   index: number;
@@ -99,7 +100,8 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
-    private authService: AuthService
+    private authService: AuthService,
+    private walkthrough: WalkthroughRegistryService
   ) {}
 
   /** Only admins and Registered Managers can create or assign tasks. */
@@ -126,6 +128,54 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.walkthrough.register('/KMP', [
+      {
+        targetId: 'kmp.performanceCard',
+        title: 'Performance',
+        description: 'Radial KPI (Performance) chart comparing current performance vs target. The card cycles through the KPI indicators you already have.',
+      },
+      {
+        targetId: 'kmp.financesCard',
+        title: 'Finances',
+        description: 'Radial KFI (Finances) chart showing target, current values, and status (on track or not). Use it to understand whether finances meet expectations.',
+      },
+      {
+        targetId: 'kmp.controlCard',
+        title: 'Control',
+        description: 'Radial KCI (Control) chart showing control indicators and where attention is needed first when something is off target.',
+      },
+      {
+        targetId: 'kmp.barChartsCard',
+        title: 'Bar chart categories',
+        description: 'Bar chart categories: choose the indicator data type you want to inspect (for example last 12 months of the current year or a monthly view). Charts show current trend values plus targets.',
+      },
+      {
+        targetId: 'kmp.updateFromTemplateButton',
+        title: 'Update from template',
+        description: 'Refresh your indicator data from templates. Use it to update the performance/finances/control values used by the charts.',
+      },
+      {
+        targetId: 'kmp.activeAlertsCardTitle',
+        title: 'Active alerts',
+        description: 'Active alerts that require action right now. Use the action buttons to assign tasks and start resolving them.',
+      },
+      {
+        targetId: 'kmp.assignTaskButton',
+        title: 'Assign task',
+        description: 'Assign a task directly from a high alert so the right ownership resolves the issue.',
+      },
+      {
+        targetId: 'kmp.tasksCardTitle',
+        title: 'Tasks',
+        description: 'Tasks tied to the alerts. When you mark a task as done, the linked alert gets resolved as well.',
+      },
+      {
+        targetId: 'kmp.markDoneButton',
+        title: 'Mark done',
+        description: 'Mark the selected task as done to resolve the linked alert.',
+      },
+    ]);
+
     if (this.locationId) this.loadLatestSet(this.locationId);
   }
 

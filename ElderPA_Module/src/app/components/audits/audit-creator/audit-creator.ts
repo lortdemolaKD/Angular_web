@@ -26,6 +26,7 @@ import {
   AuditResponse,
   TableConfiguration, AuditQuestion
 } from '../../flexible-template-system/shared/models/template.models';
+import { buildCustomResponsesFromQuestions } from '../shared/custom-audit-responses.util';
 
 type RegulationItem = typeof MOCK_REGULATIONS.items[number] & {
   type?: 'Regulation' | 'Custom';
@@ -48,6 +49,7 @@ import { LocalStorageService } from '../../../Services/LocalStorage.service';
 import { Ccga } from '../../ccga/ccga';
 import { FlexibleTemplateSystem } from '../../flexible-template-system/flexible-template-system';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import { WalkthroughRegistryService } from '../../../Services/walkthrough-registry.service';
 
 type DbLocation = {
   id: string;
@@ -212,13 +214,7 @@ export class AuditCreator implements OnInit {
    * Use this so Daily view displays custom audit data exactly like the library.
    */
   private getCustomResponsesFromAudit(audit: AuditInstance): AuditResponse {
-    const responses: Record<string, any> = {};
-    (audit.questions ?? []).forEach(q => {
-      if (q.templateQuestionId && (q as any).customFields) {
-        const cf = (q as any).customFields;
-        responses[q.templateQuestionId] = cf.value ?? cf.rawResponse ?? null;
-      }
-    });
+    const responses = buildCustomResponsesFromQuestions(audit.questions);
     return {
       id: this.auditId(audit),
       templateId: String((audit as any).templateId ?? ''),
@@ -436,6 +432,7 @@ export class AuditCreator implements OnInit {
     private http: HttpClient,
     private recurringAuditService: RecurringAuditService,
     private locationService: LocationService,
+    private walkthrough: WalkthroughRegistryService,
   ) {
     this.pendingAuditId = this.route.snapshot.queryParamMap.get('auditId');
     const routeLocationId = this.route.snapshot.queryParamMap.get('locationId');
@@ -446,6 +443,49 @@ export class AuditCreator implements OnInit {
 
   // LIFECYCLE
   ngOnInit(): void {
+    this.walkthrough.register('/CCGA/AuditCreator', [
+      {
+        targetId: 'auditCreator.pageTitle',
+        title: 'Audit Creator',
+        description:
+          'Audit Creator is the system for creating audits and adjusting them as your work evolves. The page is separated into two modes: Daily for flexible, on-the-fly audits, and Advanced for regulation-aligned audits. You can build, preview, generate from templates, save drafts or finalized audits, and then continue from where you left off in the Compliance Audit Hub.',
+      },
+      {
+        targetId: 'auditCreator.tabDaily',
+        title: 'Daily mode',
+        description:
+          'Daily mode is the flexible “on the fly” creator. It uses the template builder (custom canvas) so you can quickly assemble audit fields. The toolbox provides elements such as short/long text, numbers, checkboxes, radio groups, drop-downs, date pickers, data tables, and audit questions. Drag elements onto the canvas, select them, and set their properties (for example: required, labels, placeholders, validation rules, and advanced JSON/metadata). You can also duplicate, delete, and move elements. Finally, switch to preview to see how the audit will look once completed.',
+      },
+      {
+        targetId: 'auditCreator.tabAdvanced',
+        title: 'Advanced mode',
+        description:
+          'Advanced mode is more structured and regulation-driven. You use the regulation library to choose which required questions belong in each section. You can add multiple regulations, and you can generate audits from templates. Advanced mode also supports recurring audits—so once you configure a schedule (monthly, weekly, daily, quarterly, annually, or ad hoc), the system can create the next audits automatically. You can also generate baselines for future periods (for example the next 3/6/12 months) based on a frequency.',
+      },
+      {
+        targetId: 'auditCreator.saveAuditButton',
+        title: 'Save audit',
+        description:
+          'Save your work. Both templates and audits are stored in the same database, so they appear in the Audit Library and can be reused in the relevant editors. After saving, you can open/edit them later as needed. Export (PDF) is available if required, but it’s usually not needed.',
+        scrollTo: 'bottom',
+      },
+      {
+        targetId: 'auditCreator.cancelButton',
+        title: 'Cancel',
+        description:
+          'Cancel your current draft if you want to stop or start over. If you cancel, you can return later and build from scratch again when ready.',
+        scrollTo: 'bottom',
+      },
+      {
+        targetId: 'auditCreator.returnButton',
+        title: 'Back to Compliance Audit Hub',
+        description:
+          'Return to the Compliance Audit Hub (main page) so you can continue reviewing audits, create new ones, or open the library.',
+        panelPlacement: 'left',
+        scrollTo: 'top',
+      },
+    ]);
+
     const user = this.authService.getCurrentUser();
     if (!user) return;
     this.user = user;
@@ -569,7 +609,10 @@ export class AuditCreator implements OnInit {
 
         const auditId = this.pendingAuditId;
         if (auditId) {
-          const match = (items ?? []).find(a => a.id === auditId);
+          const want = String(auditId);
+          const match = (items ?? []).find(
+            (a) => String(a.id ?? '') === want || String((a as any)._id ?? '') === want
+          );
           if (match) this.selectAudit(match);
         }
 
@@ -1794,6 +1837,29 @@ export class AuditCreator implements OnInit {
         error: () => this.snackbar.open('Delete failed', 'Retry')
       });
     }
+  }
+
+  deleteSelectedAudit(): void {
+    const audit = this.selectedAudit();
+    const id = this.auditId(audit);
+    if (!audit || !id) {
+      this.snackbar.open('Select an audit first.', 'OK');
+      return;
+    }
+
+    const title = (audit as any).title || 'Untitled audit';
+    if (!confirm(`Delete audit "${title}"? This cannot be undone.`)) return;
+
+    this.auditService.delete(id).subscribe({
+      next: () => {
+        this.audits.update((list) =>
+          list.filter((a) => this.auditId(a) !== id)
+        );
+        this.createNewAudit();
+        this.snackbar.open('Audit deleted.', 'OK');
+      },
+      error: () => this.snackbar.open('Failed to delete audit.', 'OK'),
+    });
   }
 
 

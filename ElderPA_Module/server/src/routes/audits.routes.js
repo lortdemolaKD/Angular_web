@@ -1,6 +1,7 @@
 import express from "express";
+import mongoose from "mongoose";
 import AuditInstance from "../models/AuditInstance.js";
-import AuditTemplate from "../models/AuditTemplate.js";
+import { Location } from "../models/Location.js";
 import authenticate from '../middleware/authenticate.js'; // Adjust path to your
 const router = express.Router();
 
@@ -10,9 +11,22 @@ router.get("/", async (req, res) => {
   try {
     const { companyId, locationId, templateId } = req.query;
     const q = {};
-    if (companyId) q.companyId = companyId;
-    if (locationId) q.locationId = locationId;
     if (templateId) q.templateId = templateId;
+
+    if (locationId) {
+      q.locationId = locationId;
+    } else if (companyId) {
+      // Include audits scoped by location only (missing/wrong companyId) if location belongs to company
+      let companyObjectId = companyId;
+      try {
+        companyObjectId = new mongoose.Types.ObjectId(String(companyId));
+      } catch {
+        /* keep string */
+      }
+      const locs = await Location.find({ companyId: companyObjectId }).select("_id").lean();
+      const locIds = locs.map((l) => l._id);
+      q.$or = [{ companyId: companyObjectId }, { locationId: { $in: locIds } }];
+    }
 
     const items = await AuditInstance.find(q).sort({ createdAt: -1 });
     //console.log('POST /api/audits items=',items);
@@ -82,6 +96,17 @@ router.patch("/:id", async (req, res) => {
     res.json(updated);
   } catch {
     res.status(400).json({ error: "Invalid id/payload" });
+  }
+});
+
+// DELETE /api/audits/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    const deleted = await AuditInstance.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Not found" });
+    res.json({ ok: true, id: String(deleted._id) });
+  } catch {
+    res.status(400).json({ error: "Invalid id" });
   }
 });
 

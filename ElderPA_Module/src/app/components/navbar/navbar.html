@@ -38,77 +38,66 @@
       <mat-icon class="nav-link__icon">home</mat-icon>
       <span>Home</span>
     </a>
-    <a routerLink="/organization" routerLinkActive="active" *ngIf="isOrgAdmin" class="nav-link">
-      <mat-icon class="nav-link__icon">business</mat-icon>
-      <span>Organization</span>
-    </a>
-    <a routerLink="/companies" routerLinkActive="active" class="nav-link">
-      <mat-icon class="nav-link__icon">location_on</mat-icon>
-      <span>Companies</span>
-    </a>
-    <a routerLink="/Bonus" routerLinkActive="active" class="nav-link">
-      <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
-      <span>Bonus</span>
-    </a>
-    <a routerLink="/chart-test" routerLinkActive="active" class="nav-link">
-      <mat-icon class="nav-link__icon">bar_chart</mat-icon>
-      <span>Chart Test</span>
-    </a>
-    <a routerLink="/table-test" routerLinkActive="active" class="nav-link">
-      <mat-icon class="nav-link__icon">table_chart</mat-icon>
-      <span>Table Test</span>
-    </a>
-    <a routerLink="/gantt-test" routerLinkActive="active" class="nav-link">
-      <mat-icon class="nav-link__icon">timeline</mat-icon>
-      <span>Gantt Test</span>
-    </a>
-    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin" class="nav-link">
-      <mat-icon class="nav-link__icon">assignment</mat-icon>
-      <span>Audits</span>
-    </a>
-    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin" class="nav-link">
-      <mat-icon class="nav-link__icon">menu_book</mat-icon>
-      <span>Audit Library</span>
-    </a>
-  </div>
+    <!--<a routerLink="/organization" routerLinkActive="active" *ngIf="isOrgAdmin" class="nav-link">
+     <mat-icon class="nav-link__icon">business</mat-icon>
+     <span>Organization</span>
+   </a>--->
+    <a routerLink="/companies" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="nav-link">
+     <mat-icon class="nav-link__icon">location_on</mat-icon>
+     <span>Companies</span>
+   </a>
+   <a routerLink="/Bonus" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="nav-link">
+     <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
+     <span>Bonus</span>
+   </a>
+    <!-- Chart/Test links intentionally removed -->
+  <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="nav-link">
+     <mat-icon class="nav-link__icon">assignment</mat-icon>
+     <span>Audits</span>
+   </a>
+  <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="nav-link">
+     <mat-icon class="nav-link__icon">menu_book</mat-icon>
+     <span>Audit Library</span>
+   </a>
+ </div>
 
-  <div class="navbar-right">
-    <button type="button" class="invite-btn" *ngIf="canInvite" (click)="openInviteModal()">
-      <mat-icon class="invite-btn__icon">person_add</mat-icon>
-      <span>Invite</span>
-    </button>
+ <div class="navbar-right">
+   <button type="button" class="invite-btn" *ngIf="canInvite" (click)="openInviteModal()">
+     <mat-icon class="invite-btn__icon">person_add</mat-icon>
+     <span>Invite</span>
+   </button>
 
-    <div class="navbar-right-bottom">
-      <div class="user-pill-wrap" *ngIf="user">
-        <button type="button" class="user-pill" [class.user-pill--open]="accountPanelOpen" (click)="toggleAccountPanel()" [attr.aria-expanded]="accountPanelOpen" aria-label="Account">
-          <span class="user-pill__avatar" *ngIf="userAvatarUrl" [style.backgroundImage]="'url(' + userAvatarUrl + ')'"></span>
-          <span class="user-pill__avatar user-pill__avatar--initials" *ngIf="!userAvatarUrl">{{ userInitials }}</span>
-          <span class="user-pill__text">
-            <span class="user-name">{{ user.name }}</span>
-            <span class="user-role">{{ user.role }}</span>
-          </span>
-          <mat-icon class="user-pill__chevron">expand_more</mat-icon>
-        </button>
-        <div class="user-account-dropdown" *ngIf="accountPanelOpen">
-          <div class="user-account-dropdown__backdrop" (click)="closeAccountPanel()"></div>
-          <div class="user-account-dropdown__panel">
-            <app-user-account-panel
-              [user]="user"
-              [companyName]="currentCompany?.name ?? null"
-              [locationName]="currentLocation?.name ?? null"
-              (close)="closeAccountPanel()">
-            </app-user-account-panel>
-          </div>
-        </div>
-      </div>
-      <div class="navbar-actions-row">
-        <app-theme-switcher></app-theme-switcher>
-        <button type="button" class="logout-btn" (click)="logout()" aria-label="Log out">
-          <mat-icon>logout</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
+   <div class="navbar-right-bottom">
+     <div class="user-pill-wrap" *ngIf="user">
+       <button type="button" class="user-pill" [class.user-pill--open]="accountPanelOpen" (click)="toggleAccountPanel()" [attr.aria-expanded]="accountPanelOpen" aria-label="Account">
+         <span class="user-pill__avatar" *ngIf="userAvatarUrl" [style.backgroundImage]="'url(' + userAvatarUrl + ')'"></span>
+         <span class="user-pill__avatar user-pill__avatar--initials" *ngIf="!userAvatarUrl">{{ userInitials }}</span>
+         <span class="user-pill__text">
+           <span class="user-name">{{ user.name }}</span>
+           <span class="user-role">{{ user.role }}</span>
+         </span>
+         <mat-icon class="user-pill__chevron">expand_more</mat-icon>
+       </button>
+       <div class="user-account-dropdown" *ngIf="accountPanelOpen">
+         <div class="user-account-dropdown__backdrop" (click)="closeAccountPanel()"></div>
+         <div class="user-account-dropdown__panel">
+           <app-user-account-panel
+             [user]="user"
+             [companyName]="currentCompany?.name ?? null"
+             [locationName]="currentLocation?.name ?? null"
+             (close)="closeAccountPanel()">
+           </app-user-account-panel>
+         </div>
+       </div>
+     </div>
+     <div class="navbar-actions-row">
+       <app-theme-switcher></app-theme-switcher>
+       <button type="button" class="logout-btn" (click)="logout()" aria-label="Log out">
+         <mat-icon>logout</mat-icon>
+       </button>
+     </div>
+   </div>
+ </div>
 </nav>
 </div>
 
@@ -137,31 +126,20 @@
       <mat-icon class="nav-link__icon">business</mat-icon>
       <span>Organization</span>
     </a>
-    <a routerLink="/companies" routerLinkActive="active" class="mobile-nav-link nav-link">
+    <a routerLink="/companies" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">location_on</mat-icon>
       <span>Companies</span>
     </a>
-    <a routerLink="/Bonus" routerLinkActive="active" class="mobile-nav-link nav-link">
+    <a routerLink="/Bonus" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
       <span>Bonus</span>
     </a>
-    <a routerLink="/chart-test" routerLinkActive="active" class="mobile-nav-link nav-link">
-      <mat-icon class="nav-link__icon">bar_chart</mat-icon>
-      <span>Chart Test</span>
-    </a>
-    <a routerLink="/table-test" routerLinkActive="active" class="mobile-nav-link nav-link">
-      <mat-icon class="nav-link__icon">table_chart</mat-icon>
-      <span>Table Test</span>
-    </a>
-    <a routerLink="/gantt-test" routerLinkActive="active" class="mobile-nav-link nav-link">
-      <mat-icon class="nav-link__icon">timeline</mat-icon>
-      <span>Gantt Test</span>
-    </a>
-    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin" class="mobile-nav-link nav-link">
+    <!-- Chart/Test links intentionally removed -->
+    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">assignment</mat-icon>
       <span>Audits</span>
     </a>
-    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin" class="mobile-nav-link nav-link">
+    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">menu_book</mat-icon>
       <span>Audit Library</span>
     </a>

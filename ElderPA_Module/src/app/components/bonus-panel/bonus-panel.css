@@ -231,6 +231,15 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.table-scroll-rows-5 {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.worker-table {
+  margin-top: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -298,6 +307,10 @@
   font-size: 14px;
   font-weight: 900;
   color: var(--color-text);
+}
+
+.calc-breakdown {
+  margin-top: 10px;
 }
 
 .month-bars {

@@ -1,6 +1,6 @@
 <div class="company-page" *ngIf="company as c">
   <!-- COMPANY SUMMARY -->
-  <div class="card">
+  <div class="card" data-walkthrough-id="company.companyHeader">
     <div class="card-head">
       <div class="card-title">{{ c.name }}</div>
     </div>
@@ -22,7 +22,7 @@
     <!-- LEFT COLUMN -->
     <div class="col">
       <!-- HEALTH -->
-      <div class="card">
+      <div class="card" data-walkthrough-id="company.healthCard">
         <div class="card-head">
           <div class="card-title">Company health</div>
         </div>
@@ -43,7 +43,7 @@
       </div>
 
       <!-- TOP RISKS -->
-      <div class="card">
+      <div class="card" data-walkthrough-id="company.topRisksCard">
         <div class="card-head">
           <div class="card-title">Top risks</div>
         </div>
@@ -69,7 +69,7 @@
       </div>
 
       <!-- STAFF -->
-      <div class="card">
+      <div class="card" data-walkthrough-id="company.staffCard">
         <div class="card-head">
           <div class="card-title">Staff overview</div>
         </div>
@@ -95,7 +95,7 @@
     <!-- RIGHT COLUMN -->
     <div class="col">
       <!-- ALERTS -->
-      <div class="card">
+      <div class="card" data-walkthrough-id="company.alertsCard">
         <div class="card-head">
           <div class="card-title">Alerts</div>
         </div>
@@ -117,8 +117,22 @@
               <td>{{ a.message }}</td>
               <td>{{ a.locationName }}</td>
               <td class="actions">
-                <button type="button" class="mini-btn" (click)="openAddressDialog(a)">Create task</button>
-                <button type="button" class="mini-btn" (click)="pingManager(a)">Ping manager</button>
+                <button
+                  type="button"
+                  class="mini-btn"
+                  data-walkthrough-id="company.createTask"
+                  (click)="openAddressDialog(a)"
+                >
+                  Create task
+                </button>
+                <button
+                  type="button"
+                  class="mini-btn"
+                  data-walkthrough-id="company.pingManager"
+                  (click)="pingManager(a)"
+                >
+                  Ping manager
+                </button>
                 <span class="tag" *ngIf="hasTask(a)">Task exists</span>
               </td>
             </tr>
@@ -132,7 +146,7 @@
       </div>
 
       <!-- TASKS -->
-      <div class="card">
+      <div class="card" data-walkthrough-id="company.tasksCard">
         <div class="card-head">
           <div class="card-title">Tasks</div>
         </div>

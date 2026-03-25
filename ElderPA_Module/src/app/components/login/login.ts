@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../Services/Auth.service';
 import { LocalStorageService } from '../../Services/LocalStorage.service';
 import type { Role } from '../Types';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 type Mode = 'login' | 'register' | 'invite';
 
@@ -52,6 +53,7 @@ export class Login implements OnInit {
     private route: ActivatedRoute,
     private authService: AuthService,
     private ls: LocalStorageService,
+    private walkthrough: WalkthroughRegistryService,
   ) {}
 
   private hasCompany(): boolean {
@@ -62,6 +64,34 @@ export class Login implements OnInit {
     return ['SystemAdmin', 'OrgAdmin'].includes(role);
   }
   ngOnInit() {
+    this.walkthrough.register('/login', [
+      {
+        targetId: 'login.tabSignIn',
+        title: 'Sign in',
+        description: 'Use “Sign In” to access your existing account.',
+      },
+      {
+        targetId: 'login.welcome',
+        title: 'Welcome message',
+        description: 'This heading changes depending on your mode (login, register, invite).',
+      },
+      {
+        targetId: 'login.passwordToggle',
+        title: 'Password visibility',
+        description: 'You can toggle password visibility to confirm what you typed.',
+      },
+      {
+        targetId: 'login.submit',
+        title: 'Continue',
+        description: 'When the form is valid, this button submits your login/register/invite flow.',
+      },
+      {
+        targetId: 'login.forgotPassword',
+        title: 'Forgot password',
+        description: 'Use this link if you need help regaining access.',
+      },
+    ]);
+
     this.route.queryParams.subscribe((params) => {
       const token = params['token'];
       if (token) this.handleInvite(token);

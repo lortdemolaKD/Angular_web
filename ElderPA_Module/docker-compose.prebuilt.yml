@@ -1,9 +1,10 @@
-# Override so the app is built from Dockerfile.prebuilt (expects dist/ already present).
-# Use when you built Angular on your PC and uploaded dist/ to EC2.
-# Run: docker-compose -f docker-compose.yml -f docker-compose.ec2.yml -f docker-compose.prebuilt.yml up -d --build
+# Prebuilt overlay: build app from Dockerfile.prebuilt (uses dist/).
+# Usage:
+#   DOCKER_BUILDKIT=0 docker-compose -f docker-compose.yml -f docker-compose.ec2.yml -f docker-compose.prebuilt.yml up -d --build
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile.prebuilt
+

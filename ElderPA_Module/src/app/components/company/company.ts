@@ -11,6 +11,7 @@ import { AddressAlertDialog } from '../address-alert-dialog/address-alert-dialog
 
 import { CompanyService } from '../../Services/Company.service';
 import { LocationType, PerformanceSet, Indicator, Alert, ActionTask } from '../Types';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 type HealthCounts = { Green: number; Amber: number; Red: number };
 
@@ -86,10 +87,45 @@ export class Company implements OnInit, OnDestroy {
   constructor(
     private companyService: CompanyService,
     private http: HttpClient,
-    private dialog: MatDialog,private cdr: ChangeDetectorRef
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+    private walkthrough: WalkthroughRegistryService
   ) {}
 
   ngOnInit(): void {
+    this.walkthrough.register('/organization', [
+      {
+        targetId: 'company.companyHeader',
+        title: 'Company header',
+        description: 'This top card shows the selected company and its quick summary.',
+      },
+      {
+        targetId: 'company.healthCard',
+        title: 'Company health',
+        description: 'A quick overview of active alerts, open tasks, and indicator levels.',
+      },
+      {
+        targetId: 'company.topRisksCard',
+        title: 'Top risks',
+        description: 'The most important indicators to review first.',
+      },
+      {
+        targetId: 'company.staffCard',
+        title: 'Staff overview',
+        description: 'See how many staff accounts exist for this company, broken down by role.',
+      },
+      {
+        targetId: 'company.alertsCard',
+        title: 'Alerts',
+        description: 'Turn High/Critical alerts into tasks or ping the manager for attention.',
+      },
+      {
+        targetId: 'company.tasksCard',
+        title: 'Tasks',
+        description: 'A list of open and overdue tasks for this company.',
+      },
+    ]);
+
     this.companyService.currentCompany$
       .pipe(
         takeUntil(this.destroy$),

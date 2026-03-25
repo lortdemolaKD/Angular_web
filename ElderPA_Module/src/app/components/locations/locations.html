@@ -5,6 +5,7 @@
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="locations.tabDetails"
         [class.active]="activeTab === 'details'"
         (click)="setTab('details')"
         disabled
@@ -15,6 +16,7 @@
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="locations.tabStructure"
         [class.active]="activeTab === 'structure'"
         (click)="setTab('structure')"
         disabled
@@ -25,6 +27,7 @@
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="locations.tabMetrics"
         [class.active]="activeTab === 'metrics'"
         (click)="setTab('metrics')"
       >
@@ -33,6 +36,7 @@
       <button
         type="button"
         class="top-tab"
+        data-walkthrough-id="locations.tabCCGA"
         [class.active]="activeTab === 'CCGA'"
         (click)="setTab('CCGA')"
         *ngIf="canChangeLocation"
@@ -48,6 +52,7 @@
       <select
         *ngIf="canChangeLocation"
         class="location-select"
+        data-walkthrough-id="locations.locationSelect"
         [value]="selectedLocation?.locationID"
         (change)="onLocationDropdownChange($event)"
       >
@@ -56,7 +61,11 @@
         </option>
       </select>
 
-      <div *ngIf="!canChangeLocation && selectedLocation" class="location-fixed">
+      <div
+        *ngIf="!canChangeLocation && selectedLocation"
+        class="location-fixed"
+        data-walkthrough-id="locations.locationFixed"
+      >
         {{ selectedLocation.name }}
       </div>
     </div>
@@ -114,9 +123,9 @@
 
           <ng-container *ngIf="selectedLocation as loc">
             <!-- Summary card -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.locationSummaryTitle">
               <div class="card-head">
-                <div class="card-title">{{ loc.name }}</div>
+              <div class="card-title">{{ loc.name }}</div>
               </div>
 
               <div class="card-body details-grid">
@@ -135,7 +144,7 @@
 
             <!-- CareHome details -->
             <ng-container *ngIf="loc.type === 'CareHome'">
-              <div class="card" style="margin-top: 16px;">
+              <div class="card" style="margin-top: 16px;" data-walkthrough-id="locations.roomsCardTitle">
                 <div class="card-head">
                   <div class="card-title">Rooms</div>
                 </div>
@@ -154,7 +163,7 @@
                 </div>
               </div>
 
-              <div class="card" style="margin-top: 16px;">
+              <div class="card" style="margin-top: 16px;" data-walkthrough-id="locations.careHomeSetupCardTitle">
                 <div class="card-head">
                   <div class="card-title">Care home setup</div>
                 </div>
@@ -170,7 +179,7 @@
 
             <!-- HomeCare details -->
             <ng-container *ngIf="loc.type === 'HomeCare'">
-              <div class="card" style="margin-top: 16px;">
+              <div class="card" style="margin-top: 16px;" data-walkthrough-id="locations.homeCareSetupCardTitle">
                 <div class="card-head">
                   <div class="card-title">Home care setup</div>
                 </div>
@@ -184,7 +193,7 @@
                 </div>
               </div>
 
-              <div class="card" style="margin-top: 16px;">
+              <div class="card" style="margin-top: 16px;" data-walkthrough-id="locations.detailsCoverageCardTitle">
                 <div class="card-head">
                   <div class="card-title">Coverage</div>
                 </div>
@@ -214,7 +223,7 @@
             </ng-container>
 
             <!-- Staff -->
-            <div class="card" style="margin-top: 16px;">
+            <div class="card" style="margin-top: 16px;" data-walkthrough-id="locations.detailsStaffCardTitle">
               <div class="card-head">
                 <div class="card-title">Staff</div>
               </div>
@@ -239,7 +248,7 @@
         <ng-container *ngIf="loc.type === 'CareHome'">
           <div class="structure-grid">
             <!-- Wings selector -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureWingsCardTitle">
               <div class="card-head">
                 <div class="card-title">Wings</div>
               </div>
@@ -261,7 +270,7 @@
             </div>
 
             <!-- Rooms table -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureRoomsCardTitle">
               <div class="card-head">
                 <div class="card-title">
                   Rooms <span *ngIf="selectedWing">• Wing {{ selectedWing }}</span>
@@ -306,12 +315,13 @@
             </div>
 
             <!-- Room details -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureRoomDetailsCardTitle">
               <div class="card-head">
                 <div class="card-title">Room details</div>
                 <button
                   type="button"
                   class="mini-btn"
+                  data-walkthrough-id="locations.structureClearRoomButton"
                   (click)="clearSelectedRoom()"
                   [disabled]="!selectedRoom"
                 >
@@ -343,7 +353,7 @@
         <ng-container *ngIf="loc.type === 'HomeCare'">
           <div class="structure-grid homecare-grid">
             <!-- Coverage -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureHomeCareCoverageCardTitle">
               <div class="card-head">
                 <div class="card-title">Coverage</div>
               </div>
@@ -361,7 +371,7 @@
             </div>
 
             <!-- Operations -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureHomeCareOperationsCardTitle">
               <div class="card-head">
                 <div class="card-title">Operations</div>
               </div>
@@ -380,7 +390,7 @@
             </div>
 
             <!-- Workforce -->
-            <div class="card">
+            <div class="card" data-walkthrough-id="locations.structureHomeCareWorkforceCardTitle">
               <div class="card-head">
                 <div class="card-title">Workforce</div>
               </div>
@@ -406,7 +416,9 @@
       </ng-container>
 
       <ng-container *ngIf="selectedLocation">
-        <app-key-metrics-panel [embedded]="true" [locationId]="selectedLocation?.locationID"></app-key-metrics-panel>
+        <div data-walkthrough-id="locations.metricsPanel">
+          <app-key-metrics-panel [embedded]="true" [locationId]="selectedLocation?.locationID"></app-key-metrics-panel>
+        </div>
 
       </ng-container>
     </ng-container>
@@ -416,7 +428,9 @@
       </ng-container>
 
       <ng-container *ngIf="selectedLocation">
-        <app-ccga [locationId]="selectedLocation?.locationID"></app-ccga>
+        <div data-walkthrough-id="locations.ccgaPanel">
+          <app-ccga [locationId]="selectedLocation?.locationID"></app-ccga>
+        </div>
       </ng-container>
     </ng-container>
   </div>

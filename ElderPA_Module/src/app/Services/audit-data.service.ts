@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AuditInstance } from '../components/Types';
-import { catchError, of, tap } from 'rxjs';
+import { catchError, map, of, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuditDataService {
@@ -13,6 +13,11 @@ export class AuditDataService {
 
   constructor(private http: HttpClient) {}
 
+  private normalizeAudit(a: AuditInstance & { _id?: string }): AuditInstance {
+    const id = a.id ?? (a._id != null ? String(a._id) : '');
+    return { ...a, id } as AuditInstance;
+  }
+
   /** Builds params and returns observable for loading audits (caller can subscribe). */
   loadForContextObservable(companyId?: string | null, locationId?: string | null, templateId?: string | null) {
     let params = new HttpParams();
@@ -20,7 +25,8 @@ export class AuditDataService {
     if (locationId) params = params.set('locationId', locationId);
     if (templateId) params = params.set('templateId', templateId);
     return this.http.get<AuditInstance[]>(this.API_BASE, { params }).pipe(
-      tap((items) => this._audits.set(items ?? [])),
+      map((items) => (items ?? []).map((a) => this.normalizeAudit(a as any))),
+      tap((items) => this._audits.set(items)),
       catchError((err) => {
         console.error('loadForContext error', err);
         this._audits.set([]);
@@ -50,6 +56,7 @@ export class AuditDataService {
   /** GET one audit by id from DB (and optionally merge into cache). */
   fetchById(auditId: string) {
     return this.http.get<AuditInstance>(`${this.API_BASE}/${auditId}`).pipe(
+      map((audit) => this.normalizeAudit(audit as any)),
       tap((audit) => {
         if (!audit) return;
         const audits = [...this._audits()];

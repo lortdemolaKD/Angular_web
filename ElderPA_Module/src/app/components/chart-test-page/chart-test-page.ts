@@ -6,6 +6,7 @@ import {
   type ChartDatum,
   type ChartOptions,
 } from '../../NEW for implemnet/smart-chart/smart-chart';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 const CHART_TYPES: ChartType[] = [
   'bar-vertical',
@@ -59,6 +60,26 @@ const CHART_TYPES: ChartType[] = [
 })
 export class ChartTestPage {
   readonly chartTypes = CHART_TYPES;
+
+  constructor(private walkthrough: WalkthroughRegistryService) {
+    this.walkthrough.register('/chart-test', [
+      {
+        targetId: 'chartTest.pageTitle',
+        title: 'Chart Test Page',
+        description: 'This page verifies that many chart types render correctly.',
+      },
+      {
+        targetId: 'chartTest.chartGrid',
+        title: 'Chart sections',
+        description: 'Each section below shows a different chart type with its options.',
+      },
+      {
+        targetId: 'chartTest.backLink',
+        title: 'Back to Home',
+        description: 'Return to the main dashboard.',
+      },
+    ]);
+  }
 
   readonly defaultOptions: ChartOptions = {
     showAxis: true,

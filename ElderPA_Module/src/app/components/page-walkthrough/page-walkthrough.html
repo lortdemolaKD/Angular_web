@@ -1,0 +1,80 @@
+<button
+  type="button"
+  class="walkthrough-fab"
+  [attr.aria-expanded]="open()"
+  aria-label="Start walkthrough"
+  (click)="openWalkthrough()"
+>
+  i
+</button>
+
+<!-- Dim + blur overlay (must be part of this component template so Angular CSS scoping applies).
+     We apply an SVG rounded-rectangle mask "hole" over the active target so that area stays unblurred. -->
+
+<svg
+  class="walkthrough-mask-defs"
+  width="100vw"
+  height="100vh"
+  aria-hidden="true"
+  style="position: fixed; top: 0; left: 0; pointer-events: none"
+>
+  <defs>
+    <mask id="walkthroughMask" maskUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="100vw" height="100vh" fill="white"></rect>
+      <rect
+        [attr.x]="spotlight()?.left ?? 0"
+        [attr.y]="spotlight()?.top ?? 0"
+        [attr.width]="spotlight()?.width ?? 0"
+        [attr.height]="spotlight()?.height ?? 0"
+        [attr.rx]="maskRadius()"
+        [attr.ry]="maskRadius()"
+        fill="black"
+      ></rect>
+    </mask>
+  </defs>
+</svg>
+
+<div class="walkthrough-dim" *ngIf="open()"></div>
+
+<div class="walkthrough-panel" *ngIf="open()" [class.walkthrough-panel--left]="panelPlacement() === 'left'">
+  <div class="walkthrough-panel__head">
+    <div class="walkthrough-panel__progress" *ngIf="steps().length > 0">
+      Step {{ stepIndex() + 1 }} / {{ steps().length }}
+    </div>
+    <div class="walkthrough-panel__spacer"></div>
+    <button type="button" class="walkthrough-panel__close" aria-label="Close walkthrough" (click)="close()">×</button>
+  </div>
+
+  <ng-container *ngIf="steps().length > 0; else noSteps">
+    <div class="walkthrough-panel__body">
+      <div class="walkthrough-panel__title">{{ steps()[stepIndex()]?.title }}</div>
+      <div class="walkthrough-panel__desc">{{ steps()[stepIndex()]?.description }}</div>
+    </div>
+
+    <div class="walkthrough-panel__footer">
+      <button type="button" class="walkthrough-panel__btn" [disabled]="!canGoBack" (click)="back()">Back</button>
+      <button
+        type="button"
+        class="walkthrough-panel__btn walk-through-panel__btn--primary"
+        *ngIf="canGoNext; else finishTpl"
+        (click)="next()"
+      >
+        Next
+      </button>
+      <ng-template #finishTpl>
+        <button type="button" class="walkthrough-panel__btn walk-through-panel__btn--primary" (click)="close()">Finish</button>
+      </ng-template>
+    </div>
+  </ng-container>
+
+  <ng-template #noSteps>
+    <div class="walkthrough-panel__body">
+      <div class="walkthrough-panel__title">Walkthrough not configured</div>
+      <div class="walkthrough-panel__desc">No steps are set up for this page yet.</div>
+    </div>
+    <div class="walkthrough-panel__footer">
+      <button type="button" class="walkthrough-panel__btn walk-through-panel__btn--primary" (click)="close()">Close</button>
+    </div>
+  </ng-template>
+</div>
+

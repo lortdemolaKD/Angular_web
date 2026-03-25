@@ -1,10 +1,10 @@
 <div class="table-test-page">
   <header class="table-test-page__header">
-    <h1>Data Table – Test Page</h1>
+    <h1 data-walkthrough-id="tableTest.pageTitle">Data Table – Test Page</h1>
     <p class="table-test-page__subtitle">
       Flexible table / columns: layout, density, search, pagination, empty and loading states.
     </p>
-    <a routerLink="/" class="table-test-page__back">← Back to Home</a>
+    <a routerLink="/" class="table-test-page__back" data-walkthrough-id="tableTest.backLink">← Back to Home</a>
   </header>
 
   @if (selectedRow(); as row) {
@@ -14,7 +14,7 @@
     </aside>
   }
 
-  <div class="table-test-page__grid">
+  <div class="table-test-page__grid" data-walkthrough-id="tableTest.examplesGrid">
     @for (ex of examples; track ex.id) {
       <section class="table-test-page__section">
         <h2 class="table-test-page__title">{{ ex.title }}</h2>

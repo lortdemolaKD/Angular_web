@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UniversalGanttComponent } from '../gantt/universal-gantt.component';
 import type { GanttTask, GanttDependency, GanttConfig, GanttViewConfig, GanttResource } from '../gantt/gantt.types';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 function iso(y: number, m: number, d: number): string {
   return new Date(y, m - 1, d).toISOString().slice(0, 10);
@@ -18,6 +19,36 @@ function iso(y: number, m: number, d: number): string {
 })
 export class GanttTestPage {
   readonly selectedTask = signal<GanttTask | null>(null);
+
+  constructor(private walkthrough: WalkthroughRegistryService) {
+    this.walkthrough.register('/gantt-test', [
+      {
+        targetId: 'ganttTest.pageTitle',
+        title: 'Gantt test page',
+        description: 'This page demonstrates multiple Gantt setups (projects, dependencies, resources, etc.).',
+      },
+      {
+        targetId: 'ganttTest.workerBoardTitle',
+        title: 'Worker/resource board',
+        description: 'This section includes the resource timeline and supports adding/assigning tasks.',
+      },
+      {
+        targetId: 'ganttTest.rowModeSelect',
+        title: 'Row mode',
+        description: 'Switch between compact vs expanded resource rows.',
+      },
+      {
+        targetId: 'ganttTest.addTaskButton',
+        title: 'Add task',
+        description: 'Use the form (or quick UI) to add a new task.',
+      },
+      {
+        targetId: 'ganttTest.backLink',
+        title: 'Back to Home',
+        description: 'Return to the main dashboard.',
+      },
+    ]);
+  }
 
   readonly basicTasks: GanttTask[] = [
     { id: 't1', name: 'Discovery', start: iso(2025, 1, 6), end: iso(2025, 1, 17), progress: 100 },

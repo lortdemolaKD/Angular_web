@@ -18,7 +18,7 @@
 
       <header class="dashboard-header">
         <div class="header-left">
-          <div class="page-title">Key metrics</div>
+          <div class="page-title" data-walkthrough-id="kmp.pageTitle">Key metrics</div>
 
           <!-- DB-backed: we only know the performance period here -->
           <div class="page-subtitle" *ngIf="selectedSet?.period as p">
@@ -45,6 +45,7 @@
           <button
             type="button"
             class="btn-refresh"
+              data-walkthrough-id="kmp.updateFromTemplateButton"
             *ngIf="selectedSet && !hasAuditSourcedIndicators()"
             [disabled]="syncing"
             (click)="syncFromTemplate()">
@@ -63,6 +64,7 @@
           <!-- Removed internal location selector:
                location selection happens in parent Locations page via [locationId] -->
           <app-cst-button
+            data-walkthrough-id="kmp.createActionTaskButton"
             *ngIf="canAssignTasks"
             title="Create Action Task"
             icon=""
@@ -100,7 +102,7 @@
           <!-- LEFT: radial indicators stacked -->
           <div class="left-col">
           <!-- Performance (KPI) -->
-          <div class="card diagram-card">
+          <div class="card diagram-card" data-walkthrough-id="kmp.performanceCard">
             <div class="card-head">
               <div class="card-title">Performance</div>
               <span class="badge card-head-badge" *ngIf="performanceCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
@@ -141,7 +143,7 @@
           </div>
 
           <!-- Finances (KFI) -->
-          <div class="card diagram-card">
+          <div class="card diagram-card" data-walkthrough-id="kmp.financesCard">
             <div class="card-head">
               <div class="card-title">Finances</div>
               <span class="badge card-head-badge" *ngIf="financesCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
@@ -182,7 +184,7 @@
           </div>
 
           <!-- Control (KCI) -->
-          <div class="card diagram-card">
+          <div class="card diagram-card" data-walkthrough-id="kmp.controlCard">
             <div class="card-head">
               <div class="card-title">Control</div>
               <span class="badge card-head-badge" *ngIf="controlCurrent() as ind" [ngClass]="indicatorLevel(ind.status)">{{ indicatorLabel(ind.status) }}</span>
@@ -225,7 +227,7 @@
 
           <!-- Row 1 right: Active alerts only -->
           <div class="alerts-col">
-          <div class="card alerts-card">
+          <div class="card alerts-card" data-walkthrough-id="kmp.activeAlertsCardTitle">
             <div class="card-head">
               <div class="card-title">Active alerts</div>
             </div>
@@ -237,7 +239,15 @@
                 <li *ngFor="let alert of activeAlerts" class="alert-item">
                   <span class="alert-severity" [ngClass]="alertSeverityLevel(alert)">{{ alertSeverityLabel(alert) }}</span>
                   <span class="alert-message">{{ alert.message }}</span>
-                  <button type="button" class="btn-assign" *ngIf="canAssignTasks && alert.severity === 'High'" (click)="assignTaskFromAlert(alert)">Assign task</button>
+                  <button
+                    type="button"
+                    class="btn-assign"
+                    data-walkthrough-id="kmp.assignTaskButton"
+                    *ngIf="canAssignTasks && alert.severity === 'High'"
+                    (click)="assignTaskFromAlert(alert)"
+                  >
+                    Assign task
+                  </button>
                 </li>
               </ul>
             </div>
@@ -245,7 +255,7 @@
           </div>
 
           <!-- Row 2: bar charts only (nothing else in this row) -->
-          <div class="right-col">
+          <div class="right-col" data-walkthrough-id="kmp.barChartsCard">
         <section class="categories-grid">
           <ng-container *ngFor="let cat of set.categories || []">
 
@@ -350,7 +360,7 @@
           </div>
             -->
           <!-- Tasks -->
-          <div class="card tasks-card">
+          <div class="card tasks-card" data-walkthrough-id="kmp.tasksCardTitle">
             <div class="card-head">
               <div class="card-title">Tasks</div>
             </div>
@@ -362,7 +372,15 @@
                   <option [ngValue]="null">Select task…</option>
                   <option *ngFor="let t of set.tasks" [ngValue]="t">{{ t.description }} — {{ t.assignedTo }}</option>
                 </select>
-                <button type="button" class="btn-resolve" [disabled]="!taskToResolve" (click)="taskToResolve && resolveAlert(taskToResolve.alertId)">Mark done</button>
+                <button
+                  type="button"
+                  class="btn-resolve"
+                  data-walkthrough-id="kmp.markDoneButton"
+                  [disabled]="!taskToResolve"
+                  (click)="taskToResolve && resolveAlert(taskToResolve.alertId)"
+                >
+                  Mark done
+                </button>
               </div>
               <app-dynamic-flex-table
                 *ngIf="(set.tasks ?? []).length > 0"

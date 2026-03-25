@@ -411,8 +411,18 @@ export class FormRendererComponent implements OnInit, OnChanges,OnDestroy {
 
   private getTableCellValue(fieldId: string, rowIndex: number, colIndex: number): string {
     const tableData = this.getExistingValue(fieldId);
-    if (Array.isArray(tableData) && tableData[rowIndex]) {
-      return tableData[rowIndex][colIndex] || '';
+    if (!Array.isArray(tableData) || !tableData[rowIndex]) return '';
+    const row = tableData[rowIndex];
+    if (Array.isArray(row)) {
+      const v = row[colIndex];
+      return v != null && v !== '' ? String(v) : '';
+    }
+    if (row && typeof row === 'object') {
+      const field = this.template?.fields?.find((f) => f.id === fieldId && f.type === 'table');
+      const header = field?.tableConfig?.headers?.[colIndex];
+      if (header != null && (row as any)[header] != null && (row as any)[header] !== '') {
+        return String((row as any)[header]);
+      }
     }
     return '';
   }

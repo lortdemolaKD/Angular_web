@@ -1,10 +1,10 @@
 <div class="gantt-test-page">
   <header class="gantt-test-page__header">
-    <h1>Universal Gantt – Test Page</h1>
+    <h1 data-walkthrough-id="ganttTest.pageTitle">Universal Gantt – Test Page</h1>
     <p class="gantt-test-page__subtitle">
       Task list, timeline, bars, milestones, dependencies (FS/SS/FF/SF), today line, zoom, and view presets.
     </p>
-    <a routerLink="/" class="gantt-test-page__back">← Back to Home</a>
+    <a routerLink="/" class="gantt-test-page__back" data-walkthrough-id="ganttTest.backLink">← Back to Home</a>
   </header>
 
   <div class="gantt-test-page__grid">
@@ -64,7 +64,7 @@
     </section>
 
     <section class="gantt-test-page__section gantt-test-page__section--wide">
-      <h2 class="gantt-test-page__title">Worker / resource board (resource timeline)</h2>
+      <h2 class="gantt-test-page__title" data-walkthrough-id="ganttTest.workerBoardTitle">Worker / resource board (resource timeline)</h2>
       <p class="gantt-test-page__desc">
         Right-click on a person’s timeline row → “Create new task” (then drag the bar to move in time, or drag its left/right edges to resize). Drag tasks to move; unassigned tasks below can be assigned to a worker.
       </p>
@@ -73,6 +73,7 @@
           <label class="gantt-test-page__label">Row mode</label>
           <select
             class="gantt-test-page__select"
+            data-walkthrough-id="ganttTest.rowModeSelect"
             [ngModel]="resourceRowMode()"
             (ngModelChange)="resourceRowMode.set($event)"
           >
@@ -103,7 +104,7 @@
         </ul>
       </div>
       <details class="gantt-test-page__add-task-details">
-        <summary class="gantt-test-page__add-task-summary">Or add task via form</summary>
+        <summary class="gantt-test-page__add-task-summary" data-walkthrough-id="ganttTest.addTaskViaFormSummary">Or add task via form</summary>
         <div class="gantt-test-page__add-task">
           <div class="gantt-test-page__field">
             <label class="gantt-test-page__label">Assignee</label>
@@ -145,7 +146,7 @@
               (ngModelChange)="newTaskEnd.set($event)"
             />
           </div>
-          <button type="button" class="gantt-test-page__btn" (click)="addTask()">Add task</button>
+          <button type="button" class="gantt-test-page__btn" data-walkthrough-id="ganttTest.addTaskButton" (click)="addTask()">Add task</button>
         </div>
       </details>
       <div class="gantt-test-page__chart">

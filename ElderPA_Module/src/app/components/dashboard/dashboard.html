@@ -1,16 +1,23 @@
 <div class="header">
   <div class="dashboard-header">
-    <h2>Main dashboard with widgets</h2>
+    <h2 data-walkthrough-id="home.dashboardTitle">Main dashboard with widgets</h2>
     <p class="role-badge">{{ roleLabel }}</p>
   </div>
   <div class="header-actions">
-    <button type="button" class="add-widgets-btn" [mat-menu-trigger-for]="widgetMenu" aria-label="Add widgets">
+    <button
+      type="button"
+      class="add-widgets-btn"
+      data-walkthrough-id="home.addWidgets"
+      [mat-menu-trigger-for]="widgetMenu"
+      aria-label="Add widgets"
+    >
       <mat-icon aria-hidden="true">add_circle</mat-icon>
       <span>Add widgets</span>
     </button>
     <button
       type="button"
       class="edit-mode-toggle"
+      data-walkthrough-id="home.editModeToggle"
       (click)="toggleEditMode()"
       [attr.aria-label]="editMode() ? 'Exit edit mode (widgets locked)' : 'Edit mode (move and configure widgets)'"
       [title]="editMode() ? 'Exit edit mode' : 'Edit mode'">
@@ -25,11 +32,12 @@
     }
   </mat-menu>
 </div>
-<div class="dashboard-widgets" #dashboard cdkDropListGroup >
+<div class="dashboard-widgets" #dashboard cdkDropListGroup data-walkthrough-id="home.widgetsArea">
   @for (w of store.addedWidgets(); track w.id){
     <app-widget
       cdkDropList
       [data]="w"
+      [attr.data-walkthrough-id]="'dashboard.widget.' + w.id"
       [editMode]="editMode()"
       [locations]="LocElements"
       [isAdmin]="isOrgAdmin"

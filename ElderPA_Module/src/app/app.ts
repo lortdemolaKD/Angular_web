@@ -4,10 +4,11 @@ import {NavBar} from './components/navbar/navbar';
 import {ThemeSwitcher} from './components/theme-switcher/theme-switcher';
 import {AuthService} from './Services/Auth.service';
 import {AsyncPipe, NgIf} from '@angular/common';
+import { PageWalkthroughComponent } from './components/page-walkthrough/page-walkthrough';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavBar, NgIf, AsyncPipe],
+  imports: [RouterOutlet, NavBar, NgIf, AsyncPipe, PageWalkthroughComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
   standalone: true

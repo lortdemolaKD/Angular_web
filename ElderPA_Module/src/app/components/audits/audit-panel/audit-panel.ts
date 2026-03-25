@@ -1,5 +1,4 @@
 import { Component, computed, effect, signal, inject, OnDestroy } from '@angular/core';
-import { skip } from 'rxjs';
 import { CommonModule, KeyValuePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuditDataService } from '../../../Services/audit-data.service';
@@ -19,6 +18,8 @@ import { LocationService } from '../../../Services/location.service';
 import {AuditResponse, CustomAuditTemplate} from '../../flexible-template-system/shared/models/template.models';
 import {AuditService} from '../../../Services/audit.service';
 import {AuditTemplateService} from '../../../Services/audit-template.service';
+import { WalkthroughRegistryService } from '../../../Services/walkthrough-registry.service';
+import { buildCustomResponsesFromQuestions } from '../shared/custom-audit-responses.util';
 
 @Component({
   selector: 'app-audit-panel',
@@ -34,6 +35,7 @@ export class AuditPanel implements OnDestroy {
   readonly #authService = inject(AuthService);
   readonly #companyService = inject(CompanyService);
   readonly #ls = inject(LocalStorageService);
+  readonly #walkthrough = inject(WalkthroughRegistryService);
 
   readonly audits = signal<AuditInstance[]>([]);
   readonly selectedAudit = signal<AuditInstance | null>(null);
@@ -105,13 +107,46 @@ export class AuditPanel implements OnDestroy {
   private companyChangeSub?: { unsubscribe: () => void };
 
   constructor() {
-    this.#loadAudits();
-    // When admin switches company in navbar, reload audits for the new company
-    this.companyChangeSub = this.#companyService.currentCompany$
-      .pipe(skip(1))
-      .subscribe(() => {
-        if (this.#authService.isAdmin()) this.#loadAudits();
-      });
+    this.#walkthrough.register('/CCGA/AuditLib', [
+      {
+        targetId: 'auditPanel.pageTitle',
+        title: 'Audit Library',
+        description:
+          'Audit Library is where you review audits that belong to your company. The left side gives you an audit table (including score, type, and completion status). Select an audit to see its details, and use the right panel to inspect questions/evidence or view the full read-only responses.',
+      },
+      {
+        targetId: 'auditPanel.newAuditButton',
+        title: 'New audit',
+        description:
+          'Create a new audit. Use this when you need to start a new audit cycle (or a new audit for the chosen scope). You can later edit the audit in the Audit Creator.',
+      },
+      {
+        targetId: 'auditPanel.auditsListHeader',
+        title: 'Audit list',
+        description:
+          'This table contains all audits for your company. You can select an audit to open it. Some audits require approval (they are not completed yet and must be approved by higher authorities). The table also shows key information like score and audit type.',
+      },
+      {
+        targetId: 'auditPanel.approveAuditButton',
+        title: 'Approve audit',
+        description:
+          'If you have admin permissions, use “Approve audit” to approve this audit. Approving updates the audit status and influences connected data across the system (for example scoring and any indicators that depend on it).',
+      },
+      {
+        targetId: 'auditPanel.questionsOrResponsesHeader',
+        title: 'Questions & evidence',
+        description:
+          'This panel is view-only in the library. You can switch between questions/evidence and full responses, but you cannot edit here. If you need to make changes, open the audit in the Audit Creator instead.',
+      },
+    ]);
+
+    // Admin: reload when company is set/changed (API uses `id`, not `_id` — first load must run after company fetch)
+    this.companyChangeSub = this.#companyService.currentCompany$.subscribe(() => {
+      if (this.#authService.isAdmin()) this.#loadAudits();
+    });
+    if (!this.#authService.isAdmin()) {
+      this.#loadAudits();
+    }
     effect(() => {
       this.isAdmin.set(this.#authService.isAdmin()); // e.g., ['SystemAdmin', 'OrgAdmin'].includes(role)
     });
@@ -186,8 +221,14 @@ export class AuditPanel implements OnDestroy {
         .subscribe((items) => this.#setAuditsFromResponse(items ?? []));
       return;
     }
-    // Admin: scope to current company so audit library only shows audits for that company's locations
-    const companyId = this.#companyService.getCurrentCompany()?._id ?? this.#ls.getID('companyID') ?? null;
+    // Admin: scope to current company (CompanyService maps API → `id`, not Mongo `_id`)
+    const cur = this.#companyService.getCurrentCompany();
+    const companyId =
+      (cur as any)?.id ??
+      (cur as any)?._id ??
+      (cur as any)?.companyID ??
+      this.#ls.getID('companyID') ??
+      null;
     this.#auditService
       .loadForContextObservable(companyId, null, null)
       .subscribe((items) => this.#setAuditsFromResponse(items ?? []));
@@ -223,13 +264,15 @@ export class AuditPanel implements OnDestroy {
   }
 
   createNewAudit() {
-    this.#router.navigate(['/ccga/audit-creator']);
+    this.#router.navigate(['/CCGA/AuditCreator']);
   }
 
   editSelectedAudit() {
     const audit = this.selectedAudit();
     if (!audit) return;
-    this.#router.navigate(['/ccga/audit-creator'], {queryParams: {auditId: audit.id}});
+    const auditId = audit.id || (audit as any)._id?.toString?.();
+    if (!auditId) return;
+    this.#router.navigate(['/CCGA/AuditCreator'], { queryParams: { auditId } });
   }
 
   protected moveTo(path: string) {
@@ -267,20 +310,14 @@ export class AuditPanel implements OnDestroy {
   readonly #templateService = inject(AuditTemplateService);  // Your service
   readonly customTemplate = signal<CustomAuditTemplate | null>(null);
 
-  getCustomResponses(): AuditResponse {
+  // Memoized response object prevents readonly form from rebuilding every change detection cycle.
+  readonly selectedCustomResponse = computed<AuditResponse>(() => {
     const audit = this.selectedAudit();
     if (!audit) {
       return { id: '', templateId: '', date: '', responses: {} } as AuditResponse;
     }
 
-    const responses: Record<string, any> = {};
-    audit.questions?.forEach(q => {
-      if (q.templateQuestionId && q.customFields) {
-        const cf = q.customFields;
-        // Use normalized value; renderer will know field.type from template
-        responses[q.templateQuestionId] = cf.value ?? cf.rawResponse ?? null;
-      }
-    });
+    const responses = buildCustomResponsesFromQuestions(audit.questions);
 
     return {
       id: audit.id!,
@@ -288,7 +325,7 @@ export class AuditPanel implements OnDestroy {
       date: audit.date,
       responses
     };
-  }
+  });
 }
 
 

@@ -18,9 +18,9 @@
           </button>
         </div>
       </div>
-      <button mat-raised-button color="accent" (click)="addCompany()">Add Company</button>
+      <button mat-raised-button color="accent" data-walkthrough-id="formTests.addCompanyButton" (click)="addCompany()">Add Company</button>
       <div>
-        <button mat-raised-button color="primary" (click)="stepper.next()">Next</button>
+        <button mat-raised-button color="primary" data-walkthrough-id="formTests.nextFromCompaniesButton" (click)="stepper.next()">Next</button>
       </div>
     </form>
   </mat-step>
@@ -45,7 +45,7 @@
             </div>
           </div>
 
-          <button mat-raised-button color="accent" (click)="addServiceType(ci)">Add Service Type</button>
+          <button mat-raised-button color="accent" data-walkthrough-id="formTests.addServiceTypeButton" (click)="addServiceType(ci)">Add Service Type</button>
         </div>
       </div>
 
@@ -255,7 +255,14 @@
               </div>
               <!-- End locations -->
 
-              <button mat-raised-button color="accent" (click)="addLocation(ci, si)">Add Location</button>
+              <button
+                mat-raised-button
+                color="accent"
+                data-walkthrough-id="formTests.addLocationButton"
+                (click)="addLocation(ci, si)"
+              >
+                Add Location
+              </button>
             </div>
           </div> <!-- End serviceTypes -->
         </div>
@@ -271,7 +278,7 @@
   <mat-step>
     <ng-template matStepLabel>Finish</ng-template>
     <p>All data is ready. Click to download JSON:</p>
-    <button mat-raised-button color="primary" (click)="submitToDb()">Save</button>
+    <button mat-raised-button color="primary" data-walkthrough-id="formTests.saveButton" (click)="submitToDb()">Save</button>
     <div>
       <button mat-raised-button (click)="stepper.previous()">Back</button>
     </div>

@@ -11,6 +11,7 @@ import { AuditInstance, AuditSummary } from '../Types';
 
 import { CompanyService } from '../../Services/Company.service';
 import {AuditService} from '../../Services/audit.service';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 
 export const CLOEDomains = ['Safe', 'Effective', 'Caring', 'Responsive', 'WellLed'] as const;
 export type CLOEDomain = typeof CLOEDomains[number];
@@ -50,7 +51,8 @@ export class Ccga implements OnInit {
     private router: Router,
     private http: HttpClient,
     private companyService: CompanyService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private walkthrough: WalkthroughRegistryService
   ) {
     this.companyService.currentCompany$.subscribe((c: any) => {
       this.companyIdSig.set(c?.id ?? c?.companyID ?? null);
@@ -77,6 +79,57 @@ export class Ccga implements OnInit {
           this.auditsSig.set(items ?? []);
         });
     });
+
+    this.walkthrough.register('/CCGA', [
+      {
+        targetId: 'ccga.atAGlance',
+        title: 'At a glance',
+        description:
+          'Base information and audit breakdown. See overall completion (how many audits are completed out of the total), how many are outstanding, the average score, and how many audit types exist (baseline, monthly, and provider).',
+      },
+      {
+        targetId: 'ccga.yearlyPlanner',
+        title: 'Yearly Governance Planner',
+        description:
+          'A yearly calendar with all audits marked across time. You can select different time views (months, weeks, even days), which is helpful when you have multiple audits in the same period.',
+      },
+      {
+        targetId: 'ccga.baselineAuditsCard',
+        title: 'Baseline audits',
+        description:
+          'Baseline comparison: total, completed, and outstanding counts, shown together with the radial bar.',
+      },
+      {
+        targetId: 'ccga.monthlyManagerAuditsCard',
+        title: 'Monthly manager audits',
+        description:
+          'Multi-manager (monthly) audit comparison: total, completed, and outstanding counts, shown together with the radial bar.',
+      },
+      {
+        targetId: 'ccga.providerAuditsCard',
+        title: 'Provider audits',
+        description:
+          'Provider audit comparison: total, completed, and outstanding counts, shown together with the radial bar.',
+      },
+      {
+        targetId: 'ccga.quickAuditCreator',
+        title: 'Audit Creator',
+        description:
+          'Shortcut to `Audit Creator`. Create a new audit (daily or advanced) when you are ready to start work.',
+      },
+      {
+        targetId: 'ccga.quickAuditLibrary',
+        title: 'Audit Library',
+        description:
+          'Shortcut to `Audit Library`. Review/inspect existing audits, and use it to approve and check details.',
+      },
+      {
+        targetId: 'ccga.masterAuditCloe',
+        title: 'Master Audit per CLOE',
+        description:
+          'Master audit hierarchy that includes domain scoring derived from audits. It helps you understand how each domain is performing and where attention is needed.',
+      },
+    ]);
   }
 
   ngOnInit(): void {

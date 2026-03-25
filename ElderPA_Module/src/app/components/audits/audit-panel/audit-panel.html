@@ -1,24 +1,35 @@
 <section class="audit-library">
   <header class="audit-library__header">
-    <h1 class="audit-library__title">Audit Library</h1>
+    <h1 class="audit-library__title" data-walkthrough-id="auditPanel.pageTitle">Audit Library</h1>
     <app-cst-button
       title="Return"
       headerColor="var(--color-primary-container)"
+      data-walkthrough-id="auditPanel.returnButton"
       (headerClick)="moveTo('companies')">
     </app-cst-button>
   </header>
 
   <div class="audit-library__layout">
     <!-- Left: Audit list card -->
-    <aside class="audit-library__list-card card">
+    <aside class="audit-library__list-card card" data-walkthrough-id="auditPanel.auditsListHeader">
       <div class="card__head">
         <span class="card__head-title">Audits</span>
         <div class="card__head-actions">
-          <button type="button" class="btn btn--primary" (click)="createNewAudit()">
+          <button
+            type="button"
+            class="btn btn--primary"
+            data-walkthrough-id="auditPanel.newAuditButton"
+            (click)="createNewAudit()"
+          >
             New audit
           </button>
           @if (isAdmin()) {
-            <button type="button" class="btn btn--secondary" (click)="editSelectedAudit()">
+            <button
+              type="button"
+              class="btn btn--secondary"
+              data-walkthrough-id="auditPanel.editSelectedButton"
+              (click)="editSelectedAudit()"
+            >
               Edit selected
             </button>
           }
@@ -65,7 +76,7 @@
           <!-- Timeline: creation, edits, submission, status -->
           <div class="card detail-panel__section">
             <div class="card__head card__head--sub">
-              <span class="card__head-title">Timeline</span>
+              <span class="card__head-title" data-walkthrough-id="auditPanel.timelineHeader">Timeline</span>
             </div>
             <div class="card__body">
               <div class="audit-timeline">
@@ -134,7 +145,13 @@
               <div class="card__body approval-bar">
                 <span class="approval-bar__label">Status</span>
                 <span class="badge" [class.badge--success]="a.status === 'approved'" [class.badge--neutral]="a.status !== 'approved'">{{ a.status ?? '—' }}</span>
-                <button type="button" class="btn btn--primary" (click)="onApproveAudit(a)" [disabled]="a.status === 'approved'">
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  data-walkthrough-id="auditPanel.approveAuditButton"
+                  (click)="onApproveAudit(a)"
+                  [disabled]="a.status === 'approved'"
+                >
                   Approve audit
                 </button>
               </div>
@@ -149,16 +166,18 @@
           }
 
           <!-- Content: Responses (full file) or Questions & evidence -->
-          <div class="card detail-panel__content">
+          <div class="card detail-panel__content" data-walkthrough-id="auditPanel.questionsOrResponsesHeader">
             <div class="card__head card__head--sub">
-              <span class="card__head-title">{{ isSelectedCustom() ? 'Responses (full audit)' : 'Questions & evidence' }}</span>
+              <span class="card__head-title">
+                {{ isSelectedCustom() ? 'Responses (full audit)' : 'Questions & evidence' }}
+              </span>
             </div>
             <div class="card__body">
               @if (isSelectedCustom()) {
                 @if (isSelectedCustom() && customTemplate(); as tmpl) {
                   <app-form-renderer
                     [template]="tmpl"
-                    [existingResponse]="getCustomResponses()"
+                    [existingResponse]="selectedCustomResponse()"
                     [readonly]="true"
                     class="detail-panel__form">
                   </app-form-renderer>

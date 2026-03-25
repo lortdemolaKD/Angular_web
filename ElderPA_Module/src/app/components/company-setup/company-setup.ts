@@ -14,6 +14,7 @@ import { SetupService } from '../../Services/setup.service';
 import { CqcService, CqcLocationSuggestion } from '../../Services/cqc.service';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 import { catchError, forkJoin, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -105,6 +106,7 @@ export class CompanySetup implements OnInit {
   private cqcService = inject(CqcService);
   private dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
+  private walkthrough = inject(WalkthroughRegistryService);
 
   constructor(private locationService: LocationService) {}
 
@@ -228,6 +230,44 @@ export class CompanySetup implements OnInit {
   }
 
   ngOnInit() {
+    this.walkthrough.register('/setup/company', [
+      {
+        targetId: 'setupCompany.step1Title',
+        title: 'Step 1',
+        description: 'Set up the organisation details (name, address, and CQC provider).',
+      },
+      {
+        targetId: 'setupCompany.nextStep1Button',
+        title: 'Next',
+        description: 'Continue to service type setup.',
+      },
+      {
+        targetId: 'setupCompany.step2Title',
+        title: 'Step 2',
+        description: 'Choose service types and add company locations for each service.',
+      },
+      {
+        targetId: 'setupCompany.serviceButtons',
+        title: 'Service buttons',
+        description: 'Click to add Care Home, Home Care, Live-in Care, or Assisted Living.',
+      },
+      {
+        targetId: 'setupCompany.step4Title',
+        title: 'Step 4',
+        description: 'Configure the Care Home setup pack if you added Care Home service.',
+      },
+      {
+        targetId: 'setupCompany.readyToLaunchTitle',
+        title: 'Ready to launch',
+        description: 'Review what you configured and create the organisation.',
+      },
+      {
+        targetId: 'setupCompany.createOrganisationButton',
+        title: 'Create Organisation',
+        description: 'Submit the wizard and create the organisation in the system.',
+      },
+    ]);
+
     this.loadCurrentCompany();
     this.cqcSearch$.pipe(
       debounceTime(300),
