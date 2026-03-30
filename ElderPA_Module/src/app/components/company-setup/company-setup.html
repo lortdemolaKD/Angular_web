@@ -53,6 +53,28 @@
         <input matInput formControlName="adminContact" placeholder="Leave blank if same as creator">
       </mat-form-field>
 
+      <div class="company-banner-block" *ngIf="companyId">
+        <p class="company-banner-block__label">Company banner</p>
+        <p class="hint">Shown at the top of the main dashboard. Recommended wide image (e.g. 1200×200px).</p>
+        <div
+          class="company-banner-preview"
+          *ngIf="bannerUrl()"
+          [style.backgroundImage]="'url(' + bannerUrl() + ')'"
+          role="img"
+          [attr.aria-label]="'Company banner preview'"
+        ></div>
+        <div class="company-banner-actions">
+          <label class="company-banner-upload" [class.disabled]="bannerUploading()">
+            <input type="file" accept="image/*" (change)="onBannerFile($event)" hidden [disabled]="bannerUploading()" />
+            <span>{{ bannerUploading() ? 'Uploading…' : (bannerUrl() ? 'Replace banner' : 'Upload banner') }}</span>
+          </label>
+          <button type="button" mat-stroked-button (click)="removeBanner()" *ngIf="bannerUrl()" [disabled]="bannerUploading()">
+            Remove banner
+          </button>
+        </div>
+        <p class="company-banner-error" *ngIf="bannerError()">{{ bannerError() }}</p>
+      </div>
+
       <div class="step-actions">
         <button
           mat-flat-button
@@ -197,6 +219,7 @@
     <ng-template matStepLabel>Finish</ng-template>
     <div class="step-content">
       <h2 data-walkthrough-id="setupCompany.readyToLaunchTitle">Ready to launch</h2>
+      <p class="submit-error" *ngIf="submitError()">{{ submitError() }}</p>
       <ul>
         <li><strong>{{ companyName }}</strong></li>
         <li *ngFor="let s of servicesPreview">
@@ -212,7 +235,7 @@
           type="button"
           data-walkthrough-id="setupCompany.createOrganisationButton"
         >
-          Create Organisation
+          {{ isEditMode ? 'Save organisation' : 'Create Organisation' }}
         </button>
       </div>
     </div>

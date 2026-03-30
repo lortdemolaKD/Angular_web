@@ -91,7 +91,7 @@ export class Ccga implements OnInit {
         targetId: 'ccga.yearlyPlanner',
         title: 'Yearly Governance Planner',
         description:
-          'A yearly calendar with all audits marked across time. You can select different time views (months, weeks, even days), which is helpful when you have multiple audits in the same period.',
+          'A calendar of scheduled audits across the year. Switch views (month, week, or day) to see how work is spread. Click a marker on the timeline: if a single audit falls on that slot, it opens; if several do, you get a short list and can open the one you need. Right-click a marker for the same actions.',
       },
       {
         targetId: 'ccga.baselineAuditsCard',

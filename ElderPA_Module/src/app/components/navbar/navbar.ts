@@ -72,6 +72,35 @@ export class NavBar implements OnInit, OnDestroy {
     return r === 'SystemAdmin' || r === 'OrgAdmin';
   }
 
+  get isRegisteredManager(): boolean {
+    return this.user?.role === 'RegisteredManager';
+  }
+
+  /** Organisation edit wizard: OrgAdmin, RegisteredManager (SystemAdmin included via isOrgAdmin). */
+  get canEditCompanyFromProfile(): boolean {
+    return this.isOrgAdmin || this.isRegisteredManager;
+  }
+
+  get isAuditor(): boolean {
+    return this.user?.role === 'Auditor';
+  }
+
+  /** Hide nav items even if routes exist. */
+  get canSeeCompanies(): boolean {
+    // Per requirement: Auditor should not see Companies
+    return !this.isAuditor;
+  }
+
+  get canSeeBonus(): boolean {
+    // Per requirement: Auditor should not see Bonus
+    return !this.isAuditor;
+  }
+
+  get canSeeAudits(): boolean {
+    // Per requirement: RegisteredManager should not see Audits/Audit Library in main nav
+    return !this.isOrgAdmin && !this.isRegisteredManager;
+  }
+
 
   constructor(
     private router: Router,

@@ -72,6 +72,13 @@ const LocationSchema = new mongoose.Schema(
     areas: [String],
     wings: [String],
 
+    /** Current weekly KPI set; must persist or PUT /api/companies/:id will duplicate PerformanceSets (unique locationId+period). */
+    currentPerformanceSetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PerformanceSet",
+      default: null,
+    },
+
     // soft delete
     deletedAt: { type: Date, default: null },
     deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Account", default: null },
@@ -79,10 +86,16 @@ const LocationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// unique location "code" per company (if code exists)
+// Unique (companyId, code) only when code is a non-empty string.
+// Sparse+null counted as duplicate for { companyId, code: null } — use partial filter instead.
 LocationSchema.index(
   { companyId: 1, code: 1 },
-  { unique: true, sparse: true }
+  {
+    unique: true,
+    partialFilterExpression: {
+      code: { $exists: true, $type: "string", $gt: "" },
+    },
+  }
 );
 
 export const Location = mongoose.model("Location", LocationSchema);

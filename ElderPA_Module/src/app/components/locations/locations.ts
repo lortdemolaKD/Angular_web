@@ -295,7 +295,7 @@ export class Locations implements OnInit, OnDestroy {
         targetId: 'locations.tabCCGA',
         title: 'Compliance Audit Hub',
         description:
-          'This is the Compliance Audit Hub: where you can see all upcoming audits, all completed audits, their scores, and the audit-related information. Because this hub holds everything together, it also includes other areas like surveys and navigation to the next sections.',
+          'This is the Compliance Audit Hub: upcoming and completed audits, scores, and related information. It includes the Yearly Governance Planner—use month/week/day views and click timeline markers to open the linked audits (or choose from a list when several fall on the same slot). Surveys and shortcuts to the Audit Library and Creator are here too.',
       },
       { targetId: 'locations.ccgaPanel', title: 'CCGA panel', description: 'Embedded Compliance Audit Hub.' },
       { targetId: 'ccga.atAGlance', title: 'At a glance', description:
@@ -305,7 +305,7 @@ export class Locations implements OnInit, OnDestroy {
         targetId: 'ccga.yearlyPlanner',
         title: 'Yearly Governance Planner',
         description:
-          'A yearly calendar with all audits marked across time. You can select different time views (months, weeks, even days), which is helpful when you have multiple audits in the same period.',
+          'A calendar of scheduled audits across the year. Switch views (month, week, or day) to see how work is spread. Click a marker on the timeline: if a single audit falls on that slot, it opens; if several do, you get a short list and can open the one you need. Right-click a marker for the same actions.',
       },
       {
         targetId: 'ccga.baselineAuditsCard',

@@ -231,15 +231,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.table-scroll-rows-5 {
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.worker-table {
-  margin-top: 10px;
-}
-
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -309,12 +300,8 @@
   color: var(--color-text);
 }
 
-.calc-breakdown {
-  margin-top: 10px;
-}
-
 .month-bars {
-  height: 130px;
+  height: 110px;
   display: flex;
   gap: 6px;
   align-items: flex-end;
@@ -352,5 +339,111 @@
 .month-bar-value {
   font-size: 11px;
   opacity: 0.75;
+  color: var(--color-text);
+}
+
+/* Bonus pot: simplified single-column layout */
+.bonus-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Two-column row: chart (left) | technical + staff (right) */
+.bonus-two-col {
+  align-items: start;
+}
+
+.bonus-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bonus-hint {
+  margin-bottom: 0;
+}
+
+.subhint {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.78;
+  color: var(--color-text);
+}
+
+.bonus-details {
+  border: 1px solid var(--sidebar-hover);
+  border-radius: 12px;
+  padding: 0 12px 12px;
+  background: var(--color-surface);
+}
+
+.bonus-details > summary.bonus-details-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  list-style: none;
+}
+
+.bonus-details > summary.bonus-details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.bonus-details > summary.bonus-details-summary::marker {
+  display: none;
+}
+
+.bonus-details-summary-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.35;
+}
+
+/* Disclosure chevron on the right */
+.bonus-details > summary.bonus-details-summary::after {
+  content: '';
+  display: block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: 4px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.bonus-details[open] > summary.bonus-details-summary::after {
+  transform: rotate(-135deg);
+}
+
+.details-lead {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0.8;
+  color: var(--color-text);
+}
+
+.bonus-spend {
+  margin-top: 4px;
+  border-top: 1px solid var(--sidebar-hover);
+  padding-top: 14px;
+}
+
+.bonus-spend h4 {
+  margin: 0 0 6px 0;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--color-text);
 }

@@ -1,4 +1,5 @@
 <div class="data-table-wrapper" [attr.aria-label]="ariaLabel()" [class.data-table-wrapper--sticky]="stickyHeader()">
+  @if (showToolbar()) {
   <div class="data-table-toolbar" role="toolbar">
     @if (showSearch()) {
       <div class="data-table-toolbar__search" role="search">
@@ -50,6 +51,7 @@
       <button type="button" class="data-table-toolbar-btn" (click)="exportExcel()">Export Excel</button>
     }
   </div>
+  }
   @if (hasActiveFilters()) {
     <div class="data-table-filters-bar">
       @for (entry of activeFilterEntries(); track entry[0]) {

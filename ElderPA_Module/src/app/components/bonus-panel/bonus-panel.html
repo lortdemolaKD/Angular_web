@@ -20,10 +20,23 @@
 
   <div class="content">
     <!-- Petty cash -->
-    <section class="card petty" data-walkthrough-id="bonus.pettyCashTitle">
+    <section
+      class="card petty"
+      data-walkthrough-id="bonus.pettyCashTitle"
+      (contextmenu)="$event.preventDefault(); openPettyCashAuditDialog()"
+    >
       <div class="card-header">
         <h3>Petty cash</h3>
         <div class="pill pill-open">Always available</div>
+        <button
+          type="button"
+          class="btn btn--secondary"
+          (click)="openPettyCashAuditDialog()"
+          [disabled]="!pettyCashAuditId()"
+          title="View the petty cash audit"
+        >
+          View audit
+        </button>
       </div>
 
       <div class="grid-3">
@@ -106,155 +119,124 @@
         <div class="pill"
              [class.pill-open]="isBonusSpendWindowOpen()"
              [class.pill-closed]="!isBonusSpendWindowOpen()">
-          Spend window: {{ isBonusSpendWindowOpen() ? 'OPEN (22 Dec - 31 Dec)' : 'CLOSED' }}
+          {{ isBonusSpendWindowOpen() ? 'Spending open (22–31 Dec)' : 'Spending locked until 22 Dec' }}
         </div>
       </div>
 
-      <div class="grid-2">
-        <!-- Left: totals + deposits -->
-        <div>
-          <div class="grid-3">
-            <div class="stat">
-              <div class="k">Total accumulated</div>
-              <div class="v">£{{ potState().totalAccumulated | number:'1.0-0' }}</div>
-            </div>
-
-            <div class="stat">
-              <div class="k">Spent</div>
-              <div class="v">£{{ bonusSpentTotal() | number:'1.0-0' }}</div>
-            </div>
-
-            <div class="stat">
-              <div class="k">Available (bonus pot)</div>
-              <div class="v">£{{ bonusBalance() | number:'1.0-0' }}</div>
-            </div>
+      <div class="bonus-body">
+        <div class="grid-3">
+          <div class="stat">
+            <div class="k">Total saved in the pot</div>
+            <div class="v">£{{ potState().totalAccumulated | number:'1.2-2' }}</div>
           </div>
 
-          <p class="hint">
-            Bonus pot spending is locked until 22 Dec and closes after 31 Dec.
-          </p>
+          <div class="stat">
+            <div class="k">Already spent</div>
+            <div class="v">£{{ bonusSpentTotal() | number:'1.2-2' }}</div>
+          </div>
 
-          <div class="monthly-history">
-            <h4>Monthly deposits ({{ potState().currentMonth }}/12)</h4>
+          <div class="stat">
+            <div class="k">Left to spend</div>
+            <div class="v">£{{ bonusBalance() | number:'1.2-2' }}</div>
+          </div>
+        </div>
 
-            <div class="month-bars">
-              <div class="month-bar" *ngFor="let deposit of potState().monthlyDeposits; let i = index">
-                <div class="month-bar-fill" [style.height.%]="normalizedDeposits()[i]"></div>
-                <div class="month-bar-label">M{{ i + 1 }}</div>
-                <div class="month-bar-value">£{{ deposit | number:'1.0-0' }}</div>
+        <p class="hint bonus-hint">
+          You can record spending between <strong>22 Dec</strong> and <strong>31 Dec</strong>. Outside those dates the pot is view-only.
+        </p>
+
+        <div class="grid-2 bonus-two-col">
+          <!-- Left: monthly chart only -->
+          <div class="bonus-col">
+            <div class="monthly-history">
+              <h4>Money added each month (year to date: month {{ potState().currentMonth }} of 12)</h4>
+              <div class="month-bars">
+                <div class="month-bar" *ngFor="let deposit of potState().monthlyDeposits; let i = index">
+                  <div class="month-bar-fill" [style.height.%]="normalizedDeposits()[i]"></div>
+                  <div class="month-bar-label">M{{ i + 1 }}</div>
+                  <div class="month-bar-value">£{{ deposit | number:'1.2-2' }}</div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="monthly-history calc-breakdown">
-            <h4>Monthly deposit calculations</h4>
-            <div class="table-scroll table-scroll-rows-5">
-              <table class="table small">
-                <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Key factor</th>
-                  <th>High alerts</th>
-                  <th>Alert factor</th>
-                  <th>Productivity</th>
-                  <th>Prod factor</th>
-                  <th>Final £</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr *ngFor="let b of monthlyDepositBreakdowns()">
-                  <td>M{{ b.month }}</td>
-                  <td>{{ b.keyMetricsFactor | number:'1.2-2' }}</td>
-                  <td>{{ b.highActiveAlerts }}</td>
-                  <td>{{ b.alertPenaltyFactor | number:'1.2-2' }}</td>
-                  <td>{{ b.productivityScore | number:'1.0-1' }}</td>
-                  <td>{{ b.productivityFactor | number:'1.2-2' }}</td>
-                  <td>£{{ b.finalDeposit | number:'1.0-0' }}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
+          <!-- Right: technical breakdown + staff list -->
+          <div class="bonus-col bonus-col--aside">
+            <details class="bonus-details" data-walkthrough-id="bonus.technicalBreakdown">
+              <summary class="bonus-details-summary">
+                <span class="bonus-details-summary-text">Technical breakdown: how each month’s amount was calculated</span>
+              </summary>
+              <p class="details-lead">
+                Each month: up to £100, minus 5% of the cap per active High alert, then multiplied by team productivity (hours vs target). Example: 3 alerts → £85 left; at 87.93% productivity → £74.74.
+              </p>
+              <div class="table-scroll">
+                <table class="table small">
+                  <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th title="Active High-severity alerts">High alerts</th>
+                    <th title="1 − 0.05 × alerts">Alert mult.</th>
+                    <th title="£100 × alert mult.">After alerts £</th>
+                    <th title="Team average productivity">Team prod. %</th>
+                    <th title="Team prod. ÷ 100">×</th>
+                    <th>Final £</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let b of monthlyDepositBreakdowns()">
+                    <td>M{{ b.month }}</td>
+                    <td>{{ b.highActiveAlerts }}</td>
+                    <td>{{ b.alertPenaltyFactor | number:'1.2-2' }}</td>
+                    <td>£{{ b.amountAfterAlerts | number:'1.2-2' }}</td>
+                    <td>{{ b.productivityScore | number:'1.0-1' }}</td>
+                    <td>{{ b.productivityMultiplier | number:'1.2-2' }}</td>
+                    <td>£{{ b.finalDeposit | number:'1.2-2' }}</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
+
+            <details class="bonus-details" data-walkthrough-id="bonus.staffList">
+              <summary class="bonus-details-summary">
+                <span class="bonus-details-summary-text">Staff list: hours and productivity (this month)</span>
+              </summary>
+              <div class="table-scroll worker-table">
+                <table class="table small">
+                  <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Hours</th>
+                    <th>Target</th>
+                    <th>Productivity %</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let w of workerProductivityRows()">
+                    <td>{{ w.workerName }}</td>
+                    <td>{{ w.workerRole }}</td>
+                    <td>{{ w.hoursWorked | number:'1.0-0' }}</td>
+                    <td>{{ w.targetHours | number:'1.0-0' }}</td>
+                    <td>{{ w.productivity | number:'1.0-1' }}</td>
+                  </tr>
+                  <tr *ngIf="workerProductivityRows().length === 0">
+                    <td colspan="5" class="empty">No staff rows for this month yet.</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </details>
           </div>
         </div>
 
-        <!-- Right: bonus lines table (uses TS computed lines()) -->
-        <div>
-          <div class="table-scroll">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Role</th>
-                <th>Base %</th>
-                <th>Productivity</th>
-                <th>Auto %</th>
-                <th>Manual +/- %</th>
-                <th>Final %</th>
-              </tr>
-              </thead>
-
-              <tbody>
-              <tr *ngFor="let l of lines()">
-                <td>{{ l.role }}</td>
-                <td>{{ l.basePercent | number:'1.0-1' }}</td>
-                <td>{{ l.productivityScore | number:'1.0-1' }}</td>
-                <td class="strong">{{ l.autoBonusPercent | number:'1.0-1' }}</td>
-
-                <td>
-                  <!-- Admin-only editing; TS already blocks Managers in updateManualAdjust() -->
-                  <input
-                    class="num"
-                    type="number"
-                    [value]="manualAdjustments()[l.role] ?? 0"
-                    (input)="updateManualAdjust(l.role, ($any($event.target)).value)"
-                    [disabled]="!canEditManualAdjustments()"
-                  >
-                </td>
-
-                <td class="strong">{{ l.finalBonusPercent | number:'1.0-1' }}</td>
-              </tr>
-
-              <tr class="total-row">
-                <td colspan="5" class="strong">Total</td>
-                <td class="strong">{{ totalFinalPercent() | number:'1.0-1' }}</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="table-scroll table-scroll-rows-5 worker-table">
-            <table class="table small">
-              <thead>
-              <tr>
-                <th>Worker name</th>
-                <th>Worker role</th>
-                <th>Hours worked</th>
-                <th>Target hours</th>
-                <th>Productivity</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr *ngFor="let w of workerProductivityRows()">
-                <td>{{ w.workerName }}</td>
-                <td>{{ w.workerRole }}</td>
-                <td>{{ w.hoursWorked | number:'1.0-0' }}</td>
-                <td>{{ w.targetHours | number:'1.0-0' }}</td>
-                <td>{{ w.productivity | number:'1.0-1' }}</td>
-              </tr>
-              <tr *ngIf="workerProductivityRows().length === 0">
-                <td colspan="5" class="empty">No worker rows found for this month.</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Spend bonus pot -->
-      <div class="spend-block">
-        <h4>Spend bonus pot (e.g., Christmas presents)</h4>
+        <!-- Spend bonus pot (full width under the two columns) -->
+        <div class="spend-block bonus-spend">
+        <h4>Use the bonus pot</h4>
+        <p class="subhint">Examples: team gifts, seasonal treats. Only in the December window above.</p>
 
         <div class="hint" *ngIf="!isBonusSpendWindowOpen()">
-          Spend button will unlock on 22 Dec.
+          Spending is unlocked from <strong>22 December</strong>.
         </div>
 
         <div class="spend-form" *ngIf="isBonusSpendWindowOpen() && canSpendBonus()">
@@ -310,6 +292,7 @@
             </tr>
             </tbody>
           </table>
+        </div>
         </div>
       </div>
     </section>

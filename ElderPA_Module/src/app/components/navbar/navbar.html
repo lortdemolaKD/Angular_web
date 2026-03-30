@@ -42,20 +42,19 @@
      <mat-icon class="nav-link__icon">business</mat-icon>
      <span>Organization</span>
    </a>--->
-    <a routerLink="/companies" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="nav-link">
+   <a routerLink="/companies" routerLinkActive="active" *ngIf="canSeeCompanies" class="nav-link">
      <mat-icon class="nav-link__icon">location_on</mat-icon>
      <span>Companies</span>
    </a>
-   <a routerLink="/Bonus" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="nav-link">
+   <a routerLink="/Bonus" routerLinkActive="active" *ngIf="canSeeBonus" class="nav-link">
      <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
      <span>Bonus</span>
    </a>
-    <!-- Chart/Test links intentionally removed -->
-  <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="nav-link">
+   <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="canSeeAudits" class="nav-link">
      <mat-icon class="nav-link__icon">assignment</mat-icon>
      <span>Audits</span>
    </a>
-  <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="nav-link">
+   <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="canSeeAudits" class="nav-link">
      <mat-icon class="nav-link__icon">menu_book</mat-icon>
      <span>Audit Library</span>
    </a>
@@ -85,6 +84,7 @@
              [user]="user"
              [companyName]="currentCompany?.name ?? null"
              [locationName]="currentLocation?.name ?? null"
+             [canEditCompany]="canEditCompanyFromProfile"
              (close)="closeAccountPanel()">
            </app-user-account-panel>
          </div>
@@ -126,20 +126,19 @@
       <mat-icon class="nav-link__icon">business</mat-icon>
       <span>Organization</span>
     </a>
-    <a routerLink="/companies" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="mobile-nav-link nav-link">
+    <a routerLink="/companies" routerLinkActive="active" *ngIf="canSeeCompanies" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">location_on</mat-icon>
       <span>Companies</span>
     </a>
-    <a routerLink="/Bonus" routerLinkActive="active" *ngIf="user?.role !== 'Auditor'" class="mobile-nav-link nav-link">
+    <a routerLink="/Bonus" routerLinkActive="active" *ngIf="canSeeBonus" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">card_giftcard</mat-icon>
       <span>Bonus</span>
     </a>
-    <!-- Chart/Test links intentionally removed -->
-    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="mobile-nav-link nav-link">
+    <a routerLink="/CCGA/AuditCreator" routerLinkActive="active" *ngIf="canSeeAudits" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">assignment</mat-icon>
       <span>Audits</span>
     </a>
-    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="!isOrgAdmin && user?.role !== 'RegisteredManager'" class="mobile-nav-link nav-link">
+    <a routerLink="/CCGA/AuditLib" routerLinkActive="active" *ngIf="canSeeAudits" class="mobile-nav-link nav-link">
       <mat-icon class="nav-link__icon">menu_book</mat-icon>
       <span>Audit Library</span>
     </a>

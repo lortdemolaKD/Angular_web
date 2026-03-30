@@ -96,7 +96,7 @@ export class Home implements OnInit {
       case 'tasksCount':
         return `Summary of open tasks so you can prioritize resolution work before alerts escalate.`;
       case 'governancePlanner':
-        return `Yearly governance planning. Track audit work across the year and stay aligned with governance timelines.`;
+        return `Yearly governance planning. Use month/week/day views, then click markers on the timeline to open audits (or pick from a list when several share the same slot). Right-click works too.`;
       case 'auditCompletion':
         return `Audit completion overview. Use it to understand progress and what remains outstanding.`;
       case 'riskOverview':

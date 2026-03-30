@@ -139,3 +139,29 @@
   font-weight: 500;
   color: var(--color-text, #333);
 }
+
+.user-account-panel__actions {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--sidebar-hover, #e0e0e0);
+}
+
+.user-account-panel__edit-company {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-primary, #6750a4);
+  text-decoration: none;
+}
+
+.user-account-panel__edit-company:hover {
+  text-decoration: underline;
+}
+
+.user-account-panel__edit-company mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}

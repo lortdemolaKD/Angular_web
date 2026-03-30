@@ -6,6 +6,18 @@
   box-sizing: border-box;
 }
 
+.dashboard-company-banner {
+  width: 100%;
+  max-width: 100%;
+  min-height: 140px;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--color-surface-container-high, #eee);
+  box-sizing: border-box;
+}
+
 .dashboard-widgets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

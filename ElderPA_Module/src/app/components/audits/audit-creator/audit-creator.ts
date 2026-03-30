@@ -249,15 +249,9 @@ export class AuditCreator implements OnInit {
     if (template?.fields?.length && questions.length > 0) {
       template.fields.forEach((field, i) => {
         if (i < questions.length && !(field.id in responses)) {
-          const q = questions[i];
-          const custom = (q as any).customFields;
-          if (q.evidence?.length > 0 || (custom?.fieldType === 'question') || (q.score != null && (q.evidenceSummaryText != null || q.actionRequired != null))) {
-            responses[field.id] = { score: q.score ?? 0, evidence: q.evidenceSummaryText ?? '', actionRequired: q.actionRequired ?? 'None', ...(custom?.rawResponse && typeof (custom as any).rawResponse === 'object' ? (custom as any).rawResponse : {}) };
-          } else if (custom?.value !== undefined) {
-            responses[field.id] = custom.value;
-          } else {
-            responses[field.id] = q.score ?? q.text ?? '';
-          }
+          const patch = buildCustomResponsesFromQuestions([questions[i]]);
+          const v = Object.values(patch)[0];
+          responses[field.id] = v;
         }
       });
     }
@@ -933,28 +927,9 @@ export class AuditCreator implements OnInit {
     return this.convertQuestionsToResponsesWithIndex(questions ?? []);
   }
 
-  /** Same as above but uses field-${i} when templateQuestionId is missing (matches synthetic template in Daily). */
+  /** Same field-id rules as Audit Library (`buildCustomResponsesFromQuestions`). */
   private convertQuestionsToResponsesWithIndex(questions: AuditQuestionInstance[]): Record<string, any> {
-    const responses: Record<string, any> = {};
-    (questions ?? []).forEach((q, i) => {
-      const fieldId = q.templateQuestionId || `field-${i}`;
-      const custom = (q as any).customFields;
-      // Scorable/evidence question type (regulation or custom 'question' field)
-      if (q.evidence?.length > 0 || (custom?.fieldType === 'question') || (q.score != null && (q.evidenceSummaryText != null || q.actionRequired != null))) {
-        responses[fieldId] = {
-          score: q.score ?? 0,
-          evidence: q.evidenceSummaryText ?? '',
-          actionRequired: q.actionRequired ?? 'None',
-          ...(custom?.rawResponse && typeof custom.rawResponse === 'object' ? custom.rawResponse : {}),
-        };
-      } else if (custom?.value !== undefined) {
-        // Table, checkbox, text, number, date – use stored custom value
-        responses[fieldId] = custom.value;
-      } else {
-        responses[fieldId] = q.score ?? q.text ?? '';
-      }
-    });
-    return responses;
+    return buildCustomResponsesFromQuestions(questions ?? []);
   }
 
   convertResponsesToQuestions(

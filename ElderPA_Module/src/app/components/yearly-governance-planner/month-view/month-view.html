@@ -1,5 +1,26 @@
 
 <div class="month-view">
+  <div class="context-backdrop" *ngIf="menuOpen" (click)="closeMenu()" (contextmenu)="$event.preventDefault(); closeMenu()"></div>
+  <div
+    class="context-menu"
+    *ngIf="menuOpen"
+    [style.left.px]="menuX"
+    [style.top.px]="menuY"
+    role="menu"
+  >
+    <button
+      type="button"
+      class="context-menu__item"
+      *ngFor="let e of menuEvents"
+      (click)="onOpenAuditByEvent(e)"
+      role="menuitem"
+      [title]="e.title"
+    >
+      Open audit: {{ e.title }}
+    </button>
+    <div class="context-menu__empty" *ngIf="menuEvents.length === 0">No audits found.</div>
+  </div>
+
   <div class="week-header">
     <div class="day-header" *ngFor="let d of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']">
       {{ d }}
@@ -12,9 +33,10 @@
       <div class="day"
            *ngFor="let day of week"
            [class.outside-month]="day.date.month() !== viewDate.month()"
-           [title]="getDayTooltip(day)">
+           [title]="getDayTooltip(day)"
+           (contextmenu)="openDayMenu($event, day)">
         <div class="date">{{ day.date.date() }}</div>
-        <div class="dots-container" *ngIf="day.events.length > 0">
+        <div class="dots-container" *ngIf="day.events.length > 0" (click)="openDayMenu($event, day)">
           <!-- Color-grouped dots with per-color tooltip -->
           <div class="dot"
                *ngFor="let group of getColorCounts(day); let i = index"

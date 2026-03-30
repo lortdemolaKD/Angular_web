@@ -39,4 +39,15 @@
       <span class="user-account-panel__value">{{ locationName }}</span>
     </div>
   </div>
+
+  <div class="user-account-panel__actions" *ngIf="canEditCompany">
+    <a
+      routerLink="/setup/company"
+      class="user-account-panel__edit-company"
+      (click)="onClose()"
+    >
+      <mat-icon aria-hidden="true">edit</mat-icon>
+      Edit company
+    </a>
+  </div>
 </div>

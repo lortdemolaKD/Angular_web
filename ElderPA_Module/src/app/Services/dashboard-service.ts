@@ -202,7 +202,10 @@ export class DashboardService {
       tap((res) => {
         if (!res) return;
         if (res.monitoredLocationIds) this.monitoredLocationIds.set(res.monitoredLocationIds);
-        if (res.widgets) this._rawWidgets.set(res.widgets);
+        // When adding a monitor, the server does not create KPI/KFI/KCI widgets; syncing widgets here would drop the ones addLocationWidgets adds. Only apply server widgets when removing (server strips auto widgets).
+        if (removedLocationId && Array.isArray(res.widgets)) {
+          this._rawWidgets.set(res.widgets);
+        }
       })
     );
   }

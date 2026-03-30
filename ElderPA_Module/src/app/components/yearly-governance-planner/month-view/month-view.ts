@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 import moment from 'moment-timezone';
 import {CommonModule, NgFor, NgIf} from '@angular/common';
 import {CalendarEvent, DayEvent, MonthDay} from '../../Types';
@@ -13,11 +13,45 @@ import {CalendarEvent, DayEvent, MonthDay} from '../../Types';
 export class MonthView implements OnChanges {
   @Input() events: CalendarEvent[] = [];
   @Input() viewDate!: moment.Moment;
+  @Output() openAudit = new EventEmitter<string>();
 
   weeks: MonthDay[][] = [];
+  menuOpen = false;
+  menuX = 0;
+  menuY = 0;
+  menuEvents: DayEvent[] = [];
 
   ngOnChanges(): void {
     this.generateMonth();
+  }
+
+  openDayMenu(ev: MouseEvent, day: MonthDay): void {
+    if (!day?.events?.length) return;
+    if (ev.type === 'contextmenu') ev.preventDefault();
+    ev.stopPropagation();
+
+    const audits = [...day.events].filter((e) => !!(e as any).auditId);
+    if (audits.length === 1) {
+      this.onOpenAuditByEvent(audits[0]);
+      return;
+    }
+
+    this.menuOpen = true;
+    this.menuX = ev.clientX;
+    this.menuY = ev.clientY;
+    this.menuEvents = audits;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+    this.menuEvents = [];
+  }
+
+  onOpenAuditByEvent(e: DayEvent): void {
+    const id = String((e as any).auditId ?? '').trim();
+    if (!id) return;
+    this.openAudit.emit(id);
+    this.closeMenu();
   }
   getColorCounts(day: MonthDay): Array<{color: string, count: number, titles: string[]}> {
     const colorMap = new Map<string, {count: number, titles: string[]}>();

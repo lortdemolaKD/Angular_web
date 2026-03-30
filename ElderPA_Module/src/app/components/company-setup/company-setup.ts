@@ -49,6 +49,7 @@ interface CompanyDto {
   cqcProviderId?: string;
   registeredIn?: 'England' | 'Wales' | 'Scotland';
   adminContact?: string;
+  bannerUrl?: string | null;
   serviceTypes: ServiceType[];
 }
 
@@ -113,6 +114,13 @@ export class CompanySetup implements OnInit {
   /** CQC Provider ID verification state */
   cqcVerifyStatus = signal<'idle' | 'verifying' | 'valid' | 'invalid'>('idle');
   cqcVerifyMessage = signal<string>('');
+
+  /** Company dashboard banner (URL); only when editing an existing company */
+  bannerUrl = signal<string | null>(null);
+  bannerUploading = signal(false);
+  bannerError = signal<string>('');
+  /** Last save error (API message) */
+  submitError = signal<string>('');
 
   /** CQC Location search: keyed by 'serviceIndex-locIndex' */
   cqcLocationSuggestions = signal<Record<string, CqcLocationSuggestion[]>>({});
@@ -333,11 +341,13 @@ export class CompanySetup implements OnInit {
           name: company.name,
           director: company.director ?? '',
           companyRegisteredNumber: (company as any).companyRegisteredNumber ?? company.registrationNumber ?? '',
-          cqcProviderId: (company as any).cqcProviderId ?? '',
+          cqcProviderId: (company as any).cqcProviderId ?? (company as any).CQC_number ?? '',
           registeredAddress: company.address ?? '',
           registeredIn: (company as any).registeredIn ?? 'England',
           adminContact: (company as any).adminContact ?? ''
         });
+        this.bannerUrl.set((company as any).bannerUrl ?? null);
+        this.bannerError.set('');
 
         /* -------------------------------
          * SERVICES (DERIVED)
@@ -425,7 +435,52 @@ export class CompanySetup implements OnInit {
     console.log('Create mode: No existing company for this user.');
     this.isEditMode = false;
     this.isLoading = false;
+    this.bannerUrl.set(null);
     // Optionally redirect: this.router.navigate(['/register-org-admin']);
+  }
+
+  onBannerFile(event: Event): void {
+    const cid = this.companyId;
+    if (!cid) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+    this.bannerError.set('');
+    this.bannerUploading.set(true);
+    const fd = new FormData();
+    fd.append('banner', file);
+    this.http.post<{ bannerUrl: string }>(`/api/companies/${encodeURIComponent(cid)}/banner`, fd).subscribe({
+      next: (res) => {
+        this.bannerUrl.set(res.bannerUrl ?? null);
+        this.bannerUploading.set(false);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.bannerError.set(err?.error?.message ?? 'Banner upload failed');
+        this.bannerUploading.set(false);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  removeBanner(): void {
+    const cid = this.companyId;
+    if (!cid) return;
+    this.bannerError.set('');
+    this.bannerUploading.set(true);
+    this.http.delete<{ bannerUrl: null }>(`/api/companies/${encodeURIComponent(cid)}/banner`).subscribe({
+      next: () => {
+        this.bannerUrl.set(null);
+        this.bannerUploading.set(false);
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.bannerError.set(err?.error?.message ?? 'Could not remove banner');
+        this.bannerUploading.set(false);
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   // Actions (unchanged except submit)
@@ -451,6 +506,7 @@ export class CompanySetup implements OnInit {
   // ✅ UPDATED: Now updates instead of creates
   submit() {
     if (this.setupForm.invalid || this.isLoading) return;
+    this.submitError.set('');
 
     const formVal = this.setupForm.value;
     const locationsWithInvites: { location: any; inviteList: InviteEntry[] }[] = [];
@@ -462,6 +518,7 @@ export class CompanySetup implements OnInit {
       cqcProviderId: formVal.company?.cqcProviderId,
       registeredIn: formVal.company?.registeredIn,
       adminContact: formVal.company?.adminContact,
+      bannerUrl: this.bannerUrl(),
       serviceTypes: formVal.services?.map((s: any) => ({
         name: s.type,
         locations: (s.locations || []).map((l: any) => {
@@ -506,7 +563,11 @@ export class CompanySetup implements OnInit {
           if (companyId) doSendInvites(companyId, locationIds);
           this.router.navigate(['/']);
         },
-        error: (err) => console.error('Create failed', err)
+        error: (err) => {
+          const msg = err?.error?.message ?? err?.message ?? 'Create failed';
+          this.submitError.set(typeof msg === 'string' ? msg : 'Create failed');
+          console.error('Create failed', err);
+        }
       });
       return;
     }
@@ -516,7 +577,11 @@ export class CompanySetup implements OnInit {
         doSendInvites(this.companyId!);
         this.router.navigate(['/']);
       },
-      error: (err) => console.error('Update failed', err)
+      error: (err) => {
+        const msg = err?.error?.message ?? err?.message ?? 'Update failed';
+        this.submitError.set(typeof msg === 'string' ? msg : 'Update failed');
+        console.error('Update failed', err);
+      }
     });
   }
 }

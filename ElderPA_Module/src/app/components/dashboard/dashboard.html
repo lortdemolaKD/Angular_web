@@ -32,6 +32,14 @@
     }
   </mat-menu>
 </div>
+@if (companyBannerUrl()) {
+  <div
+    class="dashboard-company-banner"
+    [style.backgroundImage]="'url(' + companyBannerUrl() + ')'"
+    role="img"
+    [attr.aria-label]="'Organisation banner'"
+  ></div>
+}
 <div class="dashboard-widgets" #dashboard cdkDropListGroup data-walkthrough-id="home.widgetsArea">
   @for (w of store.addedWidgets(); track w.id){
     <app-widget

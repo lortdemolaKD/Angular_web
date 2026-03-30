@@ -1,5 +1,84 @@
-<app-dynamic-flex-table
-  [config]="tableConfig"
-  [data]="tableData()"
-(rowClicked)="onRowClicked($event)">
-</app-dynamic-flex-table>
+<div class="audit-list">
+  <div
+    class="audit-list__toolbar"
+    role="region"
+    aria-label="Audit list grouping"
+    data-walkthrough-id="auditPanel.listFiltersToolbar"
+  >
+    <div class="audit-list__row">
+      <label class="audit-list__field">
+        <span class="audit-list__label">Group by</span>
+        <select
+          class="audit-list__select"
+          [value]="groupMode()"
+          (change)="setGroupMode($any($event.target).value)"
+        >
+          @for (opt of groupModeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+      <div class="audit-list__range">
+        <span class="audit-list__label">Date range</span>
+        <input
+          type="date"
+          class="audit-list__date"
+          [value]="dateRangeFrom()"
+          (change)="onDateFromInput($any($event.target).value)"
+          title="Filter audits from this date (inclusive)"
+        />
+        <span class="audit-list__range-sep">–</span>
+        <input
+          type="date"
+          class="audit-list__date"
+          [value]="dateRangeTo()"
+          (change)="onDateToInput($any($event.target).value)"
+          title="Filter audits to this date (inclusive)"
+        />
+        @if (hasDateRange()) {
+          <button type="button" class="audit-list__clear" (click)="clearDateRange()">Clear range</button>
+        }
+      </div>
+    </div>
+    @if (hasDateRange()) {
+      <p class="audit-list__hint">Showing audits with a schedule date in this range (applies before grouping).</p>
+    }
+  </div>
+
+  @if (filteredAudits().length === 0) {
+    <p class="audit-list__empty">No audits match the current filters.</p>
+  } @else if (groupMode() === 'none') {
+    <app-dynamic-flex-table
+      [config]="tableConfig"
+      [data]="flatTableData()"
+      (rowClicked)="onRowClicked($event)"
+    />
+  } @else if (groupedTableSections(); as groups) {
+    <div class="audit-list__groups">
+      @for (g of groups; track groupSectionTrackId(g)) {
+        <details class="audit-group">
+          <summary class="audit-group__summary">
+            <span class="audit-group__lead">
+              <span class="audit-group__chev" aria-hidden="true">▸</span>
+              <span class="audit-group__title">{{ g.label }}</span>
+            </span>
+            <span
+              class="audit-group__meta"
+              [attr.aria-label]="g.rows.length === 1 ? '1 audit in this group' : g.rows.length + ' audits in this group'"
+            >
+              <span class="audit-group__count">{{ g.rows.length }}</span>
+              <span class="audit-group__count-suffix">{{ g.rows.length === 1 ? 'audit' : 'audits' }}</span>
+            </span>
+          </summary>
+          <div class="audit-group__body">
+            <app-dynamic-flex-table
+              [config]="tableConfig"
+              [data]="g.rows"
+              (rowClicked)="onRowClicked($event)"
+            />
+          </div>
+        </details>
+      }
+    </div>
+  }
+</div>

@@ -27,6 +27,8 @@ type Role =
   | 'Auditor';
 
 const ADMIN_ROLES: Role[] = ['SystemAdmin', 'OrgAdmin'];
+/** Organisation wizard: create/edit company (incl. banner); OrgAdmin, RegisteredManager, SystemAdmin */
+const COMPANY_SETUP_ROLES: Role[] = ['SystemAdmin', 'OrgAdmin', 'RegisteredManager'];
 const DASHBOARD_ROLES: Role[] = ['SystemAdmin', 'OrgAdmin', 'RegisteredManager'];
 const AUDIT_ROLES: Role[] = [
   'SystemAdmin',
@@ -36,26 +38,6 @@ const AUDIT_ROLES: Role[] = [
   'CareWorker',
   'SeniorCareWorker',
   'Auditor',
-];
-
-// Bonus is restricted: Auditor should not be able to access it at all.
-const BONUS_ROLES: Role[] = [
-  'SystemAdmin',
-  'OrgAdmin',
-  'RegisteredManager',
-  'Supervisor',
-  'CareWorker',
-  'SeniorCareWorker',
-];
-
-// Auditors should not navigate/access the Companies list
-const COMPANIES_ROLES: Role[] = [
-  'SystemAdmin',
-  'OrgAdmin',
-  'RegisteredManager',
-  'Supervisor',
-  'CareWorker',
-  'SeniorCareWorker',
 ];
 
 export const routes: Routes = [
@@ -70,7 +52,7 @@ export const routes: Routes = [
   { path: '', component: Home, canActivate: [authGuard], data: { roles: AUDIT_ROLES } },
 
   { path: 'organization', component: Company, canActivate: [authGuard], data: { roles: ADMIN_ROLES } },
-  { path: 'companies', component: Locations, canActivate: [authGuard], data: { roles: COMPANIES_ROLES } },
+  { path: 'companies', component: Locations, canActivate: [authGuard], data: { roles: AUDIT_ROLES } },
   { path: 'company', redirectTo: 'organization', pathMatch: 'full' },
   { path: 'locations', redirectTo: 'companies', pathMatch: 'full' },
 
@@ -84,14 +66,14 @@ export const routes: Routes = [
     path: 'setup/company',
     component: CompanySetup,
     canActivate: [authGuard],
-    data: {roles: ADMIN_ROLES}
+    data: { roles: COMPANY_SETUP_ROLES },
   },
   // Keep setupcompany only if still used; with invite-only onboarding you may remove it later
   { path: 'setupcompany', component: FormTests, canActivate: [authGuard], data: { roles: ADMIN_ROLES } },
 
 
 
-  { path: 'Bonus', component: BonusPanel, canActivate: [authGuard], data: { roles: BONUS_ROLES } },
+  { path: 'Bonus', component: BonusPanel, canActivate: [authGuard], data: { roles: AUDIT_ROLES } },
 
   { path: 'chart-test', component: ChartTestPage, canActivate: [authGuard], data: { roles: AUDIT_ROLES } },
   { path: 'table-test', component: TableTestPage, canActivate: [authGuard], data: { roles: AUDIT_ROLES } },

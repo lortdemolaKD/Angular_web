@@ -14,8 +14,11 @@ import { LocalStorageService } from '../../Services/LocalStorage.service';
 import { LocationService } from '../../Services/location.service';
 import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
 import { AuditService } from '../../Services/audit.service';
+import { AuditTemplateService } from '../../Services/audit-template.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {CQCTest} from '../cqctest/cqctest';
 import { AuditInstance, AuditQuestionInstance } from '../Types';
+import { PettyCashAuditDialogComponent } from './petty-cash-audit-dialog.component';
 
 type RoleOrNull = Role | null;
 const isOrgAdminLike = (r: Role) => r === 'SystemAdmin' || r === 'OrgAdmin';
@@ -52,17 +55,6 @@ interface BonusPotState {
   totalAccumulated: number;
 }
 
-interface BonusLineView {
-  role: string;
-  basePercent: number;
-  financialScore: number;
-  stakeholderScore: number;
-  productivityScore: number;
-  autoBonusPercent: number;
-  manualAdjustPercent: number;
-  finalBonusPercent: number;
-}
-
 interface WorkerProductivityRow {
   workerName: string;
   workerRole: string;
@@ -73,23 +65,29 @@ interface WorkerProductivityRow {
 
 interface MonthlyDepositBreakdown {
   month: number;
-  keyMetricsFactor: number;
+  /** Active High-severity alerts (each reduces the £100 cap by 5 percentage points). */
   highActiveAlerts: number;
+  /** max(0, 1 − 0.05 × highActiveAlerts) */
   alertPenaltyFactor: number;
+  /** £100 × alertPenaltyFactor (before productivity) */
+  amountAfterAlerts: number;
+  /** Team average productivity vs target, % */
   productivityScore: number;
-  productivityFactor: number;
+  /** productivityScore ÷ 100 — applied to amount after alerts */
+  productivityMultiplier: number;
   finalDeposit: number;
 }
 
 const MONTHLY_MAX_BONUS_DEPOSIT = 100;
 const PETTY_CASH_MONTHLY_LIMIT = 200;
-const PETTY_CASH_AUDIT_NAME = 'monthly useable cash';
+/** Title substrings that identify the petty-cash audit (DB may use "usable" or "useable"). */
+const PETTY_CASH_AUDIT_TITLE_MARKERS = ['monthly usable cash', 'monthly useable cash'];
 const WORKER_HOURS_AUDIT_NAME = 'monthly worker timetable';
 
 @Component({
   selector: 'app-bonus-panel',
   standalone: true,
-  imports: [CommonModule,],
+  imports: [CommonModule, MatDialogModule],
   templateUrl: './bonus-panel.html',
   styleUrl: './bonus-panel.css',
 })
@@ -103,9 +101,6 @@ export class BonusPanel implements OnInit, OnDestroy {
 
   selectedLocationId = signal<string | null>(null);
   userRole = signal<RoleOrNull>(null);
-
-  // Admin only: manual +/- adjustments to bonus percentage table
-  manualAdjustments = signal<Record<string, number>>({});
 
   // BONUS: pot + spending (spendable only in Dec 22–31)
   potState = signal<BonusPotState>({
@@ -137,7 +132,9 @@ export class BonusPanel implements OnInit, OnDestroy {
     private http: HttpClient,
     private bonusService: BonusService,
     private walkthrough: WalkthroughRegistryService,
-    private auditService: AuditService
+    private auditService: AuditService,
+    private templateService: AuditTemplateService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -161,7 +158,22 @@ export class BonusPanel implements OnInit, OnDestroy {
       {
         targetId: 'bonus.bonusPotTitle',
         title: 'Bonus pot',
-        description: 'Review totals and (when unlocked) add bonus spending entries.',
+        description:
+          'Review totals, the monthly chart, and (when unlocked in December) record spending. Optional sections on the right explain the numbers in more detail.',
+        panelPlacement: 'left',
+      },
+      {
+        targetId: 'bonus.technicalBreakdown',
+        title: 'Technical breakdown',
+        description:
+          'Opens a month-by-month table: £100 cap, how many High-severity alerts reduce that share (5% each), the amount left after alerts, team productivity %, and the final deposit. Expand this when you need to audit the maths or show a regulator.',
+        panelPlacement: 'left',
+      },
+      {
+        targetId: 'bonus.staffList',
+        title: 'Staff list',
+        description:
+          'Lists people from the worker timetable audit for the current calendar month: hours worked, targets, and productivity. Used to drive the team productivity figure in the bonus calculation. Expand when you need to check who is included.',
         panelPlacement: 'left',
       },
     ]);
@@ -445,10 +457,11 @@ export class BonusPanel implements OnInit, OnDestroy {
     const deposits = Array.from({ length: 12 }, (_, monthIndex) =>
       this.computeMonthlyBonusDeposit(monthIndex, currentYear, loc)
     );
+    const total = deposits.reduce((a, b) => a + b, 0);
     this.potState.set({
       currentMonth: now.getMonth() + 1,
       monthlyDeposits: deposits,
-      totalAccumulated: deposits.reduce((a, b) => a + b, 0),
+      totalAccumulated: Math.round(total * 100) / 100,
     });
   }
 
@@ -474,57 +487,9 @@ export class BonusPanel implements OnInit, OnDestroy {
     return now >= start && now <= end;
   });
 
-  // ---------- Bonus scoring + percentages ----------
-  lines = computed<BonusLineView[]>(() => {
-    const loc = this.currentLocation();
-    if (!loc) return [];
-
-    // If you prefer: const lines = this.bonusService.computeBonusForLocation(loc) ...
-    // Keeping your existing scoring logic for now.
-    const scores = this.computeScoresForLocation(loc);
-
-    const allRoleConfigs = [
-      { role: 'SystemAdmin', basePercent: 0 },
-      { role: 'OrgAdmin', basePercent: 0 },
-      { role: 'RegisteredManager', basePercent: 15 },
-      { role: 'Supervisor', basePercent: 8 },
-      { role: 'SeniorCareWorker', basePercent: 6 },
-      { role: 'CareWorker', basePercent: 5 },
-      { role: 'Auditor', basePercent: 0 }, // usually no bonus; set as you want
-    ];
-    const roleConfigs = allRoleConfigs.filter((cfg) => this.roleExistsInWorkerAudits(cfg.role));
-
-
-    return roleConfigs.map((cfg) => {
-      const roleProductivity = this.computeProductivityScore(undefined, undefined, cfg.role);
-      const financialWeight = 0.6;
-      const stakeholderWeight = 0.25;
-      const productivityWeight = 0.15;
-      const weightedScore =
-        scores.financial * financialWeight +
-        scores.stakeholder * stakeholderWeight +
-        roleProductivity * productivityWeight;
-      const factor = this.mapScoreToFactor(weightedScore);
-
-      const auto = cfg.basePercent * factor;
-      const manual = this.manualAdjustments()[cfg.role] ?? 0;
-      const final = auto + manual;
-
-      return {
-        role: cfg.role,
-        basePercent: cfg.basePercent,
-        financialScore: scores.financial,
-        stakeholderScore: scores.stakeholder,
-        productivityScore: roleProductivity,
-        autoBonusPercent: auto,
-        manualAdjustPercent: manual,
-        finalBonusPercent: final,
-      };
-    });
-  });
-
-  totalFinalPercent = computed(() => this.lines().reduce((s, l) => s + l.finalBonusPercent, 0));
-
+  /** Rows for the worker-hours table in Bonus: only timetables whose `audit.date` falls in the *current* calendar month.
+   * A February timetable (`date` in Feb) is excluded in March — same data shape, different period. Historical months use
+   * `computeProductivityScore(monthIndex, year)` in the deposit breakdown instead. */
   workerProductivityRows = computed<WorkerProductivityRow[]>(() => {
     const now = new Date();
     const month = now.getMonth();
@@ -538,16 +503,6 @@ export class BonusPanel implements OnInit, OnDestroy {
     if (!audits.length) return [];
     return audits.flatMap((a) => this.extractWorkerRowsFromAudit(a));
   });
-
-  updateManualAdjust(role: string, value: string) {
-    const r = this.userRole();
-    // only org admins (or optionally RegisteredManager) can adjust:
-    if (!(r === 'SystemAdmin' || r === 'OrgAdmin')) return;
-
-    const num = parseFloat(value);
-    this.manualAdjustments.update((m) => ({ ...m, [role]: isNaN(num) ? 0 : num }));
-  }
-
 
   // ---------- Balances ----------
   normalizedDeposits = computed(() => {
@@ -639,67 +594,6 @@ export class BonusPanel implements OnInit, OnDestroy {
     this.pettyCashSpendItems.update((list) => list.filter((i) => i.id !== id));
   }
 
-  // ---------- scoring helpers ----------
-  private computeScoresForLocation(loc: LocationType): { financial: number; stakeholder: number; productivity: number } {
-    const perf = (loc as any).performance;
-    if (!perf) return { financial: 0, stakeholder: 0, productivity: this.computeProductivityScore() };
-
-    const kpi = perf.categories?.filter((c: any) => c.type === 'KPI') ?? [];
-    const kfi = perf.categories?.filter((c: any) => c.type === 'KFI') ?? [];
-    const kci = perf.categories?.filter((c: any) => c.type === 'KCI') ?? [];
-    const alerts = perf.alerts ?? [];
-
-    return {
-      financial: this.computeFinancialScore(kpi, kfi, loc),
-      stakeholder: this.computeStakeholderScore(kci, alerts),
-      productivity: this.computeProductivityScore(),
-    };
-  }
-
-  private computeFinancialScore(kpiCats: any[], kfiCats: any[], loc: LocationType): number {
-    const inds = [
-      ...kpiCats.flatMap((c) => c.indicators ?? []),
-      ...kfiCats.flatMap((c) => c.indicators ?? []),
-    ];
-
-    const vals: number[] = [];
-    inds.forEach((ind: any) => {
-      if (typeof ind.current === 'number' && typeof ind.target === 'number' && ind.target !== 0) {
-        const pct = Math.max(0, Math.min(150, (ind.current / ind.target) * 100));
-        vals.push(pct);
-      }
-    });
-
-    const hc = (loc as any).homeCareMetrics;
-    if (hc?.activeCases && hc.maxCases) vals.push((hc.activeCases / hc.maxCases) * 100);
-
-    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-  }
-
-  private computeStakeholderScore(kciCats: any[], alerts: any[]): number {
-    const inds = kciCats.flatMap((c) => c.indicators ?? []);
-    const vals: number[] = [];
-
-    inds.forEach((ind: any) => {
-      if (typeof ind.current === 'number' && typeof ind.target === 'number' && ind.target !== 0) {
-        const pct = Math.max(0, Math.min(150, (ind.current / ind.target) * 100));
-        vals.push(pct);
-      }
-    });
-
-    const base = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 80;
-    const penalty = Math.min((alerts?.length ?? 0) * 3, 30);
-    return Math.max(0, base - penalty);
-  }
-
-  private mapScoreToFactor(score: number): number {
-    if (score <= 50) return 0.4;
-    if (score <= 70) return 0.7;
-    if (score <= 85) return 1.0;
-    if (score <= 100) return 1.1;
-    return 1.2;
-  }
-
   private computeMonthlyBonusDeposit(monthIndex: number, year: number, loc: LocationType): number {
     return this.computeMonthlyDepositBreakdown(monthIndex, year, loc).finalDeposit;
   }
@@ -709,38 +603,34 @@ export class BonusPanel implements OnInit, OnDestroy {
     if (year === now.getFullYear() && monthIndex > now.getMonth()) {
       return {
         month: monthIndex + 1,
-        keyMetricsFactor: 0,
         highActiveAlerts: 0,
         alertPenaltyFactor: 0,
+        amountAfterAlerts: 0,
         productivityScore: 0,
-        productivityFactor: 0,
+        productivityMultiplier: 0,
         finalDeposit: 0,
       };
     }
-    const scores = this.computeScoresForLocation(loc);
+
     const monthlyProductivity = this.computeProductivityScore(monthIndex, year);
 
-    // Key metrics contribution (KPI/KFI/KCI blend) around a base monthly value.
-    const keyMetricsWeighted = scores.financial * 0.6 + scores.stakeholder * 0.4;
-    const keyMetricsFactor = this.mapScoreToFactor(keyMetricsWeighted);
-
-    // Each active High alert reduces this month by 5%.
+    // £100 cap; each active High alert deducts 5% of the cap (same as −5 percentage points on the 100%).
     const highActiveAlerts = this.countHighActiveAlerts(loc);
     const alertPenaltyFactor = Math.max(0, 1 - highActiveAlerts * 0.05);
+    const amountAfterAlerts = MONTHLY_MAX_BONUS_DEPOSIT * alertPenaltyFactor;
 
-    // Productivity adds/removes up to +/- 20% around neutral 100%.
-    // e.g. 110 productivity => +2%, 80 productivity => -4%.
-    const productivityFactor = 1 + ((monthlyProductivity - 100) / 100) * 0.2;
+    // Remaining amount × team productivity (e.g. 87.93% → × 0.8793).
+    const productivityMultiplier = monthlyProductivity / 100;
+    const deposit = amountAfterAlerts * productivityMultiplier;
 
-    const deposit = MONTHLY_MAX_BONUS_DEPOSIT * keyMetricsFactor * alertPenaltyFactor * productivityFactor;
     return {
       month: monthIndex + 1,
-      keyMetricsFactor,
       highActiveAlerts,
       alertPenaltyFactor,
+      amountAfterAlerts,
       productivityScore: monthlyProductivity,
-      productivityFactor,
-      finalDeposit: Math.max(0, Math.round(deposit)),
+      productivityMultiplier,
+      finalDeposit: Math.max(0, Math.round(deposit * 100) / 100),
     };
   }
 
@@ -820,14 +710,6 @@ export class BonusPanel implements OnInit, OnDestroy {
     return null;
   }
 
-  private roleExistsInWorkerAudits(role: string): boolean {
-    const workerAudits = this.locationAudits().filter((a) => this.isWorkerHoursAudit(a));
-    if (!workerAudits.length) return false;
-    return workerAudits.some((audit) =>
-      this.extractWorkerRowsFromAudit(audit).some((row) => this.roleMatches(row.workerRole, role))
-    );
-  }
-
   private extractWorkerRowsFromAudit(audit: AuditInstance): WorkerProductivityRow[] {
     const rowsOut: WorkerProductivityRow[] = [];
     (audit.questions ?? []).forEach((q) => {
@@ -882,7 +764,14 @@ export class BonusPanel implements OnInit, OnDestroy {
       return;
     }
     const audit = petty.sort((a, b) => this.auditDate(b).getTime() - this.auditDate(a).getTime())[0];
-    this.pettyCashAuditId.set(audit.id);
+    const auditId = this.auditId(audit);
+    if (!auditId) {
+      this.pettyCashMonthlyLimit.set(PETTY_CASH_MONTHLY_LIMIT);
+      this.pettyCashSpendItems.set([]);
+      this.pettyCashAuditId.set(null);
+      return;
+    }
+    this.pettyCashAuditId.set(auditId);
 
     const now = new Date();
     const monthName = now.toLocaleString('en-GB', { month: 'long' }).toLowerCase();
@@ -932,7 +821,7 @@ export class BonusPanel implements OnInit, OnDestroy {
 
   private persistPettySpendToAudit(item: SpendItem): void {
     const auditId = this.pettyCashAuditId();
-    const audit = this.locationAudits().find((a) => a.id === auditId);
+    const audit = this.locationAudits().find((a) => this.auditId(a) === auditId);
     if (!audit) return;
     const questions = [...(audit.questions ?? [])];
     const monthName = new Date(item.createdAt).toLocaleString('en-GB', { month: 'long' });
@@ -968,17 +857,42 @@ export class BonusPanel implements OnInit, OnDestroy {
 
     q.customFields = { ...(q.customFields ?? {}), value: rows };
     questions[qIndex] = q as AuditQuestionInstance;
-    this.auditService.patch(audit.id, { questions }).pipe(catchError(() => of(audit))).subscribe();
+    this.auditService.patch(this.auditId(audit), { questions }).pipe(catchError(() => of(audit))).subscribe();
+  }
+
+  async openPettyCashAuditDialog(): Promise<void> {
+    const auditId = this.pettyCashAuditId();
+    if (!auditId) return;
+    const audit = this.locationAudits().find((a) => this.auditId(a) === auditId);
+    if (!audit) return;
+    const templateId = String((audit as any).templateId ?? '');
+    if (!templateId) return;
+
+    try {
+      const template = await this.templateService.getCustom(templateId).toPromise();
+      if (!template) return;
+      this.dialog.open(PettyCashAuditDialogComponent, {
+        data: { audit, template },
+        maxWidth: '96vw',
+        width: '960px',
+      });
+    } catch (e) {
+      console.error('Failed to open petty cash audit dialog', e);
+    }
   }
 
   private isPettyCashAudit(audit: AuditInstance): boolean {
     const text = `${audit.title ?? ''}`.toLowerCase();
-    return text.includes(PETTY_CASH_AUDIT_NAME);
+    return PETTY_CASH_AUDIT_TITLE_MARKERS.some((m) => text.includes(m));
   }
 
   private isWorkerHoursAudit(audit: AuditInstance): boolean {
     const title = `${audit.title ?? ''}`.toLowerCase();
     return title.includes(WORKER_HOURS_AUDIT_NAME);
+  }
+
+  private auditId(audit: AuditInstance | null | undefined): string {
+    return String((audit as any)?.id ?? (audit as any)?._id ?? '');
   }
 
   private auditDate(audit: AuditInstance): Date {
@@ -993,14 +907,6 @@ export class BonusPanel implements OnInit, OnDestroy {
     const r = this.userRole();
     return r === 'SystemAdmin' || r === 'OrgAdmin' || r === 'RegisteredManager' || r === 'Supervisor';
   }
-
-
-
-  canEditManualAdjustments(): boolean {
-    const r = this.userRole();
-    return r === 'SystemAdmin' || r === 'OrgAdmin';
-  }
-
 
   canSpendPettyCash(): boolean {
     const r = this.userRole() as Role | null;

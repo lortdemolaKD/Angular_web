@@ -4,6 +4,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { connectDb } from "./db.js";
+import { Location } from "./models/Location.js";
 import { authRouter } from "./auth.js";
 import companiesRouter from "./routes/companies.routes.js";
 import accountsRouter from "./routes/accounts.routes.js";
@@ -43,4 +44,9 @@ app.use("/api/performanceSets", performanceSetsRouter);
 app.use("/api/performance-templates", performanceTemplatesRouter);
 
 await connectDb();
+try {
+  await Location.syncIndexes();
+} catch (e) {
+  console.warn("[Location.syncIndexes]", e?.message ?? e);
+}
 app.listen(process.env.PORT || 3000, () => console.log("API running"));

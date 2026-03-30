@@ -12,6 +12,8 @@ const CompanySchema = new mongoose.Schema(
     registeredIn: { type: String, enum: ["England", "Wales", "Scotland"] },
     adminContact: { type: String, trim: true },
     icon: { type: String, trim: true },
+    /** Wide header image for dashboards (server path e.g. /uploads/company-banners/...) */
+    bannerUrl: { type: String, default: null },
     serviceTypes: [{ type: String }],
 
     ownerAdminId: { type: mongoose.Schema.Types.ObjectId, ref: "Account", required: true },

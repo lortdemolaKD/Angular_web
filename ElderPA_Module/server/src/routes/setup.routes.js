@@ -28,7 +28,9 @@ function normalizeLocationType(v) {
   if (!v) return v;
   if (v === "Care Home") return "CareHome";
   if (v === "Home Care") return "HomeCare";
-  return v; // allow already-normalized values
+  if (v === "LiveInCare" || v === "Live-in Care") return "HomeCare";
+  if (v === "AssistedLiving" || v === "Assisted Living") return "CareHome";
+  return v; // allow already-normalized CareHome | HomeCare
 }
 
 function mapCompanyDoc(c) {
@@ -196,14 +198,21 @@ router.post("/company", requireAuth, requireAdmin, async (req, res) => {
         );
         const locationDoc = locationDocArr[0];
 
-        const template = await PerformanceTemplate.findOne({
+        let template = await PerformanceTemplate.findOne({
           isActive: true,
           locationType: normalizedType,
         })
           .sort({ updatedAt: -1 });
 
         if (!template) {
-          throw new Error(`No active PerformanceTemplate for type ${normalizedType}`);
+          template = await PerformanceTemplate.findOne({
+            isActive: true,
+            locationType: "Both",
+          }).sort({ updatedAt: -1 });
+        }
+
+        if (!template) {
+          throw new Error(`No active PerformanceTemplate for type ${normalizedType} (seed templates if needed)`);
         }
 
         const period = getCurrentWeekPeriod();

@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import { UserType } from '../../Types';
 import { AuthService } from '../../../Services/Auth.service';
 
 @Component({
   selector: 'app-user-account-panel',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, RouterLink],
   templateUrl: './user-account-panel.html',
   styleUrls: ['./user-account-panel.css'],
 })
@@ -15,6 +16,8 @@ export class UserAccountPanelComponent {
   @Input() user: UserType | null = null;
   @Input() companyName: string | null = null;
   @Input() locationName: string | null = null;
+  /** Show link to edit organisation (same wizard as create company) */
+  @Input() canEditCompany = false;
   @Output() close = new EventEmitter<void>();
 
   /** Pending avatar URL after upload (before next /me refresh); null when using server avatar or none */

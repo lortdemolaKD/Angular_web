@@ -3,6 +3,7 @@
   flex-direction: column;
 
   font-family: Arial, sans-serif;
+  position: relative;
 }
 
 .week-header {
@@ -55,6 +56,7 @@
   display: flex;
   flex-direction: row; /* Stack vertically */
   gap: 1px;
+  cursor: pointer;
 }
 
 .dot {
@@ -67,6 +69,48 @@
   color: #fff;
   font-size: 0.75rem;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.context-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 1001;
+  min-width: 220px;
+  max-width: min(420px, 90vw);
+  max-height: min(60vh, 520px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  padding: 6px;
+}
+
+.context-menu__item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.context-menu__item:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.context-menu__empty {
+  padding: 10px;
+  font-size: 13px;
+  color: #666;
 }
 .more-count {
   font-size: 10px;

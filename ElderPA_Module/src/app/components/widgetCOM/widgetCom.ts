@@ -142,9 +142,11 @@ export class WidgetCom implements OnInit{
     const singleId = this.data().selectedIndicatorId;
     const selectedIds = this.data().selectedIndicatorIds;
     if (singleId != null && singleId !== '') {
-      indicators = indicators.filter((i) => i.id === singleId);
+      const filtered = indicators.filter((i) => i.id === singleId);
+      if (filtered.length) indicators = filtered;
     } else if (selectedIds?.length) {
-      indicators = indicators.filter((i) => selectedIds.includes(i.id));
+      const filtered = indicators.filter((i) => selectedIds.includes(i.id));
+      if (filtered.length) indicators = filtered;
     }
     if (!indicators.length) return null;
 
@@ -191,9 +193,11 @@ export class WidgetCom implements OnInit{
       .filter((c) => c.type === metricType)
       .flatMap((c) => c.indicators ?? []);
     if (singleId != null && singleId !== '') {
-      indicators = indicators.filter((i) => i.id === singleId);
+      const filtered = indicators.filter((i) => i.id === singleId);
+      if (filtered.length) indicators = filtered;
     } else if (this.data().selectedIndicatorIds?.length) {
-      indicators = indicators.filter((i) => this.data().selectedIndicatorIds!.includes(i.id));
+      const filtered = indicators.filter((i) => this.data().selectedIndicatorIds!.includes(i.id));
+      if (filtered.length) indicators = filtered;
     }
     const ind = indicators[0];
     return ind != null ? (ind.current ?? 0) : 0;

@@ -2,18 +2,239 @@
   display: block;
 }
 
-/* Audit table: use data-table; first column capped to avoid gap */
-:host ::ng-deep .data-table-wrapper {
+.audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   min-width: 0;
 }
 
-:host ::ng-deep .data-table {
-  min-width: max-content;
+.audit-list__toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--sidebar-hover, rgba(0, 0, 0, 0.08));
+  margin-bottom: 0.5rem;
 }
 
-:host ::ng-deep .data-table__cell:first-child,
-:host ::ng-deep .data-table__th:first-child {
-  max-width: 220px;
+.audit-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.audit-list__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.audit-list__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #666);
+}
+
+.audit-list__select {
+  min-width: 11rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: var(--color-surface, #fff);
+  font-size: 0.8125rem;
+}
+
+.audit-list__range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
+.audit-list__date {
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 0.8125rem;
+  max-width: 100%;
+}
+
+.audit-list__range-sep {
+  color: var(--color-text-muted, #888);
+  font-size: 0.875rem;
+}
+
+.audit-list__clear {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+}
+
+.audit-list__clear:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.audit-list__hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #666);
+}
+
+.audit-list__empty {
+  margin: 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #666);
+}
+
+.audit-list__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.audit-group {
+  border: 1px solid var(--sidebar-hover, rgba(0, 0, 0, 0.1));
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  overflow: hidden;
+}
+
+.audit-group__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem 1rem;
+  align-items: start;
+  padding: 0.55rem 0.65rem 0.55rem 0.35rem;
+  margin: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  list-style: none;
+}
+
+.audit-group__summary::-webkit-details-marker {
+  display: none;
+}
+
+.audit-group__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.audit-group__chev {
+  flex-shrink: 0;
+  margin-top: 0.15em;
+  transition: transform 0.15s ease;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  line-height: 1.2;
+}
+
+.audit-group[open] .audit-group__chev {
+  transform: rotate(90deg);
+}
+
+.audit-group__title {
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.audit-group__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-top: 0.05em;
+  padding-left: 0.25rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.audit-group__count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text, #1a1a1a);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.audit-group__count-suffix {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  color: var(--color-text-muted, #666);
+}
+
+.audit-group__body {
+  padding: 0 0.35rem 0.55rem 0.35rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stay inside card width: fixed layout + % columns; compact density tightens padding */
+:host ::ng-deep .data-table-wrapper {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:host ::ng-deep .data-table-scroll {
+  max-width: 100%;
+}
+
+:host ::ng-deep .data-table {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  table-layout: fixed;
+}
+
+:host ::ng-deep .data-table__cell,
+:host ::ng-deep .data-table__th {
+  min-width: 0;
+  max-width: none;
+  vertical-align: top;
+}
+
+/* Base table uses nowrap on headers — that forces horizontal overflow in narrow layouts */
+:host ::ng-deep .data-table__th {
+  white-space: normal;
+}
+
+:host ::ng-deep .data-table__th-content {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+:host ::ng-deep .data-table__cell-content {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+:host ::ng-deep .data-table--compact .data-table__th,
+:host ::ng-deep .data-table--compact .data-table__cell {
+  padding: 0.2rem 0.35rem;
 }
 
 .table-scroll {

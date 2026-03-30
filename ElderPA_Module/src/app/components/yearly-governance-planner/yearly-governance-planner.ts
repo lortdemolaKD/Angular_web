@@ -19,7 +19,9 @@ import { DayView } from './day-view/day-view';
 
 import { AuditInstance, CalendarEvent, DayEvent, MonthDay } from '../Types';
 import { AuditDataService } from '../../Services/audit-data.service';
-import {ActivatedRoute} from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { AuditViewDialogComponent } from '../audits/audit-view-dialog/audit-view-dialog.component';
 
 moment.tz.setDefault('UTC');
 function mapTypeToColor(str: string){
@@ -29,13 +31,28 @@ function mapTypeToColor(str: string){
   return '#a50011';
 }
 
+/** Prefer `date`; if missing/invalid use created/updated so older audits still appear on the grid. */
+function effectiveAuditDayUtc(audit: AuditInstance): moment.Moment {
+  const tryParse = (raw: unknown): moment.Moment => {
+    if (raw == null || raw === '') return moment.utc(NaN);
+    return moment.utc(raw as string).startOf('day');
+  };
+  let m = tryParse(audit.date);
+  if (m.isValid()) return m;
+  m = tryParse((audit as any).createdAt);
+  if (m.isValid()) return m;
+  m = tryParse((audit as any).updatedAt);
+  return m;
+}
 
 function mapAuditToEvent(audit: AuditInstance): DayEvent {
-  const startUtc = moment.utc(audit.date).startOf('day').toDate();
+  const m = effectiveAuditDayUtc(audit);
+  const startUtc = m.toDate();
   return {
     title: `${audit.title}  ${audit.auditType}`,
     color: { primary: mapTypeToColor(audit.auditType), secondary: '#FFEBEE' },
     start: startUtc,
+    auditId: String((audit as any).id ?? (audit as any)._id ?? ''),
   };
 }
 
@@ -84,10 +101,27 @@ export class YearlyGovernancePlanner implements OnInit {
   constructor(
     private auditService: AuditDataService,
     private route: ActivatedRoute,
+    private router: Router,
+    private dialog: MatDialog,
     private injector: Injector
   ) {
     // AuditDataService loads /api/audits and exposes a signal; this keeps YGP in sync with DB. [file:15][file:25]
     this.audits = this.auditService.audits;
+  }
+
+  openAuditById(auditId: unknown): void {
+    const id =
+      typeof auditId === 'string'
+        ? auditId
+        : String((auditId as any)?.auditId ?? (auditId as any)?.detail ?? '');
+    const normalized = String(id ?? '').trim();
+    if (!normalized) return;
+
+    this.dialog.open(AuditViewDialogComponent, {
+      data: { auditId: normalized },
+      maxWidth: '96vw',
+      width: '960px',
+    });
   }
 
   ngOnInit() {
@@ -169,12 +203,10 @@ export class YearlyGovernancePlanner implements OnInit {
     const dayStart = date.clone().startOf('day');
 
     return this.audits()
-      .filter((audit) =>
-        moment
-          .utc(audit.date)
-          .startOf('day')
-          .isSame(dayStart)
-      )
+      .filter((audit) => {
+        const m = effectiveAuditDayUtc(audit);
+        return m.isValid() && m.isSame(dayStart, 'day');
+      })
       .map(mapAuditToEvent);
   }
 
@@ -188,6 +220,7 @@ export class YearlyGovernancePlanner implements OnInit {
   ): CalendarEvent[] {
     // DB-backed audits
     const staticEvents: CalendarEvent[] = audits
+      .filter((a) => effectiveAuditDayUtc(a).isValid())
       .map(mapAuditToEvent)
       .filter((e) => {
         const eDay = moment.utc(e.start).startOf('day');
@@ -215,6 +248,7 @@ export class YearlyGovernancePlanner implements OnInit {
 
   generateAllEventsForPeriod(start: moment.Moment, end: moment.Moment) {
     const staticEvents = this.audits()
+      .filter((a) => effectiveAuditDayUtc(a).isValid())
       .map(mapAuditToEvent)
       .filter((e) => moment(e.start).isBetween(start, end, 'day', '[]'));
 

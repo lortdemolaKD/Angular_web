@@ -52,22 +52,44 @@ function yearMonthFromPeriod(period) {
   return null;
 }
 
-// list/search by location+period (admin: any location; non-admin: only their assigned location)
+// list/search by location+period (admin: any location in company; non-admin: per-location when query given)
 router.get("/", requireAuth, async (req, res) => {
   const { locationId, period } = req.query;
   const filter = { deletedAt: null };
 
   if (!admin_ROLES.includes(req.user.role)) {
-    // Non-admin: may only request performance sets for their assigned location
+    /** Care staff / auditor: only their assigned site. Supervisors etc.: any location in their company when ?locationId= is used. */
+    const restrictedSingleLocationRoles = ["CareWorker", "SeniorCareWorker", "Auditor"];
     let assignedLocId = req.user.locationId;
     if (!assignedLocId && req.user.id) {
       const account = await Account.findById(req.user.id).select("locationId").lean();
       assignedLocId = account?.locationId;
     }
-    if (!assignedLocId || !mongoose.isValidObjectId(assignedLocId)) {
-      return res.status(403).json({ message: "Forbidden: no location assigned" });
+
+    let targetLocationId = null;
+    if (locationId) {
+      if (!mongoose.isValidObjectId(locationId)) return res.status(400).json({ message: "Invalid locationId" });
+      const loc = await Location.findOne({ _id: locationId, deletedAt: null }).lean();
+      if (!loc) return res.status(404).json({ message: "Location not found" });
+      if (!req.user.companyId || String(loc.companyId) !== String(req.user.companyId)) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      if (restrictedSingleLocationRoles.includes(req.user.role)) {
+        if (!assignedLocId || !mongoose.isValidObjectId(assignedLocId)) {
+          return res.status(403).json({ message: "Forbidden: no location assigned" });
+        }
+        if (String(assignedLocId) !== String(locationId)) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+      }
+      targetLocationId = locationId;
+    } else {
+      if (!assignedLocId || !mongoose.isValidObjectId(assignedLocId)) {
+        return res.status(403).json({ message: "Forbidden: no location assigned" });
+      }
+      targetLocationId = assignedLocId;
     }
-    filter.locationId = new mongoose.Types.ObjectId(assignedLocId);
+    filter.locationId = new mongoose.Types.ObjectId(targetLocationId);
   } else {
     if (locationId) {
       if (!mongoose.isValidObjectId(locationId)) return res.status(400).json({ message: "Invalid locationId" });

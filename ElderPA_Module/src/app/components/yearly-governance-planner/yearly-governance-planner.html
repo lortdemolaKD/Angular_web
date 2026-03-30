@@ -16,8 +16,8 @@
   </div>
 
   <div class="view-area" [ngSwitch]="viewType">
-    <app-month-view *ngSwitchCase="'month'" [events]="events()" [viewDate]="viewDate"></app-month-view>
-    <app-week-view  *ngSwitchCase="'week'"  [events]="events()" [viewDate]="viewDate"></app-week-view>
-    <app-day-view   *ngSwitchCase="'day'"   [events]="events()" [viewDate]="viewDate"></app-day-view>
+    <app-month-view *ngSwitchCase="'month'" [events]="events()" [viewDate]="viewDate" (openAudit)="openAuditById($event)"></app-month-view>
+    <app-week-view  *ngSwitchCase="'week'"  [events]="events()" [viewDate]="viewDate" (openAudit)="openAuditById($event)"></app-week-view>
+    <app-day-view   *ngSwitchCase="'day'"   [events]="events()" [viewDate]="viewDate" (openAudit)="openAuditById($event)"></app-day-view>
   </div>
 </div>

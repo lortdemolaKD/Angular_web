@@ -1,8 +1,10 @@
 import { Component, computed, effect, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule, KeyValuePipe } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuditDataService } from '../../../Services/audit-data.service';
 import { ScoringService } from '../../../Services/scoring.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 import {AuditInstance, AuditQuestionInstance,  LocationType} from '../../Types';
 import { AuditList } from '../audit-list/audit-list';
@@ -15,11 +17,12 @@ import { CompanyService } from '../../../Services/Company.service';
 import { LocalStorageService } from '../../../Services/LocalStorage.service';
 import { FormRendererComponent } from '../../flexible-template-system/modes/form-mode/form-renderer.component';
 import { LocationService } from '../../../Services/location.service';
-import {AuditResponse, CustomAuditTemplate} from '../../flexible-template-system/shared/models/template.models';
+import { AuditField, AuditResponse, CustomAuditTemplate } from '../../flexible-template-system/shared/models/template.models';
 import {AuditService} from '../../../Services/audit.service';
 import {AuditTemplateService} from '../../../Services/audit-template.service';
 import { WalkthroughRegistryService } from '../../../Services/walkthrough-registry.service';
 import { buildCustomResponsesFromQuestions } from '../shared/custom-audit-responses.util';
+import { isAuditLibDebug, isWorkerTimetableTitle, logWorkerTimetableAuditsData } from '../audit-lib-debug';
 
 @Component({
   selector: 'app-audit-panel',
@@ -31,6 +34,7 @@ import { buildCustomResponsesFromQuestions } from '../shared/custom-audit-respon
 export class AuditPanel implements OnDestroy {
   readonly #auditService = inject(AuditDataService);
   readonly #router = inject(Router);
+  readonly #route = inject(ActivatedRoute);
   readonly #scoringService = inject(ScoringService);
   readonly #authService = inject(AuthService);
   readonly #companyService = inject(CompanyService);
@@ -105,6 +109,41 @@ export class AuditPanel implements OnDestroy {
   readonly #locationService = inject(LocationService);
 
   private companyChangeSub?: { unsubscribe: () => void };
+  readonly #pendingSelectAuditId = signal<string | null>(null);
+  readonly #auditHttp = inject(AuditService);
+  readonly #lastAdminLoadKey = signal<string>('');
+
+  #auditId(a: AuditInstance | null | undefined): string {
+    return String((a as any)?.id ?? (a as any)?._id ?? '').trim();
+  }
+
+  /**
+   * When merging location-only API results (same query as Bonus/YGP), drop rows that clearly belong
+   * to another company. Audits with missing companyId are kept — they are the usual case for custom
+   * location audits that only show up under ?locationId=.
+   *
+   * If the audit's `locationId` is one of this company's known sites, always keep it: the request
+   * was scoped to that site. Older audits sometimes have a stale/wrong `companyId` string (duplicate
+   * org rows, legacy IDs), which would otherwise hide February while March still matches.
+   */
+  #auditBelongsToCompanyScope(
+    a: AuditInstance,
+    companyId: string | null,
+    knownLocationIds: string[]
+  ): boolean {
+    const auditLoc = String((a as any).locationId ?? '').trim();
+    if (auditLoc && knownLocationIds.includes(auditLoc)) {
+      return true;
+    }
+    if (!companyId) return true;
+    const cid =
+      (a as any).companyId ??
+      (a as any).companyID ??
+      (a as any).cmpId ??
+      (a as any).cmpID;
+    if (cid == null || cid === '') return true;
+    return String(cid).trim() === String(companyId).trim();
+  }
 
   constructor() {
     this.#walkthrough.register('/CCGA/AuditLib', [
@@ -125,6 +164,13 @@ export class AuditPanel implements OnDestroy {
         title: 'Audit list',
         description:
           'This table contains all audits for your company. You can select an audit to open it. Some audits require approval (they are not completed yet and must be approved by higher authorities). The table also shows key information like score and audit type.',
+      },
+      {
+        targetId: 'auditPanel.listFiltersToolbar',
+        title: 'Grouping and date range',
+        description:
+          'Group by: choose how rows are organised (for example by type, location, or status). Groups appear as collapsible sections with counts. Date range: set From and To to only show audits whose schedule date falls in that range (inclusive). The filter runs first, then grouping is applied. If nothing matches, you will see a “no audits” message. Clear range removes the date filter.',
+        panelPlacement: 'right',
       },
       {
         targetId: 'auditPanel.approveAuditButton',
@@ -168,7 +214,15 @@ export class AuditPanel implements OnDestroy {
           error: () => this.locations.set([])
         });
       } else {
-        this.#locationService.list(/* companyId from app context if needed */).subscribe({
+        // Admin: scope locations to current company to avoid cross-company audit leakage.
+        const cur = this.#companyService.getCurrentCompany();
+        const companyId =
+          (cur as any)?.id ??
+          (cur as any)?._id ??
+          (cur as any)?.companyID ??
+          this.#ls.getID('companyID') ??
+          null;
+        this.#locationService.list(companyId || undefined).subscribe({
           next: (dbLocs) => {
             const typedLocs: LocationType[] = (dbLocs ?? []).map(loc => ({
               locationID: loc.id,
@@ -183,11 +237,46 @@ export class AuditPanel implements OnDestroy {
         });
       }
     });
+
+    // Admin: once locations are known, reload audits so location-scoped audits appear.
+    effect(() => {
+      if (!this.#authService.isAdmin()) return;
+      const cur = this.#companyService.getCurrentCompany();
+      const companyId =
+        (cur as any)?.id ??
+        (cur as any)?._id ??
+        (cur as any)?.companyID ??
+        this.#ls.getID('companyID') ??
+        '';
+      const locIds = this.locations().map((l) => l.locationID).filter(Boolean).join(',');
+      const key = `${companyId}::${locIds}`;
+      if (!companyId || !locIds) return;
+      if (this.#lastAdminLoadKey() === key) return;
+      this.#lastAdminLoadKey.set(key);
+      this.#loadAudits();
+    });
     effect(() => {
       const list = this.auditsWithStatus();
       if (!this.selectedAudit() && list.length > 0) {
         this.selectedAudit.set(list[0] as AuditInstance);
       }
+    });
+
+    // Allow deep-link selection from planner/widget: /CCGA/AuditLib?auditId=...
+    this.#route.queryParams.subscribe((p) => {
+      const id = String(p?.['auditId'] ?? '').trim();
+      this.#pendingSelectAuditId.set(id || null);
+    });
+    effect(() => {
+      const pendingId = this.#pendingSelectAuditId();
+      if (!pendingId) return;
+      const found = this.audits().find((a) => {
+        const id = String((a as any)?.id ?? (a as any)?._id ?? '').trim();
+        return id === pendingId;
+      });
+      if (!found) return;
+      this.selectedAudit.set(found);
+      this.#pendingSelectAuditId.set(null);
     });
     effect(() => {
       const audit = this.selectedAudit();
@@ -208,8 +297,34 @@ export class AuditPanel implements OnDestroy {
       // Type assertion if service returns broader type
       this.customTemplate.set(tmpl as CustomAuditTemplate ?? null);
     } catch (err) {
-      console.error('Failed to load template:', err);
-      this.customTemplate.set(null);
+      // Fallback: synthesize a template from the audit questions so tables still render.
+      const audit = this.selectedAudit();
+      const questions = audit?.questions ?? [];
+      if (audit && questions.length > 0) {
+        const fields: AuditField[] = questions.map((q: any, i: number) => {
+          const custom = q?.customFields;
+          const fieldType = (custom?.fieldType as string | undefined) ?? 'text';
+          const id = String(custom?.fieldId ?? q?.templateQuestionId ?? `field-${i}`);
+          const label = String(q?.text ?? q?.clauseLabel ?? `Field ${i + 1}`);
+          const base: any = { id, label, required: false };
+          if (fieldType === 'table') return { ...base, type: 'table', tableConfig: custom?.tableConfig } as any;
+          if (fieldType === 'checkbox') return { ...base, type: 'checkbox' } as any;
+          if (fieldType === 'textarea') return { ...base, type: 'textarea' } as any;
+          if (fieldType === 'number') return { ...base, type: 'number' } as any;
+          if (fieldType === 'date') return { ...base, type: 'date' } as any;
+          if (fieldType === 'question') return { ...base, type: 'question' } as any;
+          return { ...base, type: 'text' } as any;
+        });
+        this.customTemplate.set({
+          id: String((audit as any).templateId ?? audit.id ?? (audit as any)._id ?? 'audit-synth'),
+          name: String((audit as any).title ?? 'Audit'),
+          type: 'audit',
+          fields,
+          status: 'active',
+        } as unknown as CustomAuditTemplate);
+      } else {
+        this.customTemplate.set(null);
+      }
     }
   }
   #loadAudits() {
@@ -229,9 +344,75 @@ export class AuditPanel implements OnDestroy {
       (cur as any)?.companyID ??
       this.#ls.getID('companyID') ??
       null;
-    this.#auditService
-      .loadForContextObservable(companyId, null, null)
-      .subscribe((items) => this.#setAuditsFromResponse(items ?? []));
+    // Some backend deployments only return location-scoped custom audits when locationId is passed.
+    // Bonus/YGP use GET /api/audits?locationId=... (no companyId); those rows can be missing companyId
+    // on the document, so companyId+locationId queries omit them. Merge location-only results per
+    // known location, then filter to the current company (see #auditBelongsToCompanyScope).
+    const locIds = this.locations()
+      .map((l) => l.locationID)
+      .filter((id): id is string => !!id);
+    if (isAuditLibDebug()) {
+      console.groupCollapsed('[AuditLib] load audits (admin)');
+      console.log('companyId', companyId);
+      console.log('locationIds', locIds);
+      console.groupEnd();
+    }
+    const calls = [
+      this.#auditHttp.list({ companyId }).pipe(catchError(() => of([] as AuditInstance[]))),
+      ...locIds.map((locationId) =>
+        this.#auditHttp.list({ companyId, locationId }).pipe(catchError(() => of([] as AuditInstance[])))
+      ),
+      ...(companyId
+        ? locIds.map((locationId) =>
+            this.#auditHttp.list({ locationId }).pipe(
+              catchError(() => of([] as AuditInstance[])),
+              map((items) =>
+                (items ?? []).filter((a) =>
+                  this.#auditBelongsToCompanyScope(a, companyId, locIds)
+                )
+              )
+            )
+          )
+        : []),
+    ];
+    forkJoin(calls).subscribe((lists) => {
+      const merged = (lists ?? []).flat();
+      const timetableMatches = (merged ?? []).filter((a) => isWorkerTimetableTitle((a as any)?.title));
+      if (isAuditLibDebug()) {
+        console.groupCollapsed('[AuditLib] audits fetched (admin)');
+        console.log('raw lists sizes', (lists ?? []).map((x) => (x ?? []).length));
+        console.log('merged count', merged.length);
+        console.log(
+          'timetable matches',
+          timetableMatches.map((a) => ({
+            id: this.#auditId(a),
+            title: (a as any).title,
+            auditType: (a as any).auditType,
+            companyId: (a as any).companyId,
+            locationId: (a as any).locationId,
+            templateId: (a as any).templateId,
+            questionsCount: (a as any)?.questions?.length ?? 0,
+            hasCustomFields: ((a as any)?.questions ?? []).some((q: any) => !!q?.customFields),
+            hasResponses: !!(a as any)?.responses || !!(a as any)?.formResponse,
+          }))
+        );
+        console.log(
+          'merged summary (all)',
+          merged.map((a) => ({
+            id: this.#auditId(a),
+            title: (a as any).title,
+            companyId: (a as any).companyId,
+            locationId: (a as any).locationId,
+            q: (a as any)?.questions?.length ?? 0,
+          }))
+        );
+        console.groupEnd();
+      }
+      if (isAuditLibDebug()) {
+        logWorkerTimetableAuditsData(merged, 'merged API result (may include duplicates before dedupe)');
+      }
+      this.#setAuditsFromResponse(merged);
+    });
   }
 
   ngOnDestroy() {
@@ -239,17 +420,66 @@ export class AuditPanel implements OnDestroy {
   }
 
   #setAuditsFromResponse(list: AuditInstance[]) {
-    const audits = list.map(a => ({
-      ...a,
-      id: a.id || a._id?.toString() || `audit-${Math.random()}`
-    }));
-    this.audits.set(audits);
+    const byId = new Map<string, AuditInstance>();
+    (list ?? []).forEach((a) => {
+      const id = this.#auditId(a) || `audit-${Math.random()}`;
+      const next = { ...a, id } as AuditInstance;
+      // Prefer the one with questions payload if duplicates exist.
+      const prev = byId.get(id);
+      if (!prev) {
+        byId.set(id, next);
+        return;
+      }
+      const prevQ = (prev.questions ?? []).length;
+      const nextQ = ((next as any).questions ?? []).length;
+      if (nextQ > prevQ) byId.set(id, next);
+    });
+    const finalList = Array.from(byId.values());
+    this.audits.set(finalList);
+    if (isAuditLibDebug()) {
+      console.table(
+        finalList.map((a) => ({
+          id: this.#auditId(a),
+          title: String((a as any).title ?? ''),
+          companyId: String((a as any).companyId ?? ''),
+          locationId: String((a as any).locationId ?? ''),
+          q: (a as any)?.questions?.length ?? 0,
+        }))
+      );
+      logWorkerTimetableAuditsData(finalList, 'deduped library (what the table shows)');
+    }
   }
 
   onAuditSelected(audit: AuditInstance) {
-    console.log('Audit selected:', audit);
+    if (isAuditLibDebug()) {
+      console.log('[AuditLib] audit selected (list row)', {
+        id: String((audit as any)?.id ?? (audit as any)?._id ?? ''),
+        title: (audit as any)?.title,
+        companyId: (audit as any)?.companyId,
+        locationId: (audit as any)?.locationId,
+        questions: (audit as any)?.questions?.length ?? 0,
+      });
+    }
     this.selectedAudit.set(audit);
     this.selectedQuestion.set(null);
+
+    // The list endpoint may omit full question/customFields payloads; fetch the full audit by id
+    // so the read-only "Responses (full audit)" view is not empty.
+    const id = String((audit as any)?.id ?? (audit as any)?._id ?? '').trim();
+    if (!id) return;
+    this.#auditHttp
+      .get(id)
+      .pipe(catchError(() => of(audit)))
+      .subscribe((full) => {
+        if (!full) return;
+        if (isWorkerTimetableTitle((full as any)?.title) && isAuditLibDebug()) {
+          logWorkerTimetableAuditsData(
+            [{ ...(full as any), id: (full as any).id ?? (full as any)._id ?? id } as AuditInstance],
+            'GET /api/audits/:id (full payload after select)'
+          );
+        }
+        this.selectedAudit.set({ ...(full as any), id: (full as any).id ?? (full as any)._id ?? id } as AuditInstance);
+      });
   }
 
   onQuestionSelected(q: AuditQuestionInstance) {
@@ -317,7 +547,15 @@ export class AuditPanel implements OnDestroy {
       return { id: '', templateId: '', date: '', responses: {} } as AuditResponse;
     }
 
-    const responses = buildCustomResponsesFromQuestions(audit.questions);
+    let responses = buildCustomResponsesFromQuestions(audit.questions);
+    const stored = (audit as any).responses ?? (audit as any).formResponse;
+    if (stored && typeof stored === 'object' && !Array.isArray(stored)) {
+      const nested = (stored as any).responses;
+      const flat = nested && typeof nested === 'object' ? nested : stored;
+      if (flat && typeof flat === 'object' && !Array.isArray(flat)) {
+        responses = { ...responses, ...flat };
+      }
+    }
 
     return {
       id: audit.id!,

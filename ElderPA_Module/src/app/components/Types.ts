@@ -76,6 +76,8 @@ export interface CompanyType {
   registeredIn?: 'England' | 'Wales' | 'Scotland';
   adminContact?: string;
   icon?: string;
+  /** Wide dashboard header image (URL path e.g. /uploads/company-banners/...) */
+  bannerUrl?: string | null;
 
   // Service configuration
   serviceTypes?: string[];
@@ -738,12 +740,15 @@ export interface CalendarEvent {
   color?: { primary: string; secondary?: string };
   recurring?: boolean;
   rrule?: any;
+  /** When this event corresponds to a DB audit. */
+  auditId?: string;
 }
 
 export interface DayEvent {
   title: string;
   start: Date;
   color?: { primary: string; secondary?: string };
+  auditId?: string;
 }
 
 export interface MonthDay {

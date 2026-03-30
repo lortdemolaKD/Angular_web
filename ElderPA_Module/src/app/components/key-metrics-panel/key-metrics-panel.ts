@@ -22,6 +22,7 @@ import { CSTButton } from '../cst-button/cst-button';
 import { TaskCreator } from '../task-creator/task-creator';
 import { AuthService } from '../../Services/Auth.service';
 import { WalkthroughRegistryService } from '../../Services/walkthrough-registry.service';
+import { performanceNeedsAuditRecalc } from '../../utils/performance-audit.helper';
 
 interface MarkerConfig {
   index: number;
@@ -245,6 +246,14 @@ export class KeyMetricsPanel implements OnInit, OnChanges, OnDestroy {
           this.resetDiagramIndices();
           this.startDiagramCarousel();
           this.cdr.detectChanges();
+
+          const model = this.selectedSet;
+          if (model && performanceNeedsAuditRecalc(model.categories) && this.authService.isAdmin()) {
+            queueMicrotask(() => {
+              if (this.destroy$.closed) return;
+              this.recalculateFromAudits();
+            });
+          }
         })
       )
       .subscribe();

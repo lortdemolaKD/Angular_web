@@ -22,13 +22,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { LocalStorageService } from '../../Services/LocalStorage.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { LocationService } from '../../Services/location.service';
+import { performanceNeedsAuditRecalc } from '../../utils/performance-audit.helper';
 import { catchError, forkJoin, map, of, switchMap, tap } from 'rxjs';
 
-type ApiCompany = { id: string; name: string; icon?: string | null };
+type ApiCompany = { id: string; name: string; icon?: string | null; bannerUrl?: string | null };
 type ApiLocation = { id: string; companyId: string; name: string; type: string; icon?: string | null };
 
 function toCompanyType(c: ApiCompany): CompanyType {
-  return { _id: c.id, name: c.name, icon: c.icon ?? undefined };
+  return { _id: c.id, name: c.name, icon: c.icon ?? undefined, bannerUrl: c.bannerUrl ?? undefined };
 }
 
 function toLocationType(l: ApiLocation): LocationType {
@@ -72,6 +73,9 @@ export class Dashboard implements AfterViewInit, OnInit {
 
   /** When false (default): view mode – widgets cannot be moved and settings are hidden. Button shows gear. When true: edit mode – widgets draggable and settings available. Button shows eye. */
   editMode = signal(false);
+
+  /** Wide image from current company; shown under the dashboard header */
+  companyBannerUrl = signal<string | null>(null);
 
   toggleEditMode(): void {
     this.editMode.update((v) => !v);
@@ -198,7 +202,50 @@ export class Dashboard implements AfterViewInit, OnInit {
         })
       );
     });
-    return forkJoin(calls).pipe(map((hydrated) => hydrated as LocationType[]));
+    return forkJoin(calls).pipe(
+      switchMap((hydrated) => this.backfillAuditPerformanceForMonitored(hydrated as LocationType[]))
+    );
+  }
+
+  /** When locations have audit-sourced KPIs with no history yet, run the same recalc as Key metrics (no manual button). Not limited to monitored IDs: monitoredLocationIds may still be loading from GET /api/dashboard/me while hydration runs. */
+  private backfillAuditPerformanceForMonitored(locs: LocationType[]) {
+    if (!this.authService.isAdmin()) return of(locs);
+    const need = locs.filter((loc) => {
+      const p = loc.performance;
+      if (!p?.id || !p.categories?.length) return false;
+      return performanceNeedsAuditRecalc(p.categories);
+    });
+    if (!need.length) return of(locs);
+    const params = new HttpParams().set('fullYear', 'true');
+    return forkJoin(
+      need.map((loc) =>
+        this.http
+          .post<PerformanceSet>(`/api/performanceSets/${loc.performance!.id}/recalculate-from-audits`, {}, { params })
+          .pipe(
+            map((updated) => this.mergeLocationPerformance(loc, updated)),
+            catchError(() => of(loc))
+          )
+      )
+    ).pipe(
+      map((updatedLocs) => {
+        const byId = new Map(updatedLocs.map((l) => [l.locationID ?? l.id, l]));
+        return locs.map((l) => byId.get(l.locationID ?? l.id) ?? l);
+      })
+    );
+  }
+
+  private mergeLocationPerformance(loc: LocationType, updated: PerformanceSet): LocationType {
+    return {
+      ...loc,
+      performance: {
+        id: updated.id,
+        period: updated.period ?? '',
+        createdAt: updated.createdAt ?? new Date(0).toISOString(),
+        categories: updated.categories ?? [],
+        alerts: updated.alerts ?? [],
+        tasks: updated.tasks ?? [],
+      },
+    };
   }
 
   /** Load companies (admin: all; else: me) then locations for the current company. */
@@ -210,6 +257,9 @@ export class Dashboard implements AfterViewInit, OnInit {
           catchError(() => of([])),
           tap((companies) => {
             this.ComElements = (companies ?? []).map(toCompanyType);
+            const companyId = this.ls.getID('companyID') || (companies?.[0] as ApiCompany | undefined)?.id;
+            const c = (companies ?? []).find((x) => x.id === companyId);
+            this.companyBannerUrl.set(c?.bannerUrl ?? null);
           }),
           switchMap((companies) => {
             const companyId = this.ls.getID('companyID') || (companies?.[0] as ApiCompany | undefined)?.id;
@@ -240,6 +290,7 @@ export class Dashboard implements AfterViewInit, OnInit {
         switchMap((company) => {
           if (company) {
             this.ComElements = [toCompanyType(company)];
+            this.companyBannerUrl.set(company.bannerUrl ?? null);
             return this.locationService.list(company.id).pipe(
               catchError(() => of([])),
               map((locs) =>
@@ -250,6 +301,7 @@ export class Dashboard implements AfterViewInit, OnInit {
             );
           }
           // 404 or no company: load locations via assigned endpoint (care workers etc.)
+          this.companyBannerUrl.set(null);
           return this.locationService.listMyAssigned().pipe(
             catchError(() => of([])),
             map((locs) =>
@@ -287,9 +339,13 @@ export class Dashboard implements AfterViewInit, OnInit {
     const companyId = this.companyService.getCurrentCompany()?._id ?? this.ls.getID('companyID');
     if (!companyId) return;
     this.http
-      .get<ApiLocation[]>(`/api/locations?companyId=${encodeURIComponent(companyId)}`)
+      .get<ApiCompany>(`/api/companies/${encodeURIComponent(companyId)}`)
       .pipe(
-        catchError(() => of([])),
+        catchError(() => of(null)),
+        tap((co) => this.companyBannerUrl.set(co?.bannerUrl ?? null)),
+        switchMap(() =>
+          this.http.get<ApiLocation[]>(`/api/locations?companyId=${encodeURIComponent(companyId)}`).pipe(catchError(() => of([])))
+        ),
         switchMap((locs) => {
           const locationTypes = (locs ?? []).map(toLocationType);
           return this.hydrateLocationsWithPerformance(locationTypes);
@@ -321,7 +377,7 @@ export class Dashboard implements AfterViewInit, OnInit {
       // 2. If added, generate widgets
       if (!removedId) {
         // Find the full location object in the loaded Location Elements
-        const locationObj = this.LocElements.find(l => l.locationID === id);
+        const locationObj = this.LocElements.find((l) => (l.locationID ?? l.id) === id);
 
         if (locationObj) {
           const locId = locationObj.locationID ?? locationObj.id ?? '';

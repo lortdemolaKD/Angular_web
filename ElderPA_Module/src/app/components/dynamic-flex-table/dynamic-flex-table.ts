@@ -141,6 +141,14 @@ export class DynamicFlexTable {
   readonly showColumnResize = computed(() => !!this._config().columnResize);
   readonly showSavedViews = computed(() => !!this._config().savedViews);
   readonly showExport = computed(() => !!this._config().export);
+  /** Omit the toolbar row entirely when it would be empty (avoids stray padding/border above the table). */
+  readonly showToolbar = computed(
+    () =>
+      this.showSearch() ||
+      this.showColumnVisibility() ||
+      this.showSavedViews() ||
+      this.showExport()
+  );
   readonly mobileCardLayout = computed(() => !!this._config().mobileCardLayout);
 
   readonly columnIds = computed(() => this.columns().map((c) => c.id));
