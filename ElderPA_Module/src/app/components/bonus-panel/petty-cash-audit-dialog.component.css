@@ -1,0 +1,4 @@
+.petty-cash-audit-dialog__content {
+  max-height: min(78vh, 720px);
+  overflow: auto;
+}

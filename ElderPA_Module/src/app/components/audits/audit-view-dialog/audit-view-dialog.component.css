@@ -1,0 +1,35 @@
+.audit-view-dialog__content {
+  max-height: min(78vh, 740px);
+  overflow: auto;
+}
+
+.audit-view-dialog__meta {
+  margin-bottom: 12px;
+}
+
+.audit-view-dialog__title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.audit-view-dialog__sub {
+  color: #666;
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.audit-view-dialog__error {
+  color: #b00020;
+}
+
+.audit-view-dialog__note {
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
